@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+apps/mobile/ios/
+apps/mobile/android/
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+
+# Firmware
+firmware/**/build/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Tooling
+coverage/
+*.log
+.DS_Store
+.idea/
+.vscode/
+.claude/settings.local.json
