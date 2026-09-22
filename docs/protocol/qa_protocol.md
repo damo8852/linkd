@@ -15,9 +15,9 @@ Automated checks (lint, typecheck, tests) run on every PR. On top of that, **any
 
 ## Flow
 
-1. Claude gets the branch green and posts the **QA checklist** (acceptance criteria as checkboxes) in the PR and labels it `needs-qa`.
+1. Claude gets the branch green and posts the **QA checklist** (acceptance criteria as checkboxes) in the PR.
 2. A developer runs it on devices and notes the device next to each box.
-3. All boxes pass -> label `qa-passed` -> the developer merges.
+3. All boxes ticked -> the developer merges.
 
 ## Safety scenarios (run for any alert-path change)
 

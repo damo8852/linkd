@@ -47,7 +47,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Item          | Locked Value / State                                                                              | Lock Type |
 |---------------|---------------------------------------------------------------------------------------------------|-----------|
 | Issue tracker | GitHub Issues in this repo, with labels ([authoring.md](authoring.md#labels))                     | Hard      |
-| Branching     | Protected `main`; `feature/<issue#>-<slug>` / `bugfix/<issue#>-<slug>`; PR + CI; developer merges | Hard      |
+| Branching     | No direct commits to `main`; `feature/<issue#>-<slug>` / `bugfix/<issue#>-<slug>`; PR + CI; developer merges | Hard      |
 | Session types | Tracked and Sandbox                                                                               | Hard      |
 | Testing bar   | Strict test-first for safety-critical code; tested-in-same-PR for the rest                         | Hard      |
 

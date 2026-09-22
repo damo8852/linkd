@@ -112,7 +112,7 @@ Enforcement rules: [session_protocol.md](docs/protocol/session_protocol.md#enfor
 
 ## Branch & Merge Workflow (CRITICAL)
 
-`main` is protected. Work happens on short-lived `feature/<issue#>-<slug>` or `bugfix/<issue#>-<slug>` branches off `main`, merged back by PR once CI is green. **Claude opens PRs but never merges them** and never commits to `main` directly - a developer merges. Full model: [core_protocol.md - Branching](docs/protocol/core_protocol.md#branching).
+No direct commits to `main` (a team convention, not enforced by GitHub). Work happens on short-lived `feature/<issue#>-<slug>` or `bugfix/<issue#>-<slug>` branches off `main`, merged back by PR once CI is green. **Claude opens PRs but never merges them** and never commits to `main` directly - a developer merges. Full model: [core_protocol.md - Branching](docs/protocol/core_protocol.md#branching).
 
 ---
 

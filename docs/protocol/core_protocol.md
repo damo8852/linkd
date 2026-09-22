@@ -44,7 +44,7 @@ Screens, settings, onboarding, and styling need a render test (or a smoke check)
 
 ## Branching
 
-- **`main`** is protected and always releasable. No direct commits.
+- **`main`** is always releasable. No direct commits (by convention; GitHub branch protection is not enabled).
 - Branch off `main` per issue: `feature/<issue#>-<slug>` (non-bug work) or `bugfix/<issue#>-<slug>` (a fix), e.g. `feature/12-contact-picker`.
 - Order of operations:
   1. Get the branch green locally (lint + typecheck + tests), push (CI runs).

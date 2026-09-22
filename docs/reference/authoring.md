@@ -41,7 +41,6 @@ Split anything that cannot be demoed in one sitting.
 | `mobile` / `supabase` / `ble` / `firmware` / `docs` | Surface     |
 | `safety-critical` | Touches the alert path; strict test-first + on-device QA |
 | `decision`      | An open question to resolve (often via `/new-design`)   |
-| `needs-qa` / `qa-passed` | PR QA state                                    |
 
 ---
 

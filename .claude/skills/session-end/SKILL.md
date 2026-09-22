@@ -30,7 +30,7 @@ Insert at the top of `docs/changelog.md` (below the header comment) via str_repl
 Confirm with the developer that the session's work is complete. Then:
 
 - `gh pr view` - if a PR exists, update its body to the template in `docs/reference/authoring.md`.
-- Otherwise `gh pr create --base main` with that template, and `Closes #<n>`. Add `needs-qa` if the change is user-facing, BLE, background, or alert-path.
+- Otherwise `gh pr create --base main` with that template, and `Closes #<n>`. Include the QA checklist if the change is user-facing, BLE, background, or alert-path.
 
 **Never merge.** A developer merges after CI + QA.
 
