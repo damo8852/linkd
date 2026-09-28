@@ -24,3 +24,18 @@ jobs:
       - run: npm run lint
 
       - run: npm test
+
+  # Semgrep's stock p/default ruleset. No Semgrep AppSec Platform account and no
+  # secrets, so this runs on forks too. p/default is used rather than the narrower
+  # p/typescript, p/react and p/secrets packs: those three returned zero findings
+  # even against deliberately vulnerable code, so they would be a gate that cannot
+  # fail. Fails the PR on ERROR findings only, since a check people learn to
+  # ignore is worse than no check.
+  semgrep:
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.178.0
+    steps:
+      - uses: actions/checkout@v7
+
+      - run: semgrep scan --config p/default --severity ERROR --error

@@ -147,7 +147,12 @@ Rules:
 
 ### CI gates (all blocking)
 
-Define in `.github/workflows/` when the scaffold lands: typecheck, lint, Jest (app + packages), `deno test` (functions), `supabase test db` (pgTAP), and a check that `packages/ble-protocol/generated/` is up to date with the spec.
+Live in [.github/workflows/ci.yml](../../.github/workflows/ci.yml), on pull requests to `main`:
+
+- **typecheck**, **lint**, **Jest** (app + packages).
+- **Semgrep** (`p/default`), failing on `ERROR` findings only. No Semgrep account or repo secret, so it runs on forks. A finding is either fixed or suppressed with a `// nosemgrep: <rule-id>` comment that says why; never silenced by widening the severity filter.
+
+Added as the surfaces arrive: `deno test` (Edge Functions), `supabase test db` (pgTAP), and a check that `packages/ble-protocol/generated/` is up to date with the spec.
 
 ---
 
