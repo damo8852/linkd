@@ -90,28 +90,30 @@ linkd/
 ├── apps/
 │   └── mobile/            # Expo app
 ├── packages/
-│   └── ble-protocol/      # Single source of truth for app <-> bangle messages
+│   └── ble-protocol/      # Single source of truth for app <-> bangle messages (planned)
 ├── supabase/
-│   ├── migrations/        # Schema + RLS
-│   ├── functions/         # Edge Functions (send-alert, dispatch, ...)
-│   └── tests/             # pgTAP tests
+│   ├── config.toml        # Local stack config
+│   ├── migrations/        # Schema + RLS (planned)
+│   ├── functions/         # Edge Functions (send-alert, dispatch, ...) (planned)
+│   └── tests/             # pgTAP tests (planned)
 ├── firmware/              # Bangle firmware (planned)
 ├── docs/                  # Protocols, design specs, decisions
 └── .claude/               # Claude Code agents + skills
 ```
 
 > [!NOTE]
-> The app, packages, and Supabase folders are created by the first scaffolding issues. Today the repo holds the working agreement and design drafts.
+> `packages/ble-protocol/` and `firmware/` do not exist yet - they are created when the bangle hardware is confirmed. `supabase/` holds config only; migrations, functions, and tests arrive with the first backend issue.
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js LTS + npm
-- [Expo CLI](https://docs.expo.dev/) and an [EAS](https://expo.dev/eas) account
-- [Supabase CLI](https://supabase.com/docs/guides/cli) + Docker (for the local stack)
-- Xcode (iOS) and/or Android Studio (Android)
+- **Node.js LTS + npm.** Built and tested on Node 24 (see the CI workflow).
+- **Docker Desktop**, for the local Supabase stack.
+- **Xcode** (iOS builds, macOS only) and/or **Android Studio + SDK** (Android builds).
 - **A physical phone.** Simulators cannot use Bluetooth.
+
+The Expo and Supabase CLIs are not installed globally; they come from the repo's dev dependencies and run via `npx`.
 
 ### Setup
 
@@ -121,13 +123,30 @@ cd linkd
 npm install
 ```
 
-```bash
-supabase start
-```
+Run the checks (the same three CI runs on every PR):
 
 ```bash
-cd apps/mobile && npx expo run:ios
+npm run typecheck
+npm run lint
+npm test
 ```
+
+Start the local Supabase stack (needs Docker running):
+
+```bash
+npx supabase start
+```
+
+### Running the app
+
+The app needs a **development build**, not Expo Go - Bluetooth requires native code. With a device connected:
+
+```bash
+cd apps/mobile
+npx expo run:android    # or: npx expo run:ios  (macOS only)
+```
+
+After the first build, `npm start -w @linkd/mobile` launches the dev server against the installed dev build.
 
 Environment variables for each service are listed in [integrations.md](docs/reference/integrations.md). Copy `.env.example` to `.env` and fill it in; never commit secrets.
 
