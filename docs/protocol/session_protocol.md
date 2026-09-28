@@ -20,7 +20,7 @@
 
 ## Session Start Checklist
 
-1. **Sync (guarded)** - on a clean tree not mid-feature: `git checkout main && git pull --ff-only && git fetch --prune`, then delete local branches whose PRs have merged. Skip if resuming a branch or the tree is dirty.
+1. **Sync (guarded)** - on a clean tree not mid-feature: `git checkout main && git pull --ff-only && git fetch --prune`, then delete any branch whose PR has merged, remote and local ([core_protocol.md - Branching](core_protocol.md#branching)). Skip if resuming a branch or the tree is dirty.
 2. **Session type** - the developer declares Tracked or Sandbox (or Claude asks).
 3. **Select the work** - list open issues labeled `ready`, highest priority first (`gh issue list --label ready`). The developer picks.
 4. **Read relevant docs** - the protocol(s) for the surfaces the issue touches, plus any `docs/design/*` it depends on (always [sos_alert_flow.md](../design/sos_alert_flow.md) for alert-path work, [ble_link_spec.md](../design/ble_link_spec.md) for BLE work).
@@ -32,7 +32,7 @@
 
 1. **Summary** - what was decided, built, opened, closed.
 2. **File list** - each changed file with a one-line why.
-3. **Tracked:** changelog entry -> commit -> push -> open/update PR.
+3. **Tracked:** changelog entry -> commit -> push -> open/update PR. If a PR from earlier work merged while this session ran, delete its branch too.
 4. **Sandbox:** brief summary only.
 5. **Unresolved items** become GitHub issues (`/new-issue`) - no loose prose left in docs.
 6. **Up Next** - top 3-5 `ready` issues by priority from GitHub.

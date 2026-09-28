@@ -34,6 +34,10 @@ Confirm with the developer that the session's work is complete. Then:
 
 **Never merge.** A developer merges after CI + QA.
 
+## Step 6b - Retire merged branches
+
+If any PR merged while this session ran, delete its branch, remote and local ([core_protocol.md - Branching](../../../docs/protocol/core_protocol.md#branching)). This session's own branch stays until its PR is merged.
+
 ## Step 7 - Up Next
 
 ```bash

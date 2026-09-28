@@ -15,7 +15,15 @@ git pull --ff-only
 git fetch --prune
 ```
 
-Delete local branches whose PRs have merged (squash merges: confirm with `gh pr list --state merged --head <branch>` before `git branch -D`).
+Delete every branch whose PR has merged, remote and local:
+
+```bash
+gh pr list --state merged --limit 20 --json number,headRefName,mergedAt
+git push origin --delete <branch>
+git branch -D <branch>
+```
+
+Confirm the PR really is merged first. A squash merge makes `git branch -d` refuse, which is why `-D` is correct here and nowhere else.
 
 ## Step 1 - Read context (in parallel)
 
