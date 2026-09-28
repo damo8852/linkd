@@ -50,6 +50,7 @@ Screens, settings, onboarding, and styling need a render test (or a smoke check)
   1. Get the branch green locally (lint + typecheck + tests), push (CI runs).
   2. Open a PR into `main` with `Closes #<n>`. User-facing or safety-critical changes carry the QA checklist ([qa_protocol.md](qa_protocol.md)).
   3. CI green + review/QA done -> **a developer merges** (squash). Claude never merges.
+  4. Merged -> **the branch is deleted**, remote and local. Confirm the merge (`gh pr view <n> --json state,mergedAt`), then `git push origin --delete <branch>` and `git branch -d <branch>` (from `main`, after `git pull --ff-only`). A squash merge leaves the branch's commits unreachable, so `git branch -d` refuses it: verify the PR says merged, then use `git branch -D`. Nothing else justifies `-D`.
 - Keep branches short-lived (days, not weeks). Sync with `git pull --ff-only` on `main`, then `git merge main` into the branch if it falls behind (no rebasing pushed branches).
 - A change that replaces old code removes the old code in the same PR.
 

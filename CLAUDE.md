@@ -114,11 +114,15 @@ Enforcement rules: [session_protocol.md](docs/protocol/session_protocol.md#enfor
 
 No direct commits to `main` (a team convention, not enforced by GitHub). Work happens on short-lived `feature/<issue#>-<slug>` or `bugfix/<issue#>-<slug>` branches off `main`, merged back by PR once CI is green. **Claude opens PRs but never merges them** and never commits to `main` directly - a developer merges. Full model: [core_protocol.md - Branching](docs/protocol/core_protocol.md#branching).
 
+**Merged means gone.** Once a PR is merged, its branch is deleted, remote and local. Claude verifies the merge first (`gh pr view <n> --json state,mergedAt`), then deletes; no branch outlives its PR. This is the one branch deletion Claude does without asking - see Git Safety.
+
 ---
 
 ## Git Safety (CRITICAL - never rewrite shared history)
 
-Claude only ever **fast-forward pushes**. Forbidden without explicit, in-the-moment approval: any force push (`--force`, `-f`, `--force-with-lease`), rebasing / amending / hard-resetting a pushed branch, `filter-branch`, deleting remote branches, `git branch -D` of a branch others may have. If a rewrite seems necessary, **stop and ask**. Force-push is also denied in [.claude/settings.json](.claude/settings.json).
+Claude only ever **fast-forward pushes**. Forbidden without explicit, in-the-moment approval: any force push (`--force`, `-f`, `--force-with-lease`), rebasing / amending / hard-resetting a pushed branch, `filter-branch`, deleting remote branches, `git branch -D` of a branch others may have. If a rewrite seems necessary, **stop and ask**.
+
+**One standing exception:** the branch of a merged PR, whose commits are already on `main`, is deleted without asking (confirm the merge first). Deleting an unmerged branch still needs approval, and nothing here permits a history rewrite. Force-push is also denied in [.claude/settings.json](.claude/settings.json).
 
 ---
 
