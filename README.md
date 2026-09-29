@@ -106,24 +106,64 @@ linkd/
 
 ## Getting started
 
-### Prerequisites
+The repo sets up the same way on Windows and macOS. Everything below is identical on both, except the platform prerequisites and the fact that **iOS builds require macOS** - Windows developers test on Android.
 
-- **Node.js LTS + npm.** Built and tested on Node 24 (see the CI workflow).
-- **Docker Desktop**, for the local Supabase stack.
-- **Xcode** (iOS builds, macOS only) and/or **Android Studio + SDK** (Android builds).
-- **A physical phone.** Simulators cannot use Bluetooth.
+### Shared prerequisites
 
-The Expo and Supabase CLIs are not installed globally; they come from the repo's dev dependencies and run via `npx`.
+| Tool | Why | Notes |
+|---|---|---|
+| **Node** (version in [`.nvmrc`](.nvmrc)) | Runs everything | Install with [fnm](https://github.com/Schniz/fnm): `fnm install` reads `.nvmrc`. `engine-strict=true` means npm refuses to install on the wrong major version rather than failing strangely later. |
+| **Git** | Source control | |
+| **Docker Desktop** | Local Supabase stack | Must be running before `npx supabase start`. |
+| **Android Studio + SDK** | Android builds | SDK Platform 36 (Android 16), Android SDK Build-Tools. |
+| **JDK 17** | Android builds | Azul Zulu 17 on macOS, Microsoft OpenJDK 17 on Windows, per the [Expo setup guide](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=physical&mode=development-build). |
+| **A physical phone** | Bluetooth | Simulators cannot do BLE, so there is no way to test the bangle link without one. |
+
+The Expo and Supabase CLIs are **not** installed globally - both come from this repo's dev dependencies and run through `npx`, so everyone gets the same version.
+
+### macOS only
+
+- **Xcode** from the Mac App Store, plus Xcode Command Line Tools, for iOS builds.
+- `export ANDROID_HOME=$HOME/Library/Android/sdk` and `JAVA_HOME` in `~/.zshrc`.
+- Watchman is **not** needed: Expo requires it only for SDK 55 and earlier, and this app is on SDK 57.
+
+### Windows only
+
+- **`ANDROID_HOME`** must be set (System Properties -> Environment Variables), normally `%LOCALAPPDATA%\Android\Sdk`.
+- **Long paths must be enabled**, or `npm ci` fails deep inside `node_modules`:
+
+  ```
+  git config --global core.longpaths true
+  ```
+
+  and enable the OS setting (Local Group Policy `Enable Win32 long paths`, or set
+  `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled` to `1`), then reboot.
+- iOS builds are not possible. Test on Android; a teammate on macOS covers iOS.
 
 ### Setup
 
 ```bash
 git clone <repo-url> linkd
 cd linkd
-npm install
+fnm install && fnm use
+npm ci
 ```
 
-Run the checks (the same three CI runs on every PR):
+`npm ci` rather than `npm install`: it installs exactly what [`package-lock.json`](package-lock.json) pins, so two machines cannot drift apart.
+
+Then copy the env file and fill it in. Names and purposes are in [integrations.md](docs/reference/integrations.md); never commit values.
+
+```bash
+cp .env.example .env
+```
+
+### Check the setup
+
+```bash
+npm run doctor
+```
+
+That runs `expo-doctor` in the app workspace. It is the setup check: it validates the native project, dependency versions against the Expo SDK, and config. Run it before asking why a build fails. Then the three checks CI runs on every PR, on every OS:
 
 ```bash
 npm run typecheck
@@ -131,7 +171,7 @@ npm run lint
 npm test
 ```
 
-Start the local Supabase stack (needs Docker running):
+Local Supabase stack (Docker must be running):
 
 ```bash
 npx supabase start
@@ -139,16 +179,14 @@ npx supabase start
 
 ### Running the app
 
-The app needs a **development build**, not Expo Go - Bluetooth requires native code. With a device connected:
+The app needs a **development build**, not Expo Go - Bluetooth requires native code. With a phone connected by USB:
 
 ```bash
-cd apps/mobile
-npx expo run:android    # or: npx expo run:ios  (macOS only)
+npm run android -w @linkd/mobile    # Windows or macOS
+npm run ios -w @linkd/mobile        # macOS only
 ```
 
-After the first build, `npm start -w @linkd/mobile` launches the dev server against the installed dev build.
-
-Environment variables for each service are listed in [integrations.md](docs/reference/integrations.md). Copy `.env.example` to `.env` and fill it in; never commit secrets.
+After the first build, `npm start -w @linkd/mobile` starts the dev server against the installed dev build.
 
 ## Development workflow
 
