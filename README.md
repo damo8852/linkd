@@ -106,87 +106,218 @@ linkd/
 
 ## Getting started
 
-The repo sets up the same way on Windows and macOS. Everything below is identical on both, except the platform prerequisites and the fact that **iOS builds require macOS** - Windows developers test on Android.
+Pick your machine below. The commands inside each section are the complete path from a fresh clone to the app running on a phone.
 
-### Shared prerequisites
-
-| Tool | Why | Notes |
+| | Android builds | iOS builds |
 |---|---|---|
-| **Node** (version in [`.nvmrc`](.nvmrc)) | Runs everything | Install with [fnm](https://github.com/Schniz/fnm): `fnm install` reads `.nvmrc`. `engine-strict=true` means npm refuses to install on the wrong major version rather than failing strangely later. |
-| **Git** | Source control | |
-| **Docker Desktop** | Local Supabase stack | Must be running before `npx supabase start`. |
-| **Android Studio + SDK** | Android builds | SDK Platform 36 (Android 16), Android SDK Build-Tools. |
-| **JDK 17** | Android builds | Azul Zulu 17 on macOS, Microsoft OpenJDK 17 on Windows, per the [Expo setup guide](https://docs.expo.dev/get-started/set-up-your-environment/?platform=android&device=physical&mode=development-build). |
-| **A physical phone** | Bluetooth | Simulators cannot do BLE, so there is no way to test the bangle link without one. |
+| **macOS** | yes | yes |
+| **Windows** | yes | no |
+| **Linux** | yes | no |
 
-The Expo and Supabase CLIs are **not** installed globally - both come from this repo's dev dependencies and run through `npx`, so everyone gets the same version.
+iOS builds require macOS: Apple's toolchain does not exist elsewhere. On Windows and Linux, develop against Android and let a teammate on macOS cover iOS.
 
-### macOS only
+> [!IMPORTANT]
+> **A physical phone is required.** Simulators and emulators cannot do Bluetooth Low Energy, so the bangle link cannot be tested without one.
 
-- **Xcode** from the Mac App Store, plus Xcode Command Line Tools, for iOS builds.
-- `export ANDROID_HOME=$HOME/Library/Android/sdk` and `JAVA_HOME` in `~/.zshrc`.
-- Watchman is **not** needed: Expo requires it only for SDK 55 and earlier, and this app is on SDK 57.
+<details>
+<summary><b>macOS</b> - setup and run</summary>
 
-### Windows only
+### 1. Prerequisites
 
-- **`ANDROID_HOME`** must be set (System Properties -> Environment Variables), normally `%LOCALAPPDATA%\Android\Sdk`.
-- **Long paths must be enabled**, or `npm ci` fails deep inside `node_modules`:
+```bash
+# Node, pinned by .nvmrc
+curl -fsSL https://fnm.vercel.app/install | bash
+exec $SHELL
 
-  ```
-  git config --global core.longpaths true
-  ```
+# JDK 17 and Android SDK command-line tools
+brew install --cask zulu@17
+brew install --cask android-studio
 
-  and enable the OS setting (Local Group Policy `Enable Win32 long paths`, or set
-  `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled` to `1`), then reboot.
-- iOS builds are not possible. Test on Android; a teammate on macOS covers iOS.
+# Docker, for the local Supabase stack
+brew install --cask docker
+```
 
-### Setup
+Open Android Studio once and install **SDK Platform 36 (Android 16)** and **Android SDK Build-Tools** from Settings -> Languages & Frameworks -> Android SDK.
+
+Install **Xcode** from the Mac App Store, then its Command Line Tools (Xcode -> Settings -> Locations -> Command Line Tools).
+
+Add to `~/.zshrc`:
+
+```bash
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+Watchman is **not** needed: Expo requires it only for SDK 55 and earlier, and this app is on SDK 57.
+
+### 2. Install
 
 ```bash
 git clone <repo-url> linkd
 cd linkd
 fnm install && fnm use
 npm ci
-```
-
-`npm ci` rather than `npm install`: it installs exactly what [`package-lock.json`](package-lock.json) pins, so two machines cannot drift apart.
-
-Then copy the env file and fill it in. Names and purposes are in [integrations.md](docs/reference/integrations.md); never commit values.
-
-```bash
 cp .env.example .env
-```
-
-### Check the setup
-
-```bash
 npm run doctor
 ```
 
-That runs `expo-doctor` in the app workspace. It is the setup check: it validates the native project, dependency versions against the Expo SDK, and config. Run it before asking why a build fails. Then the three checks CI runs on every PR, on every OS:
+### 3. Run on a phone
+
+Connect the phone by USB and trust the computer.
 
 ```bash
-npm run typecheck
-npm run lint
-npm test
+npm run ios -w @linkd/mobile        # iPhone
+npm run android -w @linkd/mobile    # Android
 ```
 
-Local Supabase stack (Docker must be running):
+</details>
+
+<details>
+<summary><b>Windows</b> - setup and run</summary>
+
+### 1. Prerequisites
+
+In PowerShell:
+
+```powershell
+# Node, pinned by .nvmrc
+winget install Schniz.fnm
+
+# JDK 17, Android Studio, Docker
+winget install Microsoft.OpenJDK.17
+winget install Google.AndroidStudio
+winget install Docker.DockerDesktop
+```
+
+Open Android Studio once and install **SDK Platform 36 (Android 16)** and **Android SDK Build-Tools** from Settings -> Languages & Frameworks -> Android SDK.
+
+Set **`ANDROID_HOME`** under System Properties -> Environment Variables, normally:
+
+```
+%LOCALAPPDATA%\Android\Sdk
+```
+
+**Enable long paths**, or `npm ci` fails deep inside `node_modules`:
+
+```powershell
+git config --global core.longpaths true
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1
+```
+
+Reboot after that second command.
+
+### 2. Install
+
+```powershell
+git clone <repo-url> linkd
+cd linkd
+fnm install; fnm use
+npm ci
+copy .env.example .env
+npm run doctor
+```
+
+### 3. Run on a phone
+
+Enable **Developer options** and **USB debugging** on the Android phone, connect it by USB, and accept the debugging prompt.
+
+```powershell
+npm run android -w @linkd/mobile
+```
+
+iOS is not available on Windows.
+
+</details>
+
+<details>
+<summary><b>Linux</b> - setup and run</summary>
+
+### 1. Prerequisites
 
 ```bash
-npx supabase start
+# Node, pinned by .nvmrc
+curl -fsSL https://fnm.vercel.app/install | bash
+exec $SHELL
+
+# JDK 17 (apt: openjdk-17-jdk, dnf: java-17-openjdk-devel)
+sudo dnf install java-17-openjdk-devel
+
+# Android Studio: install from https://developer.android.com/studio
+# Docker Engine or Docker Desktop, for the local Supabase stack
 ```
 
-### Running the app
+Open Android Studio once and install **SDK Platform 36 (Android 16)** and **Android SDK Build-Tools** from Settings -> Languages & Frameworks -> Android SDK.
 
-The app needs a **development build**, not Expo Go - Bluetooth requires native code. With a phone connected by USB:
+Add to `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-npm run android -w @linkd/mobile    # Windows or macOS
-npm run ios -w @linkd/mobile        # macOS only
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/platform-tools
 ```
 
-After the first build, `npm start -w @linkd/mobile` starts the dev server against the installed dev build.
+Add yourself to the group that can talk to USB devices, or `adb` will not see the phone:
+
+```bash
+sudo usermod -aG plugdev $USER   # log out and back in
+```
+
+### 2. Install
+
+```bash
+git clone <repo-url> linkd
+cd linkd
+fnm install && fnm use
+npm ci
+cp .env.example .env
+npm run doctor
+```
+
+### 3. Run on a phone
+
+Enable **Developer options** and **USB debugging** on the Android phone, connect it by USB, and accept the debugging prompt. Confirm it is visible:
+
+```bash
+adb devices
+```
+
+Then:
+
+```bash
+npm run android -w @linkd/mobile
+```
+
+iOS is not available on Linux.
+
+</details>
+
+### Everyday commands
+
+Identical on all three OSes.
+
+| Command | What it does |
+|---|---|
+| `npm run doctor` | The setup check. Validates the native project, config, and dependency versions against the Expo SDK. Run this before asking why a build fails. |
+| `npm run typecheck` | TypeScript, no emit. |
+| `npm run lint` | ESLint. |
+| `npm test` | Jest. These three are exactly what CI runs on every PR, on all three OSes. |
+| `npm start -w @linkd/mobile` | Dev server against an already-installed dev build. |
+| `npx supabase start` | Local Supabase stack. Docker must be running. |
+
+Two notes on the setup commands above:
+
+- **`npm ci`, not `npm install`.** It installs exactly what [`package-lock.json`](package-lock.json) pins, so two machines cannot drift apart.
+- **`fnm use` reads [`.nvmrc`](.nvmrc).** `engine-strict=true` in `.npmrc` means npm refuses to install on the wrong Node major rather than failing strangely later.
+
+The Expo and Supabase CLIs are **not** installed globally. Both come from this repo's dev dependencies, so everyone gets the same version.
+
+Environment variable names and purposes are in [integrations.md](docs/reference/integrations.md). Never commit values.
+
+### Development builds, not Expo Go
+
+Bluetooth needs native code, so the app runs as a **development build**. Expo Go cannot connect to the bangle. `npm run android` / `npm run ios` produce that build the first time and install it on the phone.
+
+Prerequisite versions above (JDK 17, Android SDK Platform 36, and Watchman being unnecessary from SDK 56 on) follow Expo's [environment setup guide](https://docs.expo.dev/get-started/set-up-your-environment/). Check it against the installed SDK version before assuming these are current.
 
 ## Development workflow
 
