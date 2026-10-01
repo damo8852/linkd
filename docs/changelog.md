@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-01 15:15 MDT
+damo8852
+
+## Link-loss reconnect behavior
+
+[internal] Decided that a bangle reconnect never cancels an alert by itself: the link-loss cancel window keeps counting down, and a reconnect during grace only counts once the link stays up 5 s. A button hold during the link-loss cancel window now sends immediately.
+
+Issues: #13
+
+---
+
 2026-09-28 19:58 MDT
 damo8852
 
