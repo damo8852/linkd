@@ -11,7 +11,7 @@ Term + one-line definition + link to the canonical spec. No inline spec content.
 | LINKD             | The product: a safety bangle plus its companion app.                                 | [README](../../README.md)                             |
 | Bangle            | The wearable: BLE SoC, coin cell, one button.                                        | [firmware_protocol.md](../protocol/firmware_protocol.md) |
 | SOS / alert       | The emergency event that notifies contacts and/or dispatch.                          | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
-| Trigger           | What starts an SOS: button press/hold or link loss.                                  | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
+| Trigger           | What starts an SOS: bangle button hold, in-app SOS hold, or link loss.               | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Link / link loss  | The BLE connection between phone and bangle / its unexpected drop.                   | [ble_link_spec.md](../design/ble_link_spec.md)        |
 | Grace period      | Wait after link loss before treating it as an emergency; a reconnect cancels it.     | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Cancel window     | Countdown during which the user can cancel an SOS before it is sent.                 | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
@@ -20,6 +20,9 @@ Term + one-line definition + link to the canonical spec. No inline spec content.
 | Dispatch          | Professional emergency dispatch via Noonlight or RapidSOS.                           | [supabase_protocol.md](../protocol/supabase_protocol.md) |
 | False alert       | An SOS sent when the user was not in danger.                                         | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Missed alert      | An SOS that should have been sent and was not. The worse failure.                    | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
+| Benign link loss  | Known safe link drop (battery critical, phone BT off, phone dying); warns only.      | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
+| Live location     | Link in the SOS text with live location, for 60 min or until the alert ends.         | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
+| I'm safe          | User action (device unlock) that ends a sent alert and texts contacts.               | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 
 ## Technical Terms
 

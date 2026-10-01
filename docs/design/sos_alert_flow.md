@@ -1,47 +1,99 @@
-# SOS Alert Flow (draft)
+# SOS Alert Flow
 
-> **Status: draft.** Decided items are marked **Decided**; everything else needs a `/new-design` pass before the alert path is implemented. Changes to this file need developer sign-off (session_protocol Enforcement Rule 6).
+> **Status: decided** (items marked **Decided**). Remaining items are listed under Open questions and tracked as `decision` issues. Changes to this file need developer sign-off (session_protocol Enforcement Rule 6).
 
 The single spec for **when an SOS fires, how it can be cancelled, and who is told**. The code lives in `apps/mobile/src/features/sos/` (state machine) and `supabase/functions/` (fan-out).
+
+Guiding rule: a **missed alert** is worse than a **false alert**. When the app cannot tell, it sends.
 
 ---
 
 ## Triggers
 
-| Trigger                      | Status      | Notes                                                                 |
-|------------------------------|-------------|-----------------------------------------------------------------------|
-| Bangle button press / hold   | **Decided** | Exact gesture (single press, hold N s, multi-press) is open.          |
-| BLE link severed             | **Decided** | Only after the grace period, and never after a battery-critical message. |
-| In-app SOS button            | Open        | Likely yes, as a fallback.                                            |
+| Trigger           | Status      | Notes                                                                                          |
+|-------------------|-------------|------------------------------------------------------------------------------------------------|
+| Bangle button     | **Decided** | Hold for `SOS_HOLD_MS`; detected by firmware, which then sends `SOS_TRIGGER`. Short presses do nothing. |
+| BLE link severed  | **Decided** | Grace period, then the link-loss cancel window. Never after a benign link loss (see below).     |
+| In-app SOS button | **Decided** | Hold-to-trigger, same cancel window as the bangle button. Fallback when the bangle is dead, unpaired, or not worn. |
 
-## States (sketch)
+## Timings
+
+All are tunable constants (starting values, to be tuned on real hardware). The clock is injected so tests never sleep.
+
+| Constant                     | Value  | Meaning                                                                 |
+|------------------------------|--------|-------------------------------------------------------------------------|
+| `SOS_HOLD_MS`                | 3 s    | Button hold needed to trigger (firmware side).                          |
+| `BUTTON_CANCEL_WINDOW_MS`    | 5 s    | Countdown after a bangle or in-app trigger.                             |
+| `GRACE_PERIOD_MS`            | 20 s   | Silent wait after link loss; a reconnect inside it returns to Idle.     |
+| `LINK_LOSS_CANCEL_WINDOW_MS` | 30 s   | Countdown after the grace period (50 s total from link loss to send).   |
+| `LIVE_LOCATION_MS`           | 60 min | How long the live location link updates; the alert auto-ends after it.  |
+
+## Cancelling
+
+**Decided.** Cancelling a countdown, or ending a sent alert ("I'm safe"), requires a **device unlock** (biometric or passcode). No input, a failed unlock, or an unlock that outlasts the window lets the alert send. During link loss the bangle cannot cancel, so cancel is phone-only.
+
+Known risk: the 5 s button window is short for a passcode unlock, so an accidental hold may send. Accepted (false alert over missed alert); revisit with real usage.
+
+## States
 
 ```
-Idle ──trigger──▶ CancelWindow ──timeout──▶ Sending ──▶ Sent / PartiallyFailed
-  │                     │
-  │                     └──cancel──▶ Idle
-  └──link lost──▶ GracePeriod ──reconnect──▶ Idle
-                        └──timeout──▶ CancelWindow
+Idle ──button / in-app hold──▶ CancelWindow(5 s) ──timeout──▶ Sending ──▶ Active ──"I'm safe" / 60 min──▶ Ended
+  │                              │      ▲                        │
+  │                              │      │                        └─ PartiallyFailed: surface to user, keep retrying
+  │                              └─cancel (unlock)──▶ Idle
+  │                                     │
+  └──link lost──▶ GracePeriod(20 s) ──timeout──▶ CancelWindow(30 s)
+                        └──reconnect──▶ Idle
 
-BatteryCritical received ──▶ link loss after it is NOT an emergency (warn the user instead)
+Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ Unprotected warning, never an SOS
 ```
+
+## Benign link loss
+
+**Decided.** These never trigger an SOS and send no SMS. The app shows a persistent local warning that the bangle is not protecting the user:
+
+| Cause                                   | Detected by                                 |
+|-----------------------------------------|---------------------------------------------|
+| Bangle sent `BATTERY_CRITICAL`          | BLE message before the disconnect           |
+| Phone Bluetooth turned off              | OS Bluetooth state change                   |
+| Phone battery dying / shutting down     | OS battery / shutdown signal (to verify per platform) |
+
+## Location
+
+**Decided.** The SOS SMS includes the location fix at trigger time immediately (sending never waits for GPS; last known location is used if no fresh fix), plus a **live location link** updated for `LIVE_LOCATION_MS` or until the alert ends.
 
 ## Recipients
 
-| Channel                          | Status      | Notes                                                         |
-|----------------------------------|-------------|---------------------------------------------------------------|
-| SMS to chosen emergency contacts | **Decided** | Via Twilio from a Supabase Edge Function. Includes location.  |
-| Emergency dispatch               | **Decided** | Noonlight or RapidSOS (vendor open), behind an interface.     |
-| Push to contacts with the app    | Deferred    |                                                               |
+| Channel                          | Status      | Notes                                                                      |
+|----------------------------------|-------------|----------------------------------------------------------------------------|
+| SMS to chosen emergency contacts | **Decided** | Always texted. Via Twilio from a Supabase Edge Function. Up to 5 contacts. |
+| Emergency dispatch               | **Decided** | User setting chosen in onboarding, default on. Vendor open, behind an interface. |
+| Push to contacts with the app    | Deferred    |                                                                            |
+
+**Contacts (Decided):** up to 5. Adding a contact sends a one-time intro SMS (who added them, reply STOP to opt out). The contact is active immediately; a STOP removes them and warns the user.
+
+## Offline
+
+**Decided.** With no data connection the app does both: keeps retrying the server send (idempotent client-generated alert id, so contacts are never texted twice), and opens the native SMS composer prefilled with the cached contacts and last known location so a user who can tap gets it out.
+
+## Ending an alert
+
+**Decided.** "I'm safe" (device unlock required) ends the alert: contacts get an "I'm safe" SMS, the live location link stops, and dispatch is cancelled through the vendor API where supported. With no action the alert auto-ends after `LIVE_LOCATION_MS`.
+
+## iOS force-quit
+
+**Decided.** iOS does not relaunch a force-quit app for BLE events (verify against current Apple docs at implementation), and the v1 bangle cannot warn the user. Mitigation: explain it in onboarding, and keep a scheduled local notification that the running app reschedules, so it fires ("LINKD is not running, open it") if the app is gone. Needs on-device verification.
+
+## To verify at implementation
+
+- iOS SMS composer requires a user tap to send; Android silent SMS (`SEND_SMS`) is restricted by Google Play.
+- iOS state restoration behavior after force-quit.
+- Detecting phone shutdown / critically low battery on iOS and Android.
+- Twilio consent, intro-message, and STOP handling requirements.
 
 ## Open questions
 
-- Grace period length after link loss, and cancel window length.
-- Which button gesture triggers, and how to avoid accidental triggers.
-- Button trigger: cancel window, or send immediately (the user may not be able to reach the phone)?
-- Location: one fix at trigger time, or live updates to contacts for N minutes?
-- No network at trigger time: fall back to the native SMS composer? Queue and retry?
-- iOS force-quit: iOS will not relaunch the app for BLE after a force-quit. How do we warn the user, and does the bangle need to detect "phone app gone"?
-- Phone Bluetooth turned off, or phone battery dies: alert, warn, or ignore?
-- Contacts: max count, do they need to opt in (consent SMS) before being added?
+- Reconnect during the link-loss cancel window: cancel automatically, or keep counting down?
+- Duress PIN (an unlock that appears to cancel but still sends).
+- Should phone Bluetooth turned off by someone else be treated as an attack?
 - Dispatch vendor choice (Noonlight vs RapidSOS) and their consent/verification requirements.
