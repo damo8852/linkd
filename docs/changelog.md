@@ -4,6 +4,39 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-01 15:18 MDT
+damo8852
+
+## Signed-out SOS decision
+
+[internal] Decided that a signed-out phone still sends an SOS through the server with a per-install alert token, dispatch follows the saved setting, and sign-out keeps the cache and token so only removing the device disarms it. Recorded it in the alert flow, Supabase protocol, locked decisions, and glossary, reordered the changelog after the last merges, and filed the implementation work.
+
+Issues: #19, #22
+
+---
+
+2026-10-01 14:56 MDT
+damo8852
+
+## Auth method decision
+
+[internal] Chose email + password with Supabase Auth to stay on free tiers, with Resend's free tier as the auth SMTP, sessions that never time out, and password-reset email for recovery. The user's own phone number is required but unverified for now, and follow-up issues cover verifying it and sending an SOS while signed out.
+
+Issues: #10, #18, #19, PR #20
+
+---
+
+2026-10-01 14:55 MDT
+damo8852
+
+## SOS alert flow design
+
+[internal] Resolved the SOS alert flow open questions: 3 s hold trigger, 5 s button cancel window, 20 s link-loss grace plus 30 s cancel window, device unlock to cancel, offline retry plus native SMS fallback, and warn-only benign link loss. Recorded the decisions in the design doc, locked decisions, and glossary, and opened follow-up decision issues for what remains open.
+
+Issues: #9, #12, #13, #14, #15, #16, PR #17
+
+---
+
 2026-09-28 19:58 MDT
 damo8852
 
@@ -13,6 +46,8 @@ damo8852
 
 Issues: #1, PR #8
 
+---
+
 2026-09-28 17:52 MDT
 damo8852
 
@@ -21,22 +56,6 @@ damo8852
 [internal] Added a Semgrep job to CI on the stock `p/default` ruleset, pinned to a container image and failing on ERROR findings only, after confirming the narrower rulesets caught nothing against deliberately vulnerable code. Also made "delete the branch once its PR is merged" a written rule across the working agreement, the protocols, and both session skills.
 
 Issues: #3, #5, PR #6, PR #7
-2026-10-01 14:56 MDT
-damo8852
-
-## Auth method decision
-
-[internal] Chose email + password with Supabase Auth to stay on free tiers, with Resend's free tier as the auth SMTP, sessions that never time out, and password-reset email for recovery. The user's own phone number is required but unverified for now, and follow-up issues cover verifying it and sending an SOS while signed out.
-
-Issues: #10, #18, #19
-2026-10-01 14:55 MDT
-damo8852
-
-## SOS alert flow design
-
-[internal] Resolved the SOS alert flow open questions: 3 s hold trigger, 5 s button cancel window, 20 s link-loss grace plus 30 s cancel window, device unlock to cancel, offline retry plus native SMS fallback, and warn-only benign link loss. Recorded the decisions in the design doc, locked decisions, and glossary, and opened follow-up decision issues for what remains open.
-
-Issues: #9, #12, #13, #14, #15, #16
 
 ---
 

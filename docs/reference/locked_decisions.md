@@ -46,6 +46,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Cancel / end auth  | Device unlock to cancel a countdown or end an alert; no input means it sends                 | Hard      |
 | Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
+| Signed-out SOS     | Alert token sends as if signed in; sign-out keeps cache; only device removal disarms         | Hard      |
 | Emergency contacts | Max 5; intro SMS on add, active immediately, STOP removes                                    | Soft      |
 | v1 hardware scope  | No haptic motor, no status LED, no accelerometer                                             | Soft      |
 
