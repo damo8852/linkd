@@ -10,6 +10,7 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 |-----------------------|---------------------------------------------|-------------------------|
 | Supabase              | Auth, Postgres, Edge Functions              | local, staging, prod    |
 | Twilio                | SMS to emergency contacts                   | test creds in dev, live in prod |
+| Resend                | SMTP for Supabase Auth email                | staging, prod           |
 | Noonlight / RapidSOS  | Emergency dispatch (vendor not chosen)      | sandbox in dev, live in prod |
 | Expo / EAS            | Dev builds, store builds, OTA updates       | all                     |
 
@@ -42,6 +43,18 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 | `TWILIO_FROM_NUMBER` | Sender number / service  | Edge Functions |
 
 **Verification:** `<send to a team number using test credentials>`.
+
+## Resend
+
+**Purpose:** SMTP for Supabase Auth email (sign-up confirmation, password reset). Free tier: 3,000 emails/month, 100/day.
+
+**Setup:** create a Resend account, verify a sending domain, create an API key; in the hosted Supabase project set Auth -> SMTP to `smtp.resend.com`, port 465, user `resend`, password = the API key. Local dev keeps confirmations off and needs no SMTP.
+
+| Variable         | Holds                                       | Used by                |
+|------------------|---------------------------------------------|------------------------|
+| `RESEND_API_KEY` | API key, used as the SMTP password (secret) | Supabase Auth (hosted) |
+
+**Verification:** trigger a password reset for a team address on staging and receive it.
 
 ## Emergency dispatch (Noonlight or RapidSOS)
 

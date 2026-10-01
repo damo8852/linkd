@@ -21,6 +21,24 @@ damo8852
 [internal] Added a Semgrep job to CI on the stock `p/default` ruleset, pinned to a container image and failing on ERROR findings only, after confirming the narrower rulesets caught nothing against deliberately vulnerable code. Also made "delete the branch once its PR is merged" a written rule across the working agreement, the protocols, and both session skills.
 
 Issues: #3, #5, PR #6, PR #7
+2026-10-01 14:56 MDT
+damo8852
+
+## Auth method decision
+
+[internal] Chose email + password with Supabase Auth to stay on free tiers, with Resend's free tier as the auth SMTP, sessions that never time out, and password-reset email for recovery. The user's own phone number is required but unverified for now, and follow-up issues cover verifying it and sending an SOS while signed out.
+
+Issues: #10, #18, #19
+2026-10-01 14:55 MDT
+damo8852
+
+## SOS alert flow design
+
+[internal] Resolved the SOS alert flow open questions: 3 s hold trigger, 5 s button cancel window, 20 s link-loss grace plus 30 s cancel window, device unlock to cancel, offline retry plus native SMS fallback, and warn-only benign link loss. Recorded the decisions in the design doc, locked decisions, and glossary, and opened follow-up decision issues for what remains open.
+
+Issues: #9, #12, #13, #14, #15, #16
+
+---
 
 2026-09-28 17:43 MDT
 damo8852
