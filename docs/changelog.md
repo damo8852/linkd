@@ -15,6 +15,17 @@ Issues: #19, #22
 
 ---
 
+2026-10-01 15:15 MDT
+damo8852
+
+## Link-loss reconnect behavior
+
+[internal] Decided that a bangle reconnect never cancels an alert by itself: the link-loss cancel window keeps counting down, and a reconnect during grace only counts once the link stays up 5 s. A button hold during the link-loss cancel window now sends immediately.
+
+Issues: #13, PR #21
+
+---
+
 2026-10-01 14:56 MDT
 damo8852
 

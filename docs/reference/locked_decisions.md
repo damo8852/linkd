@@ -44,6 +44,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Alert recipients   | SMS to chosen emergency contacts (always) + emergency dispatch (user setting, default on)    | Hard      |
 | Alert timings      | Hold 3 s; cancel 5 s (button), 20 s grace + 30 s cancel (link loss); live location 60 min    | Soft      |
 | Cancel / end auth  | Device unlock to cancel a countdown or end an alert; no input means it sends                 | Hard      |
+| Link reconnect     | Never cancels by itself; must be up 5 s during grace; hold in link-loss window sends now     | Hard      |
 | Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
 | Signed-out SOS     | Alert token sends as if signed in; sign-out keeps cache; only device removal disarms         | Hard      |
@@ -65,7 +66,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 
 Turn each into a GitHub issue (label `decision`) before working on it.
 
-- Reconnect during the link-loss cancel window, duress PIN, Bluetooth-off as an attack - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
+- Duress PIN, Bluetooth-off as an attack - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
 - BLE UUIDs, byte layouts, bonding/security - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Android foreground-service implementation (library or custom Expo module).

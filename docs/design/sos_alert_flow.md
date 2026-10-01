@@ -24,7 +24,8 @@ All are tunable constants (starting values, to be tuned on real hardware). The c
 |------------------------------|--------|-------------------------------------------------------------------------|
 | `SOS_HOLD_MS`                | 3 s    | Button hold needed to trigger (firmware side).                          |
 | `BUTTON_CANCEL_WINDOW_MS`    | 5 s    | Countdown after a bangle or in-app trigger.                             |
-| `GRACE_PERIOD_MS`            | 20 s   | Silent wait after link loss; a reconnect inside it returns to Idle.     |
+| `GRACE_PERIOD_MS`            | 20 s   | Silent wait after link loss; a stable reconnect returns to Idle.        |
+| `RECONNECT_STABLE_MS`        | 5 s    | How long the link must stay up during grace to count as reconnected.    |
 | `LINK_LOSS_CANCEL_WINDOW_MS` | 30 s   | Countdown after the grace period (50 s total from link loss to send).   |
 | `LIVE_LOCATION_MS`           | 60 min | How long the live location link updates; the alert auto-ends after it.  |
 
@@ -42,11 +43,19 @@ Idle ──button / in-app hold──▶ CancelWindow(5 s) ──timeout──�
   │                              │      │                        └─ PartiallyFailed: surface to user, keep retrying
   │                              └─cancel (unlock)──▶ Idle
   │                                     │
-  └──link lost──▶ GracePeriod(20 s) ──timeout──▶ CancelWindow(30 s)
-                        └──reconnect──▶ Idle
+  └──link lost──▶ GracePeriod(20 s) ──timeout──▶ CancelWindow(30 s) ──button hold──▶ Sending
+                        └──link up 5 s──▶ Idle      (reconnect here: keep counting down)
 
 Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ Unprotected warning, never an SOS
 ```
+
+## Reconnect and flapping
+
+**Decided.** A reconnect never cancels an alert on its own; only a device unlock does.
+
+- **During grace:** the link must stay up for `RECONNECT_STABLE_MS` to return to Idle. A drop before that resumes the same grace timer (it never restarts), so a flapping link cannot postpone an alert. If grace expires before the link is stable, the cancel window starts.
+- **During the link-loss cancel window:** the countdown keeps running. The phone shows that the bangle reconnected and that cancelling needs an unlock.
+- **Button hold during the link-loss cancel window:** sends immediately, skipping the remaining countdown.
 
 ## Benign link loss
 
@@ -101,7 +110,6 @@ Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ 
 
 ## Open questions
 
-- Reconnect during the link-loss cancel window: cancel automatically, or keep counting down?
 - Duress PIN (an unlock that appears to cancel but still sends).
 - Should phone Bluetooth turned off by someone else be treated as an attack?
 - Dispatch vendor choice (Noonlight vs RapidSOS) and their consent/verification requirements.
