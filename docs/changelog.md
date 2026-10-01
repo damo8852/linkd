@@ -4,6 +4,14 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-01 14:56 MDT
+damo8852
+
+## Auth method decision
+
+[internal] Chose email + password with Supabase Auth to stay on free tiers, with Resend's free tier as the auth SMTP, sessions that never time out, and password-reset email for recovery. The user's own phone number is required but unverified for now, and follow-up issues cover verifying it and sending an SOS while signed out.
+
+Issues: #10, #18, #19
 2026-10-01 14:55 MDT
 damo8852
 
