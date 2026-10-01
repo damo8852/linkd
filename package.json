@@ -2,6 +2,10 @@
   "name": "linkd",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -9,7 +13,8 @@
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "doctor": "npm exec -w @linkd/mobile -- expo-doctor"
   },
   "devDependencies": {
     "eslint": "^9.39.0",

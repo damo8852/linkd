@@ -4,6 +4,23 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-09-28 19:58 MDT
+damo8852
+
+## OS-agnostic setup
+
+[internal] Pinned the toolchain (`.nvmrc`, `engines`, `engine-strict`), normalized line endings and filename casing, and extended CI to run typecheck, lint, and tests on ubuntu, windows, and macos. Rewrote the README getting-started into selectable per-OS sections for macOS, Windows, and Linux, each a complete path from clone to the app on a phone.
+
+Issues: #1, PR #8
+
+2026-09-28 17:52 MDT
+damo8852
+
+## Semgrep security scan and branch cleanup
+
+[internal] Added a Semgrep job to CI on the stock `p/default` ruleset, pinned to a container image and failing on ERROR findings only, after confirming the narrower rulesets caught nothing against deliberately vulnerable code. Also made "delete the branch once its PR is merged" a written rule across the working agreement, the protocols, and both session skills.
+
+Issues: #3, #5, PR #6, PR #7
 2026-10-01 14:56 MDT
 damo8852
 
