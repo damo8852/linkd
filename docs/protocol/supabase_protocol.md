@@ -15,6 +15,11 @@ Rules for `supabase/` - Postgres schema, row-level security (RLS), auth, and Edg
 
 - Supabase Auth. Identity always comes from the verified JWT (`auth.uid()` in SQL, the verified user in functions) - never from a user id sent in a request body.
 - The **service-role key** is used only inside Edge Functions and never ships in the app.
+- **Method: email + password.** Chosen to stay on free tiers: signing in sends no email, only sign-up confirmation and password reset do. Phone OTP was rejected for its per-SMS cost; revisit if that changes.
+- **Auth email** goes through a custom SMTP (Resend free tier: 3,000/month, 100/day) on hosted projects. Supabase's built-in SMTP is for development only (2 emails/hour, team addresses only). Email confirmation is on for hosted projects so a reset email can reach the user; it is off locally (`supabase/config.toml`).
+- **Sessions never time out.** No time-boxed session or inactivity timeout; refresh tokens rotate and do not expire, so a user is not signed out mid-day. Recovery is a password-reset email.
+- **The user's own phone number** is required at onboarding (entered twice to catch typos) and stored unverified. It is the callback number in contact SMS and passed to dispatch. It must be verified by SMS before launch.
+- **Signed out never blocks an SOS.** A signed-out or locked-out user can still trigger an SOS with cached contacts ([mobile_protocol.md](mobile_protocol.md) offline-first rule); how it is sent without a session follows the offline fallback in [sos_alert_flow.md](../design/sos_alert_flow.md).
 
 ## Edge Functions (alert fan-out)
 

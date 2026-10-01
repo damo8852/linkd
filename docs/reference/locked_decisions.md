@@ -16,6 +16,8 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Platforms          | iOS + Android                                                               | Hard      |
 | BLE library        | react-native-ble-plx (via its Expo config plugin)                           | Soft      |
 | Backend            | Supabase: Postgres + RLS, Supabase Auth, Edge Functions (Deno)              | Hard      |
+| Auth method        | Email + password, no session timeout. [supabase_protocol.md](../protocol/supabase_protocol.md#auth) | Soft      |
+| Auth email         | Resend (free tier) as the custom SMTP for Supabase Auth                     | Soft      |
 | SMS provider       | Twilio, called only from Edge Functions                                     | Soft      |
 | Emergency dispatch | Noonlight or RapidSOS (vendor open), behind a provider interface            | Soft      |
 | Package manager    | npm workspaces                                                              | Hard      |
@@ -60,7 +62,6 @@ Turn each into a GitHub issue (label `decision`) before working on it.
 - Alert timings, trigger gesture, offline fallback, iOS force-quit handling - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
 - BLE UUIDs, byte layouts, bonding/security - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
-- Auth method: phone OTP, email, or both.
 - Android foreground-service implementation (library or custom Expo module).
 - Server-state library for the app (e.g. TanStack Query) or plain hooks.
 - Firmware toolchain (nRF Connect SDK / Zephyr assumed) and test approach; target SoC (nRF52832 / nRF52840 / nRF54L15).
