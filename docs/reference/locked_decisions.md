@@ -37,9 +37,14 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 
 | Item               | Locked Value / State                                                                         | Lock Type |
 |--------------------|----------------------------------------------------------------------------------------------|-----------|
-| SOS triggers       | Bangle button press/hold, and BLE link loss (after grace period + cancel window)             | Hard      |
+| SOS triggers       | Bangle button hold, in-app SOS hold, and BLE link loss (after grace period + cancel window)  | Hard      |
 | Battery            | User-replaceable coin cell; bangle reports battery and sends battery-critical before shutdown | Hard      |
-| Alert recipients   | SMS to chosen emergency contacts + emergency dispatch                                        | Hard      |
+| Alert recipients   | SMS to chosen emergency contacts (always) + emergency dispatch (user setting, default on)    | Hard      |
+| Alert timings      | Hold 3 s; cancel 5 s (button), 20 s grace + 30 s cancel (link loss); live location 60 min    | Soft      |
+| Cancel / end auth  | Device unlock to cancel a countdown or end an alert; no input means it sends                 | Hard      |
+| Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
+| Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
+| Emergency contacts | Max 5; intro SMS on add, active immediately, STOP removes                                    | Soft      |
 | v1 hardware scope  | No haptic motor, no status LED, no accelerometer                                             | Soft      |
 
 ## Workflow
@@ -57,7 +62,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 
 Turn each into a GitHub issue (label `decision`) before working on it.
 
-- Alert timings, trigger gesture, offline fallback, iOS force-quit handling - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
+- Reconnect during the link-loss cancel window, duress PIN, Bluetooth-off as an attack - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
 - BLE UUIDs, byte layouts, bonding/security - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Auth method: phone OTP, email, or both.
