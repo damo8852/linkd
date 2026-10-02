@@ -79,7 +79,7 @@ Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ 
 | Emergency dispatch               | **Decided** | User setting chosen in onboarding, default on. Vendor open, behind an interface. |
 | Push to contacts with the app    | Deferred    |                                                                            |
 
-**Contacts (Decided):** up to 5. Adding a contact sends a one-time intro SMS (who added them, reply STOP to opt out). The contact is active immediately; a STOP removes them and warns the user.
+**Contacts (Decided):** up to 5. Adding a contact sends a one-time intro SMS (who added them, reply STOP to opt out). The contact is active immediately. A STOP marks them opted out and warns the user: they are never texted, no longer count toward the 5, and stay listed so the number cannot be re-added. A phone number cannot be edited; changing it is remove and re-add, so the new number gets the intro SMS.
 
 ## Offline
 

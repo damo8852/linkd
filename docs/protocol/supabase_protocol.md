@@ -8,7 +8,7 @@ Rules for `supabase/` - Postgres schema, row-level security (RLS), auth, and Edg
 
 - Every schema change is a **SQL migration** in `supabase/migrations/` (`supabase migration new <name>`). Migrations are append-only - never edit one that has been applied to a shared environment; write a new one.
 - **RLS is on for every table, no exceptions.** Each table ships with its policies in the same migration. Default posture: a user reads and writes only rows they own (`auth.uid()`).
-- Regenerate TypeScript types after each migration (`supabase gen types typescript`) and commit them; the app and functions use the generated types, never hand-written row shapes.
+- Regenerate TypeScript types after each migration (`npx supabase gen types typescript --local > supabase/types/database.ts`) and commit them (CI fails if they are stale); the app and functions use the generated types, never hand-written row shapes.
 - `seed.sql` holds **synthetic** data only. Never copy real users, contacts, or locations into dev.
 
 ## Auth
