@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-01 21:28 MDT
+damo8852
+
+## Emergency contacts table
+
+[feature] Added the first migration: `emergency_contacts` with RLS so users see and change only their own contacts, an E.164 check, a database-enforced limit of 5 active contacts, and an opted-out status only the server can set. Added 24 pgTAP tests written test-first, a synthetic seed, committed DB types, and a CI job that runs the database tests and fails on stale types.
+
+Issues: #12
+
+---
+
 2026-10-01 15:18 MDT
 damo8852
 
