@@ -47,6 +47,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Link reconnect     | Never cancels by itself; must be up 5 s during grace; hold in link-loss window sends now     | Hard      |
 | Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
+| Signed-out SOS     | Alert token sends as if signed in; sign-out keeps cache; only device removal disarms         | Hard      |
 | Emergency contacts | Max 5; intro SMS on add, active immediately, STOP removes                                    | Soft      |
 | v1 hardware scope  | No haptic motor, no status LED, no accelerometer                                             | Soft      |
 

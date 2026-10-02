@@ -85,6 +85,14 @@ Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ 
 
 **Decided.** With no data connection the app does both: keeps retrying the server send (idempotent client-generated alert id, so contacts are never texted twice), and opens the native SMS composer prefilled with the cached contacts and last known location so a user who can tap gets it out.
 
+## Signed out
+
+**Decided.** Being signed out never disarms the bangle or blocks an SOS. At sign-in the app gets a per-install **alert token**, kept in secure storage; the server stores only its hash. When there is no valid session, the app sends the alert with this token instead, and the server treats it exactly like a signed-in send: contacts are texted and dispatch follows the user's saved setting. The native SMS composer also opens, as for offline.
+
+- The token can only send, update, and end alerts for its own user and device. It reads nothing else.
+- Signing out keeps the cached contacts, alert settings, and token, and shows a persistent "signed out" banner. Signing in as a different account replaces them.
+- **Remove this device** (on the phone, or from another signed-in device) revokes the token and wipes the cache; that is the only way to disarm a phone.
+
 ## Ending an alert
 
 **Decided.** "I'm safe" (device unlock required) ends the alert: contacts get an "I'm safe" SMS, the live location link stops, and dispatch is cancelled through the vendor API where supported. With no action the alert auto-ends after `LIVE_LOCATION_MS`.

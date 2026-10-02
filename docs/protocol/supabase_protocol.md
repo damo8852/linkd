@@ -19,7 +19,7 @@ Rules for `supabase/` - Postgres schema, row-level security (RLS), auth, and Edg
 - **Auth email** goes through a custom SMTP (Resend free tier: 3,000/month, 100/day) on hosted projects. Supabase's built-in SMTP is for development only (2 emails/hour, team addresses only). Email confirmation is on for hosted projects so a reset email can reach the user; it is off locally (`supabase/config.toml`).
 - **Sessions never time out.** No time-boxed session or inactivity timeout; refresh tokens rotate and do not expire, so a user is not signed out mid-day. Recovery is a password-reset email.
 - **The user's own phone number** is required at onboarding (entered twice to catch typos) and stored unverified. It is the callback number in contact SMS and passed to dispatch. It must be verified by SMS before launch.
-- **Signed out never blocks an SOS.** A signed-out or locked-out user can still trigger an SOS with cached contacts ([mobile_protocol.md](mobile_protocol.md) offline-first rule); how it is sent without a session follows the offline fallback in [sos_alert_flow.md](../design/sos_alert_flow.md).
+- **Signed out never blocks an SOS.** Alert functions accept either the user's JWT or an **alert token** (per install, stored hashed, scoped to sending, updating, and ending that user's alerts only). Identity comes from the verified token, never the request body. Revoked only by removing the device. Behavior: [sos_alert_flow.md - Signed out](../design/sos_alert_flow.md#signed-out).
 
 ## Edge Functions (alert fan-out)
 
