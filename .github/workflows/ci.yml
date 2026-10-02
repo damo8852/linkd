@@ -32,6 +32,30 @@ jobs:
 
       - run: npm test
 
+  # pgTAP tests (RLS and constraints) against a local Postgres, plus a check that the
+  # committed DB types match the migrations. Linux only: the Supabase CLI runs
+  # Postgres in Docker, which GitHub provides only on ubuntu runners.
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx supabase db start
+
+      - run: npx supabase test db
+
+      - name: DB types are up to date
+        run: |
+          npx supabase gen types typescript --local > supabase/types/database.ts
+          git diff --exit-code supabase/types/database.ts
+
   # Semgrep's stock p/default ruleset. No Semgrep AppSec Platform account and no
   # secrets, so this runs on forks too. p/default is used rather than the narrower
   # p/typescript, p/react and p/secrets packs: those three returned zero findings
