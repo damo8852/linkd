@@ -25,7 +25,7 @@ The app must keep a live link to the bangle while backgrounded and detect a lost
 - **iOS:** `bluetooth-central` background mode; use CoreBluetooth state restoration (restore identifier) so the OS can relaunch the app for BLE events. Known limitation: iOS does not relaunch an app the user has **force-quit** - the app must detect and warn about this (see open questions in [sos_alert_flow.md](../design/sos_alert_flow.md)).
 - **Android:** a **foreground service** (type `connectedDevice`) with a persistent notification keeps the connection alive; request `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` (Android 12+) and notification permission (Android 13+). Ask users to exempt the app from battery optimization.
 - **Permissions are onboarding steps, not surprises.** Each permission (Bluetooth, notifications, location, background location) gets its own explained screen; a denied permission shows exactly what no longer works.
-- **Reconnect automatically** after a drop, and keep reporting link state to the alert state machine. A reconnect inside the grace period cancels the pending alert.
+- **Reconnect automatically** after a drop, and keep reporting link state to the alert state machine. A reconnect inside the grace period cancels the pending alert only once the link has stayed up `RECONNECT_STABLE_MS` ([sos_alert_flow.md](../design/sos_alert_flow.md#reconnect-and-flapping)).
 - **Document every platform quirk on discovery** in this file, in the same PR.
 
 ## UI rules for a safety app

@@ -12,6 +12,14 @@ damo8852
 [feature] Filled the style guide with the dark-only "Pink drink" palette (hot pink on midnight, butter and tangerine accents), every pair contrast-checked to WCAG AA, with a red-plus-label SOS so it never relies on hue next to the pink accent. Added the theme module and `useTheme` hook, moved the home route and header onto it, and bundled the deck's Bagel Fat One at build time for headings while body and SOS text stay on the system font.
 
 Issues: #11
+2026-10-01 21:40 MDT
+damo8852
+
+## SOS alert state machine
+
+[feature] Added the platform-free SOS state machine in `apps/mobile/src/features/sos/`, a pure reducer with injected time that catches up on overdue deadlines so a late timer can never skip or postpone a send. Built test-first with 35 Jest tests checked against deliberate safety mutations, and wrote the newly decided transitions (holds during countdowns and grace, Bluetooth off during grace, cancel vs "I'm safe") into the alert flow.
+
+Issues: #25
 
 ---
 
