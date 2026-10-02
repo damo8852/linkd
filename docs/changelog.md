@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-01 21:40 MDT
+damo8852
+
+## SOS alert state machine
+
+[feature] Added the platform-free SOS state machine in `apps/mobile/src/features/sos/`, a pure reducer with injected time that catches up on overdue deadlines so a late timer can never skip or postpone a send. Built test-first with 35 Jest tests checked against deliberate safety mutations, and wrote the newly decided transitions (holds during countdowns and grace, Bluetooth off during grace, cancel vs "I'm safe") into the alert flow.
+
+Issues: #25
+
+---
+
 2026-10-01 21:28 MDT
 damo8852
 
