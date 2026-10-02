@@ -31,7 +31,7 @@ All are tunable constants (starting values, to be tuned on real hardware). The c
 
 ## Cancelling
 
-**Decided.** Cancelling a countdown, or ending a sent alert ("I'm safe"), requires a **device unlock** (biometric or passcode). No input, a failed unlock, or an unlock that outlasts the window lets the alert send. During link loss the bangle cannot cancel, so cancel is phone-only.
+**Decided.** Cancelling a countdown, or ending a sent alert ("I'm safe"), requires a **device unlock** (biometric or passcode). Cancel and "I'm safe" are separate actions: a cancel unlock that completes after the window has expired does nothing, so it can never end the alert it failed to stop. No input, a failed unlock, or an unlock that outlasts the window lets the alert send. During link loss the bangle cannot cancel, so cancel is phone-only.
 
 Known risk: the 5 s button window is short for a passcode unlock, so an accidental hold may send. Accepted (false alert over missed alert); revisit with real usage.
 
@@ -55,7 +55,8 @@ Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ 
 
 - **During grace:** the link must stay up for `RECONNECT_STABLE_MS` to return to Idle. A drop before that resumes the same grace timer (it never restarts), so a flapping link cannot postpone an alert. If grace expires before the link is stable, the cancel window starts.
 - **During the link-loss cancel window:** the countdown keeps running. The phone shows that the bangle reconnected and that cancelling needs an unlock.
-- **Button hold during the link-loss cancel window:** sends immediately, skipping the remaining countdown.
+- **Hold (bangle or in-app) during any cancel window:** sends immediately, skipping the remaining countdown.
+- **Hold during the grace period:** starts the button cancel window (`BUTTON_CANCEL_WINDOW_MS`).
 
 ## Benign link loss
 
@@ -66,6 +67,8 @@ Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ 
 | Bangle sent `BATTERY_CRITICAL`          | BLE message before the disconnect           |
 | Phone Bluetooth turned off              | OS Bluetooth state change                   |
 | Phone battery dying / shutting down     | OS battery / shutdown signal (to verify per platform) |
+
+If phone Bluetooth off or phone dying is reported while the grace period is running, grace ends and the warning shows instead: the OS may report the disconnect before its cause. Once the link-loss cancel window is showing, it keeps counting.
 
 ## Location
 
