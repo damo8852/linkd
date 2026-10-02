@@ -20,7 +20,7 @@ export const theme = {
   font: {
     // undefined = the platform system font, so body and SOS text can never fail to load.
     body: undefined,
-    display: 'Fredoka-SemiBold',
+    display: 'BagelFatOne-Regular',
   },
   fontSize: { xs: 12, sm: 14, base: 16, lg: 20, xl: 24, '2xl': 32, '3xl': 48 },
   space: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },

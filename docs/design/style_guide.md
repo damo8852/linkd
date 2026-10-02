@@ -18,7 +18,7 @@
 | Default mode     | Dark                                                         |
 | Mode support     | Dark only                                                    |
 | Primary font     | System (SF Pro on iOS, Roboto on Android) for all body + SOS |
-| Display font     | Fredoka SemiBold, bundled at build time, headings only       |
+| Display font     | Bagel Fat One, bundled at build time, headings only          |
 | Monospace font   | System monospace (not used yet)                              |
 | Accent color     | Hot pink `#FF4FA3`                                           |
 | Border radius    | Generous and round (8 / 16 / 24 / pill)                      |

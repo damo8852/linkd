@@ -30,8 +30,8 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     // Embedded at build time so the display font can never fail to load at runtime.
-    // File name matches the font's PostScript name, so 'Fredoka-SemiBold' works on iOS and Android.
-    ['expo-font', { fonts: ['./assets/fonts/Fredoka-SemiBold.ttf'] }],
+    // File name matches the font's PostScript name, so 'BagelFatOne-Regular' works on iOS and Android.
+    ['expo-font', { fonts: ['./assets/fonts/BagelFatOne-Regular.ttf'] }],
     [
       'expo-splash-screen',
       {
