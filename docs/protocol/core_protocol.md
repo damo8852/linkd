@@ -77,6 +77,7 @@ linkd/
 │   ├── migrations/                 ← SQL migrations (schema + RLS), append-only
 │   ├── functions/<name>/           ← Edge Functions (Deno/TS): send-alert, dispatch, ...
 │   ├── tests/                      ← pgTAP database tests
+│   ├── types/database.ts           ← generated DB types (never hand-edited)
 │   └── seed.sql                    ← synthetic dev data only
 ├── firmware/                       ← (planned) bangle firmware       [firmware_protocol.md]
 ├── docs/
