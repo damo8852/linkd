@@ -48,6 +48,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
 | Emergency contacts | Max 5 active; intro SMS on add, active immediately; STOP opts out (kept, never texted)       | Soft      |
+| Signed-out SOS     | Alert token sends as if signed in; sign-out keeps cache; only device removal disarms         | Hard      |
 | v1 hardware scope  | No haptic motor, no status LED, no accelerometer                                             | Soft      |
 
 ## Workflow

@@ -16,6 +16,7 @@ Term + one-line definition + link to the canonical spec. No inline spec content.
 | Grace period      | Wait after link loss before treating it as an emergency; a reconnect cancels it.     | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Cancel window     | Countdown during which the user can cancel an SOS before it is sent.                 | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Battery critical  | Bangle message sent just before shutdown so the next disconnect is not an SOS.       | [ble_link_spec.md](../design/ble_link_spec.md)        |
+| Alert token       | Per-install secret that lets a signed-out phone still send an SOS.                   | [sos_alert_flow.md](../design/sos_alert_flow.md#signed-out) |
 | Emergency contact | A person the user chose to receive SOS texts.                                        | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Dispatch          | Professional emergency dispatch via Noonlight or RapidSOS.                           | [supabase_protocol.md](../protocol/supabase_protocol.md) |
 | False alert       | An SOS sent when the user was not in danger.                                         | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
