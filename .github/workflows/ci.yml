@@ -32,6 +32,12 @@ jobs:
 
       - run: npm test
 
+      # Edge Function: typecheck, lint, and unit tests (providers faked, no network).
+      # Run from the function folder so Deno uses its deno.json, not the root package.json.
+      - name: send-alert function
+        working-directory: supabase/functions/send-alert
+        run: npx deno check index.ts && npx deno lint && npx deno test
+
   # pgTAP tests (RLS and constraints) against a local Postgres, plus a check that the
   # committed DB types match the migrations. Linux only: the Supabase CLI runs
   # Postgres in Docker, which GitHub provides only on ubuntu runners.

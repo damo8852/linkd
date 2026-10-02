@@ -17,6 +17,7 @@
     "doctor": "npm exec -w @linkd/mobile -- expo-doctor"
   },
   "devDependencies": {
+    "deno": "^2.9.6",
     "eslint": "^9.39.0",
     "eslint-config-expo": "^10.0.0",
     "supabase": "^2.58.0",
