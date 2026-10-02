@@ -12,6 +12,17 @@ damo8852
 [feature] Filled the style guide with the dark-only "Pink drink" palette (hot pink on midnight, butter and tangerine accents), every pair contrast-checked to WCAG AA, with a red-plus-label SOS so it never relies on hue next to the pink accent. Added the theme module and `useTheme` hook, moved the home route and header onto it, and bundled the deck's Bagel Fat One at build time for headings while body and SOS text stay on the system font.
 
 Issues: #11
+2026-10-01 22:09 MDT
+damo8852
+
+## send-alert: record alerts and text contacts
+
+[feature] Added `profiles`, `alerts`, and `alert_recipients` with owner-only RLS and server-only SQL functions that record an alert once per client id, snapshot active contacts, and claim recipients atomically so no contact is texted twice. Added the `send-alert` Edge Function with Twilio behind a fake / sandbox / live provider, Deno pinned as an npm dev dependency, test-first pgTAP and Deno suites checked against deliberate safety mutations, and a local end-to-end run.
+
+Issues: #29, #36, #37, #38
+
+---
+
 2026-10-01 21:40 MDT
 damo8852
 

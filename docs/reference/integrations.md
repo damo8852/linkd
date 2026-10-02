@@ -34,15 +34,20 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 
 **Purpose:** SMS alerts to emergency contacts.
 
-**Setup:** `<account, messaging service / sender number, test credentials for dev>`.
+**Setup:** `<account, messaging service / sender number>`. `SMS_PROVIDER` picks the provider in `send-alert`: `fake` (no network; tests and local dev), `sandbox` (Twilio test credentials: validated, never delivered, sender fixed to Twilio's test number), `live` (production only). Unset or unknown makes `send-alert` fail loud rather than skip texting. Locally, put `SMS_PROVIDER=fake` in `supabase/functions/.env` (gitignored) and run `npx supabase functions serve send-alert --env-file supabase/functions/.env`.
 
-| Variable             | Holds                    | Used by        |
-|----------------------|--------------------------|----------------|
-| `TWILIO_ACCOUNT_SID` | Account SID              | Edge Functions |
-| `TWILIO_AUTH_TOKEN`  | Auth token (secret)      | Edge Functions |
-| `TWILIO_FROM_NUMBER` | Sender number / service  | Edge Functions |
+| Variable                  | Holds                                  | Used by        |
+|---------------------------|----------------------------------------|----------------|
+| `SMS_PROVIDER`            | `fake` / `sandbox` / `live`            | Edge Functions |
+| `TWILIO_ACCOUNT_SID`      | Live account SID (`live` only)         | Edge Functions |
+| `TWILIO_AUTH_TOKEN`       | Live auth token (secret, `live` only)  | Edge Functions |
+| `TWILIO_FROM_NUMBER`      | Live sender number (`live` only)       | Edge Functions |
+| `TWILIO_TEST_ACCOUNT_SID` | Test account SID (`sandbox` only)      | Edge Functions |
+| `TWILIO_TEST_AUTH_TOKEN`  | Test auth token (secret, `sandbox`)    | Edge Functions |
 
-**Verification:** `<send to a team number using test credentials>`.
+**Rule:** `live` is set only in production.
+
+**Verification:** with `SMS_PROVIDER=sandbox`, an alert to a contact on `+15005550001` is recorded as failed with Twilio error 21211; any other contact is recorded as sent.
 
 ## Resend
 

@@ -23,7 +23,45 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "emergency_contacts": {
+            "alert_recipients": {
+                  Row: {
+                    "alert_id": string,"contact_id": string | null,"error": string | null,"name": string,"phone_e164": string,"provider_message_id": string | null,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "alert_id": string,"contact_id"?: string | null,"error"?: string | null,"name": string,"phone_e164": string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "alert_id"?: string,"contact_id"?: string | null,"error"?: string | null,"name"?: string,"phone_e164"?: string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "alert_recipients_alert_id_fkey"
+      columns: ["alert_id"]
+isOneToOne: false
+      referencedRelation: "alerts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "alert_recipients_contact_id_fkey"
+      columns: ["contact_id"]
+isOneToOne: false
+      referencedRelation: "emergency_contacts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"alerts": {
+                  Row: {
+                    "accuracy_m": number | null,"created_at": string,"id": string,"latitude": number | null,"located_at": string | null,"longitude": number | null,"trigger": string,"triggered_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "accuracy_m"?: number | null,"created_at"?: string,"id": string,"latitude"?: number | null,"located_at"?: string | null,"longitude"?: number | null,"trigger": string,"triggered_at": string,"user_id": string
+                  }
+                  Update: {
+                    "accuracy_m"?: number | null,"created_at"?: string,"id"?: string,"latitude"?: number | null,"located_at"?: string | null,"longitude"?: number | null,"trigger"?: string,"triggered_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"emergency_contacts": {
                   Row: {
                     "created_at": string,"id": string,"name": string,"phone_e164": string,"status": string,"updated_at": string,"user_id": string
                   }
@@ -36,13 +74,38 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"profiles": {
+                  Row: {
+                    "created_at": string,"display_name": string,"phone_e164": string,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"display_name": string,"phone_e164": string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"display_name"?: string,"phone_e164"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "claim_alert_recipients":
+{ Args: { "p_alert_id": string }; Returns: {
+              "phone_e164": string
+            }[]
+                           },
+"record_alert_recipient":
+{ Args: { "p_alert_id": string,"p_error": string,"p_phone_e164": string,"p_provider_message_id": string,"p_status": string }; Returns: undefined
+                           },
+"start_alert":
+{ Args: { "p_accuracy_m": number,"p_id": string,"p_latitude": number,"p_located_at": string,"p_longitude": number,"p_trigger": string,"p_triggered_at": string,"p_user_id": string }; Returns: {
+              "display_name": string,"phone_e164": string,"recipient_count": number
+            }[]
+                           }
           }
           Enums: {
             [_ in never]: never

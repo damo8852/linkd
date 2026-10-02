@@ -34,4 +34,5 @@ Rules for `supabase/` - Postgres schema, row-level security (RLS), auth, and Edg
 
 - **pgTAP** tests in `supabase/tests/` run with `supabase test db`. Every table's RLS is tested: owner can, other user cannot, anonymous cannot.
 - **Deno tests** (`deno test`) for function logic with providers faked: correct recipients, message content, idempotency, and error handling - **test-first** for anything in the alert path.
+- **Deno is a pinned npm dev dependency** (`npx deno`), so every OS and CI use the same version. Each function folder has its own `deno.json` (import map, `"nodeModulesDir": "none"`) and is tested from that folder: `npx deno check index.ts && npx deno lint && npx deno test`. The local edge runtime embeds an older Deno than the CLI (check `supabase functions serve` output), so avoid Deno APIs newer than the runtime.
 - Never call live Twilio or a live dispatch API from a test.

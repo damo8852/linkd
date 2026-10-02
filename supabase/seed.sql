@@ -7,6 +7,9 @@ insert into auth.users (id, aud, role, email, email_confirmed_at, raw_app_meta_d
 values ('00000000-0000-0000-0000-00000000d001', 'authenticated', 'authenticated', 'dev@example.test', now(),
         '{"provider":"email","providers":["email"]}', '{}', '', '', '', '');
 
+insert into public.profiles (user_id, display_name, phone_e164) values
+  ('00000000-0000-0000-0000-00000000d001', 'Dev User', '+15555550199');
+
 insert into public.emergency_contacts (user_id, name, phone_e164, status) values
   ('00000000-0000-0000-0000-00000000d001', 'Test Contact One',   '+15555550100', 'active'),
   ('00000000-0000-0000-0000-00000000d001', 'Test Contact Two',   '+15555550101', 'active'),
