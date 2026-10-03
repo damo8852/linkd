@@ -10,7 +10,7 @@ const config: ExpoConfig = {
   version: '1.0.0',
   orientation: 'portrait',
   scheme: 'linkd',
-  userInterfaceStyle: 'automatic',
+  userInterfaceStyle: 'dark',
   icon: './assets/images/icon.png',
   platforms: ['ios', 'android'],
   ios: {
@@ -29,6 +29,9 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
+    // Embedded at build time so the display font can never fail to load at runtime.
+    // File name matches the font's PostScript name, so 'BagelFatOne-Regular' works on iOS and Android.
+    ['expo-font', { fonts: ['./assets/fonts/BagelFatOne-Regular.ttf'] }],
     [
       'expo-splash-screen',
       {
