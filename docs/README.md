@@ -21,6 +21,7 @@ Map of the documentation. Per-file update rules: [File Inventory](protocol/sessi
 | [sos_alert_flow.md](design/sos_alert_flow.md)  | Triggers, timers, recipients, open questions (draft).    |
 | [ble_link_spec.md](design/ble_link_spec.md)    | BLE messages and timing (draft).                         |
 | [style_guide.md](design/style_guide.md)        | Visual language and tokens (template).                   |
+| [wireframes.html](design/wireframes.html)      | Living screen layouts, drawn with the style tokens.      |
 
 ## reference/
 
