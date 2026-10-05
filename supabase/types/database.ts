@@ -25,13 +25,13 @@ export type Database = {
           Tables: {
             "alert_recipients": {
                   Row: {
-                    "alert_id": string,"contact_id": string | null,"error": string | null,"name": string,"phone_e164": string,"provider_message_id": string | null,"status": string,"updated_at": string
+                    "alert_id": string,"contact_id": string | null,"delivery_error": string | null,"delivery_status": string | null,"error": string | null,"name": string,"phone_e164": string,"provider_message_id": string | null,"status": string,"updated_at": string
                   }
                   Insert: {
-                    "alert_id": string,"contact_id"?: string | null,"error"?: string | null,"name": string,"phone_e164": string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
+                    "alert_id": string,"contact_id"?: string | null,"delivery_error"?: string | null,"delivery_status"?: string | null,"error"?: string | null,"name": string,"phone_e164": string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "alert_id"?: string,"contact_id"?: string | null,"error"?: string | null,"name"?: string,"phone_e164"?: string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
+                    "alert_id"?: string,"contact_id"?: string | null,"delivery_error"?: string | null,"delivery_status"?: string | null,"error"?: string | null,"name"?: string,"phone_e164"?: string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -97,6 +97,9 @@ isOneToOne: false
 { Args: { "p_alert_id": string }; Returns: {
               "phone_e164": string
             }[]
+                           },
+"record_alert_delivery":
+{ Args: { "p_error_code": string,"p_provider_message_id": string,"p_status": string }; Returns: boolean
                            },
 "record_alert_recipient":
 { Args: { "p_alert_id": string,"p_error": string,"p_phone_e164": string,"p_provider_message_id": string,"p_status": string }; Returns: undefined

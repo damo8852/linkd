@@ -17,7 +17,8 @@ export const fakeSms: SmsProvider = {
   send: () => Promise.resolve({ ok: true, id: `fake-${crypto.randomUUID()}` }),
 };
 
-type TwilioConfig = { accountSid: string; authToken: string; from: string };
+/** `statusCallback`: where Twilio reports handset delivery (the sms-status function). */
+type TwilioConfig = { accountSid: string; authToken: string; from: string; statusCallback?: string };
 
 /** Twilio Messages API: https://www.twilio.com/docs/messaging/api/message-resource */
 export function twilioSms(config: TwilioConfig, fetchFn: typeof fetch = fetch): SmsProvider {
@@ -28,7 +29,12 @@ export function twilioSms(config: TwilioConfig, fetchFn: typeof fetch = fetch): 
       const res = await fetchFn(url, {
         method: 'POST',
         headers: { Authorization: authorization, 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ To: to, From: config.from, Body: body }).toString(),
+        body: new URLSearchParams({
+          To: to,
+          From: config.from,
+          Body: body,
+          ...(config.statusCallback ? { StatusCallback: config.statusCallback } : {}),
+        }).toString(),
       });
       const json = (await res.json().catch(() => ({}))) as { sid?: string; code?: number; message?: string };
       if (res.ok && json.sid) return { ok: true, id: json.sid };
@@ -46,22 +52,28 @@ function required(env: Record<string, string | undefined>, name: string): string
   return value;
 }
 
-export function smsProviderFromEnv(env: Record<string, string | undefined>): SmsProvider {
+export function smsProviderFromEnv(
+  env: Record<string, string | undefined>,
+  fetchFn: typeof fetch = fetch,
+): SmsProvider {
   switch (env.SMS_PROVIDER) {
     case 'fake':
       return fakeSms;
     case 'sandbox':
+      // No status callback: Twilio test credentials never send one.
       return twilioSms({
         accountSid: required(env, 'TWILIO_TEST_ACCOUNT_SID'),
         authToken: required(env, 'TWILIO_TEST_AUTH_TOKEN'),
         from: TWILIO_TEST_FROM,
-      });
+      }, fetchFn);
     case 'live':
       return twilioSms({
         accountSid: required(env, 'TWILIO_ACCOUNT_SID'),
         authToken: required(env, 'TWILIO_AUTH_TOKEN'),
         from: required(env, 'TWILIO_FROM_NUMBER'),
-      });
+        // Optional on purpose: a missing URL loses delivery reports, but must never stop the SOS text.
+        statusCallback: env.SMS_STATUS_CALLBACK_URL || undefined,
+      }, fetchFn);
     default:
       throw new Error(`SMS_PROVIDER must be fake, sandbox, or live (got ${env.SMS_PROVIDER ?? 'nothing'})`);
   }

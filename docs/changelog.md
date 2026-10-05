@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-05 17:01 MDT
+damo8852
+
+## Twilio delivery status for SOS texts
+
+[feature] Added the `sms-status` Edge Function, which verifies Twilio's request signature and records whether each SOS text was delivered, undelivered, or failed, in new `delivery_status` and `delivery_error` columns the owner can read. `send-alert` now passes the callback URL to Twilio in live mode; built test-first with pgTAP and Deno suites and a local end-to-end run with signed, forged, and unsigned requests.
+
+Issues: #38
+
+---
+
 2026-10-05 16:32 MDT
 damo8852
 
@@ -12,6 +23,9 @@ damo8852
 [feature] Added the single Supabase client with the session stored encrypted on the phone, plus sign-in, sign-up, and password-reset screens with signed-in vs signed-out routing and a sign-out button on the placeholder home. Password reset is by a 6-digit emailed code instead of a link, the minimum password length is now 8, and the flows were checked against the local Supabase stack.
 
 Issues: #30
+
+---
+
 2026-10-05 16:40 MDT
 damo8852
 
