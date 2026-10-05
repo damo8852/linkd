@@ -44,10 +44,13 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 | `TWILIO_FROM_NUMBER`      | Live sender number (`live` only)       | Edge Functions |
 | `TWILIO_TEST_ACCOUNT_SID` | Test account SID (`sandbox` only)      | Edge Functions |
 | `TWILIO_TEST_AUTH_TOKEN`  | Test auth token (secret, `sandbox`)    | Edge Functions |
+| `SMS_STATUS_CALLBACK_URL` | Public URL of `sms-status` (`live`)    | Edge Functions |
 
 **Rule:** `live` is set only in production.
 
 **Verification:** with `SMS_PROVIDER=sandbox`, an alert to a contact on `+15005550001` is recorded as failed with Twilio error 21211; any other contact is recorded as sent.
+
+**Delivery status:** `sent` only means Twilio accepted the text. In `live`, `send-alert` passes `SMS_STATUS_CALLBACK_URL` to Twilio as the message's `StatusCallback`, and Twilio then calls the `sms-status` function with the final result (`delivered`, `undelivered`, or `failed`). Set it to the function's exact public URL (`https://<project-ref>.supabase.co/functions/v1/sms-status`): `sms-status` checks Twilio's request signature against that same string and `TWILIO_AUTH_TOKEN`, and refuses everything if either is unset. If the variable is unset, SOS texts still send but no delivery status is recorded. Twilio test credentials never send status callbacks, so this path can only be exercised end to end with a live account.
 
 ## Resend
 

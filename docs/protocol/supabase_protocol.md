@@ -31,6 +31,8 @@ Rules for `supabase/` - Postgres schema, row-level security (RLS), auth, and Edg
 - **Providers behind interfaces.** SMS (Twilio) and emergency dispatch (Noonlight or RapidSOS, not yet chosen) are each behind a small interface with a **fake implementation** for tests and a **sandbox mode** for dev. Live providers are enabled only in production by config.
 - **Idempotent alerts.** Each alert has a client-generated id; retries must not text contacts twice or open a second dispatch.
 - **Record everything about an alert** (trigger, timestamps, recipients, per-recipient delivery status) in an `alerts` table so the app can show delivery status and failures are visible.
+- **Accepted is not delivered.** A recipient's `status` records whether the provider accepted the text and decides who a retry texts; `delivery_status` records the provider's later report of whether it reached the phone. A delivery report never changes `status`, and `delivered` never overwrites a recorded `undelivered` or `failed`.
+- **Webhooks from providers have no user JWT.** They turn off `verify_jwt` in `supabase/config.toml` and verify the provider's request signature instead, before reading anything from the body (`sms-status` checks `X-Twilio-Signature`).
 - **Fail loud.** A provider failure is returned to the app (which shows it and falls back) and recorded - never swallowed.
 - Secrets via `supabase secrets set`; documented (names only) in [integrations.md](../reference/integrations.md).
 

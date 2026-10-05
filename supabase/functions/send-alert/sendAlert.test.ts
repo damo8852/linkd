@@ -249,3 +249,48 @@ Deno.test('twilio provider posts the documented request and maps success and err
   reply = new Response(JSON.stringify({ code: 21211, message: 'Invalid To number' }), { status: 400 });
   assertEquals(await sms.send('+15005550001', 'Help'), { ok: false, error: 'twilio 21211: Invalid To number' });
 });
+
+// ---------- delivery status callback ----------
+
+Deno.test('twilio provider asks for delivery reports only when a callback URL is configured', async () => {
+  const bodies: Record<string, string>[] = [];
+  const fetchStub: typeof fetch = (_url, init) => {
+    bodies.push(Object.fromEntries(new URLSearchParams(String(init?.body))));
+    return Promise.resolve(new Response(JSON.stringify({ sid: 'SM0123' }), { status: 201 }));
+  };
+  const config = { accountSid: 'AC1', authToken: 'secret', from: '+15555550100' };
+  const callback = 'https://example.test/functions/v1/sms-status';
+
+  await twilioSms({ ...config, statusCallback: callback }, fetchStub).send('+15555550101', 'Help');
+  await twilioSms(config, fetchStub).send('+15555550101', 'Help');
+
+  assertEquals(bodies[0]!.StatusCallback, callback);
+  assert(!('StatusCallback' in bodies[1]!));
+});
+
+Deno.test('live passes the callback URL to Twilio; sandbox never does (test credentials send no callbacks)', async () => {
+  const bodies: Record<string, string>[] = [];
+  const fetchStub: typeof fetch = (_url, init) => {
+    bodies.push(Object.fromEntries(new URLSearchParams(String(init?.body))));
+    return Promise.resolve(new Response(JSON.stringify({ sid: 'SM0123' }), { status: 201 }));
+  };
+  const callback = 'https://example.test/functions/v1/sms-status';
+  const live = {
+    SMS_PROVIDER: 'live',
+    TWILIO_ACCOUNT_SID: 'AC1',
+    TWILIO_AUTH_TOKEN: 't',
+    TWILIO_FROM_NUMBER: '+15555550100',
+  };
+
+  await smsProviderFromEnv({ ...live, SMS_STATUS_CALLBACK_URL: callback }, fetchStub).send('+15555550101', 'Help');
+  await smsProviderFromEnv(
+    { SMS_PROVIDER: 'sandbox', TWILIO_TEST_ACCOUNT_SID: 'AC1', TWILIO_TEST_AUTH_TOKEN: 't', SMS_STATUS_CALLBACK_URL: callback },
+    fetchStub,
+  ).send('+15555550101', 'Help');
+  // Delivery tracking is an extra: a missing callback URL must never stop the SOS text.
+  assertEquals(await smsProviderFromEnv(live, fetchStub).send('+15555550101', 'Help'), { ok: true, id: 'SM0123' });
+
+  assertEquals(bodies[0]!.StatusCallback, callback);
+  assert(!('StatusCallback' in bodies[1]!));
+  assert(!('StatusCallback' in bodies[2]!));
+});
