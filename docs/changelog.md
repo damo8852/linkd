@@ -1,4 +1,4 @@
-# Changelog
+# Changeloghttps://github.com/damo8852/linkd/pull/43/conflict?name=docs%252Fchangelog.md&ancestor_oid=1fdff7cb2fc73c7af23f25b170f7cf5d2c7e3a73&base_oid=bf04d9ef9f28d63aed4e08b1f41123b0fc1138c8&head_oid=a7a7f64d46c128d5a22d66720fa824a5a0d3c689
 
 Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the oldest when a 21st is added. Insert via str_replace, never rewrite the file.
 
@@ -12,6 +12,14 @@ damo8852
 [feature] Added the single Supabase client with the session stored encrypted on the phone, plus sign-in, sign-up, and password-reset screens with signed-in vs signed-out routing and a sign-out button on the placeholder home. Password reset is by a 6-digit emailed code instead of a link, the minimum password length is now 8, and the flows were checked against the local Supabase stack.
 
 Issues: #30
+2026-10-05 16:40 MDT
+damo8852
+
+## Profiles: dispatch setting and verified flag
+
+[feature] Added `dispatch_enabled` (default on) and a server-only `phone_verified` to `profiles`, with a trigger that clears the verified flag whenever the number changes. Built test-first with 23 pgTAP tests covering owner, other user, anon, and server, and decided the profile row is created by the app at onboarding rather than by a sign-up trigger.
+
+Issues: #31
 
 ---
 
