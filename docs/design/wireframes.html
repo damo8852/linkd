@@ -444,6 +444,7 @@
             <div class="field"><label>Password</label><div class="input err">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</div><p class="err-text">That email and password don't match. Try again or reset your password.</p></div>
             <div class="btn primary">Sign in</div>
             <p class="link">Reset my password</p>
+            <p class="link">Create an account</p>
             <div class="grow"></div>
             <div class="banner info">Signed out, your bangle still works. An SOS will still reach your contacts.</div>
           </div>
@@ -452,7 +453,47 @@
           <strong>Sign in, with an error</strong>
           <ul>
             <li>Error states: wrong password, unconfirmed email, no network. Each says what to do next.</li>
-            <li>Being signed out never disarms the bangle, and the screen says so.</li>
+            <li>Being signed out never disarms the bangle, and the screen says so. The banner ships with the alert token, once that is true.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="ph">
+          <div class="sb"><span>9:41</span><span>LTE &middot; 82%</span></div>
+          <div class="scr">
+            <p class="h">Reset your password</p>
+            <p class="sub">We will email you a 6-digit code.</p>
+            <div class="field"><label>Email</label><div class="input">you@example.com</div></div>
+            <div class="btn primary">Email me a code</div>
+            <p class="link">Back to sign in</p>
+          </div>
+        </div>
+        <figcaption>
+          <strong>Password reset, ask for a code</strong>
+          <ul>
+            <li>Reset is by emailed code, not a link, so it works when the email is read on another device.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="ph">
+          <div class="sb"><span>9:41</span><span>LTE &middot; 82%</span></div>
+          <div class="scr">
+            <p class="h">Check your email</p>
+            <p class="sub">If that email has an account, we sent it a 6-digit code. Enter it with your new password.</p>
+            <div class="field"><label>6-digit code</label><div class="input">482 913</div></div>
+            <div class="field"><label>New password</label><div class="input empty">At least 8 characters</div></div>
+            <div class="btn primary">Save new password</div>
+            <p class="link">Send a new code</p>
+          </div>
+        </div>
+        <figcaption>
+          <strong>Password reset, code and new password</strong>
+          <ul>
+            <li>Never says whether the email has an account.</li>
+            <li>Saving signs the user in and goes home. A wrong or expired code says so and offers a new one.</li>
           </ul>
         </figcaption>
       </figure>
@@ -558,7 +599,7 @@
     </ul>
     <header>
       <h2>Not drawn yet</h2>
-      <p>Settings and device screens (pairing, bangle status, alert settings, signed-out banner, remove this device), the offline SMS composer hand-off, password reset, and the remaining three permission screens. Icons are placeholders until an icon set is chosen, and the bottom tab bar is an assumption until navigation is decided.</p>
+      <p>Settings and device screens (pairing, bangle status, alert settings, signed-out banner, remove this device), the offline SMS composer hand-off, and the remaining three permission screens. Icons are placeholders until an icon set is chosen, and the bottom tab bar is an assumption until navigation is decided.</p>
     </header>
   </section>
 </div>

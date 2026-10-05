@@ -17,6 +17,8 @@ Rules for `apps/mobile` - the Expo (React Native, TypeScript) app. Shared conven
 - `src/features/sos/` owns the **alert state machine** - plain TypeScript, no React Native imports, clock injected. UI and BLE feed it events; it emits commands (start cancel countdown, send alert, cancel).
 - `src/lib/ble/` is the only place that talks to the BLE library. It turns raw notifications into typed events using `packages/ble-protocol`. Nothing else imports the BLE library.
 - `src/lib/supabase.ts` is the single Supabase client. Screens reach data through feature hooks, never by calling the client inline.
+- **The session is stored encrypted** (`src/lib/sessionStorage.ts`): AES-256 ciphertext in AsyncStorage, the key in the Keychain / Keystore via `expo-secure-store`. Not SecureStore alone, because some iOS releases refuse values above about 2048 bytes and a session can be larger.
+- **Signed-in vs signed-out routing** is `Stack.Protected` guards in `app/_layout.tsx`, driven by `useSession()` from `src/features/auth/`. `reset-password` sits outside both guards because verifying the reset code signs the user in mid-flow.
 
 ## Bluetooth and background behavior (the hard part)
 

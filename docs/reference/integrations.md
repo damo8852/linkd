@@ -20,7 +20,7 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 
 **Purpose:** backend for accounts, contacts, devices, alerts; Edge Functions send alerts.
 
-**Setup:** install the Supabase CLI; `supabase start` for local; link the hosted project with `supabase link`.
+**Setup:** install the Supabase CLI; `supabase start` for local; link the hosted project with `supabase link`. Hosted Auth settings must mirror `supabase/config.toml`: minimum password length 8, and the reset-password email template set to `supabase/templates/recovery.html` (it shows the 6-digit `{{ .Token }}`, not a link).
 
 | Variable                        | Holds                                  | Used by          |
 |---------------------------------|----------------------------------------|------------------|
