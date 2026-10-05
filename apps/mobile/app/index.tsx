@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { signOut } from '../src/features/auth/auth';
+import { Button } from '../src/features/auth/ui';
 import { theme } from '../src/lib/theme';
 
 /** Placeholder home route. The real home screen shows link and battery status. */
@@ -10,6 +12,7 @@ export default function HomeScreen(): React.JSX.Element {
       <View style={styles.content}>
         <Text style={styles.title}>LINKD</Text>
         <Text style={styles.tagline}>One press. Your people know.</Text>
+        <Button label="Sign out" variant="ghost" onPress={() => void signOut()} />
       </View>
     </SafeAreaView>
   );

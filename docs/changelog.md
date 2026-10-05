@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-05 16:32 MDT
+damo8852
+
+## Supabase client and auth screens
+
+[feature] Added the single Supabase client with the session stored encrypted on the phone, plus sign-in, sign-up, and password-reset screens with signed-in vs signed-out routing and a sign-out button on the placeholder home. Password reset is by a 6-digit emailed code instead of a link, the minimum password length is now 8, and the flows were checked against the local Supabase stack.
+
+Issues: #30
+
+---
+
 2026-10-04 14:19 MDT
 damo8852
 
