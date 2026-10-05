@@ -21,6 +21,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | SMS provider       | Twilio, called only from Edge Functions                                     | Soft      |
 | Emergency dispatch | Noonlight or RapidSOS (vendor open), behind a provider interface            | Soft      |
 | Package manager    | npm workspaces                                                              | Hard      |
+| Phone numbers      | libphonenumber-js, E.164, US/Canada default region                          | Soft      |
 | App testing        | Jest (`jest-expo`) + React Native Testing Library                           | Soft      |
 | Backend testing    | pgTAP (`supabase test db`) + `deno test`                                    | Soft      |
 | Builds / releases  | EAS Build + EAS Update                                                      | Soft      |

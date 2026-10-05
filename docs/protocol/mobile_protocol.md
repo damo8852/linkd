@@ -17,7 +17,8 @@ Rules for `apps/mobile` - the Expo (React Native, TypeScript) app. Shared conven
 - `src/features/sos/` owns the **alert state machine** - plain TypeScript, no React Native imports, clock injected. UI and BLE feed it events; it emits commands (start cancel countdown, send alert, cancel).
 - `src/lib/ble/` is the only place that talks to the BLE library. It turns raw notifications into typed events using `packages/ble-protocol`. Nothing else imports the BLE library.
 - `src/lib/supabase.ts` is the single Supabase client. Screens reach data through feature hooks, never by calling the client inline.
-- **The session is stored encrypted** (`src/lib/sessionStorage.ts`): AES-256 ciphertext in AsyncStorage, the key in the Keychain / Keystore via `expo-secure-store`. Not SecureStore alone, because some iOS releases refuse values above about 2048 bytes and a session can be larger.
+- **The session and the contacts cache are stored encrypted** (`src/lib/encryptedStorage.ts`): AES-256 ciphertext in AsyncStorage, the key in the Keychain / Keystore via `expo-secure-store`. Not SecureStore alone, because some iOS releases refuse values above about 2048 bytes and both can be larger.
+- **Keychain items an SOS needs use `AFTER_FIRST_UNLOCK`.** The iOS default (`WHEN_UNLOCKED`) makes an item unreadable while the phone is locked, and an SOS can fire from a locked phone. Anything the alert path reads (session, contacts cache, later the alert token) must be stored with `AFTER_FIRST_UNLOCK`. Needs on-device verification with the phone locked.
 - **Signed-in vs signed-out routing** is `Stack.Protected` guards in `app/_layout.tsx`, driven by `useSession()` from `src/features/auth/`. `reset-password` sits outside both guards because verifying the reset code signs the user in mid-flow.
 
 ## Bluetooth and background behavior (the hard part)
@@ -42,6 +43,8 @@ The app must keep a live link to the bangle while backgrounded and detect a lost
 
 - Local UI state for UI concerns; the alert state machine holds alert state; Supabase data through feature hooks. No global store without approval.
 - Offline-first for what matters: emergency contacts and alert settings are cached on device so an SOS can still be composed without a network.
+- **Contacts cache rules** (`src/features/emergency-contacts/contactsCache.ts`): refreshed at app start, at sign-in, and whenever a contacts screen is focused; a failed fetch keeps the cached list and never empties it; sign-out keeps it; signing in as a different account removes it before fetching, so one account's contacts are never texted for another's SOS. Read active contacts through `activeContacts()`, which drops opted-out ones.
+- **Phone numbers** are normalized to E.164 with `libphonenumber-js` (`normalizePhone`) before they reach the database. A number typed without a country code is read as US/Canada; anything else needs a leading `+`. An invalid number is rejected at entry.
 
 ## Testing
 

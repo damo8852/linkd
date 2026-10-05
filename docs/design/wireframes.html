@@ -321,6 +321,7 @@
           <strong>Contact list</strong>
           <ul>
             <li>Count shows active contacts only.</li>
+            <li>Remove asks for confirmation first. With no connection, a banner says the list is the saved copy.</li>
             <li>Opted-out contacts are labelled in words and cannot be removed or re-added.</li>
             <li>Numbers cannot be edited: remove and add again, so the new number gets the intro text.</li>
             <li>The list is cached on the phone and works offline and signed out.</li>
@@ -334,7 +335,7 @@
           <div class="scr">
             <p class="h">Add a contact</p>
             <div class="field"><label>Name</label><div class="input">Jordan</div></div>
-            <div class="field"><label>Mobile number</label><div class="input err">555 01</div><p class="err-text">Enter the full number, with area code.</p></div>
+            <div class="field"><label>Mobile number</label><div class="input err">555 01</div><p class="err-text">Enter the full number, with area code. Outside the US or Canada, start with + and the country code.</p></div>
             <div class="banner info">We'll text Jordan to say you added them. They can reply STOP to opt out.</div>
             <div class="grow"></div>
             <div class="btn primary">Save contact</div>
@@ -346,7 +347,7 @@
           <ul>
             <li>The number is normalized to international format before saving.</li>
             <li>Errors say what is wrong and how to fix it, in text beside the field.</li>
-            <li>The intro text is disclosed before saving.</li>
+            <li>The intro text is disclosed before saving. The banner ships with the intro text itself, not before.</li>
             <li class="open">picking from the phone's address book.</li>
           </ul>
         </figcaption>

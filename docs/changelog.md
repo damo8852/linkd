@@ -7,6 +7,11 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 2026-10-05 17:01 MDT
 damo8852
 
+## Emergency contacts screen with offline cache
+
+[feature] Added the contacts list and add-contact screens with numbers normalized to E.164, the limit of 5 and opted-out contacts shown in words, and an encrypted on-device cache, built test-first, that survives sign-out, never empties on a failed fetch, and is replaced when a different account signs in. Also fixed the stored session and cache being unreadable on a locked iPhone by storing the Keychain key as readable after first unlock.
+
+Issues: #32
 ## Twilio delivery status for SOS texts
 
 [feature] Added the `sms-status` Edge Function, which verifies Twilio's request signature and records whether each SOS text was delivered, undelivered, or failed, in new `delivery_status` and `delivery_error` columns the owner can read. `send-alert` now passes the callback URL to Twilio in live mode; built test-first with pgTAP and Deno suites and a local end-to-end run with signed, forged, and unsigned requests.

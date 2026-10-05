@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
 
-import { sessionStorage } from './sessionStorage';
+import type { Database } from '../../../../supabase/types/database';
+import { encryptedStorage } from './encryptedStorage';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -11,9 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 /** The single Supabase client. Screens reach it through feature hooks, never directly. */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: sessionStorage,
+    storage: encryptedStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
