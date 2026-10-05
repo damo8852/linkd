@@ -74,6 +74,7 @@
 | docs/design/sos_alert_flow.md          | The alert state machine: triggers, timers, recipients.           | When alert behavior changes.                  |
 | docs/design/ble_link_spec.md           | BLE services, messages, timing, battery reporting.               | Via `/ble-change` only.                       |
 | docs/design/style_guide.md             | Visual language and tokens.                                      | When a token or UX rule changes.              |
+| docs/design/wireframes.html            | Living screen wireframes (themed mid-fi phone frames).           | Same PR as any screen layout change.          |
 
 ---
 
