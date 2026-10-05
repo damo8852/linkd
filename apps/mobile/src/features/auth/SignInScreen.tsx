@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { signIn } from './auth';
 import { AUTH_FAILURE_MESSAGE } from './authErrors';
-import { Button, EmailField, ErrorText, Heading, PasswordField, Screen, TextLink } from './ui';
+import { Button, EmailField, ErrorText, Heading, PasswordField, Screen, TextLink } from '../../components/ui';
 
 /** Sign-in form. On success the root layout's guard swaps to the signed-in routes. */
 export function SignInScreen(): React.JSX.Element {

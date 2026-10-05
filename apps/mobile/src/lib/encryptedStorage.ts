@@ -5,16 +5,20 @@ import * as SecureStore from 'expo-secure-store';
 import 'react-native-get-random-values';
 
 /**
- * Encrypted storage for the Supabase session, following Supabase's documented
- * "LargeSecureStore" pattern. The session holds a refresh token that never
- * expires, so it is AES-256 encrypted in AsyncStorage and only the key lives in
- * the Keychain / Keystore, because some iOS releases refuse SecureStore values
- * above about 2048 bytes and a session can be larger.
+ * Encrypted key-value storage for the Supabase session and the emergency
+ * contacts cache, following Supabase's documented "LargeSecureStore" pattern.
+ * Values are AES-256 encrypted in AsyncStorage and only the key lives in the
+ * Keychain / Keystore, because some iOS releases refuse SecureStore values
+ * above about 2048 bytes and both values can be larger.
  *
- * On failure: a missing key or unreadable value reads as "no session" (the user
- * signs in again); write errors propagate to the caller.
+ * The key is readable after the first unlock since boot, not only while the
+ * phone is unlocked: an SOS can fire from a locked phone and must still find
+ * the session and the contacts.
+ *
+ * On failure: a missing key or unreadable value reads as absent (null); write
+ * errors propagate to the caller.
  */
-export const sessionStorage = {
+export const encryptedStorage = {
   async getItem(key: string): Promise<string | null> {
     const encrypted = await AsyncStorage.getItem(key);
     const keyHex = await SecureStore.getItemAsync(key);
@@ -34,7 +38,9 @@ export const sessionStorage = {
     const encryptionKey = crypto.getRandomValues(new Uint8Array(32));
     const cipher = new aesjs.ModeOfOperation.ctr(encryptionKey, new aesjs.Counter(1));
     const encrypted = cipher.encrypt(aesjs.utils.utf8.toBytes(value));
-    await SecureStore.setItemAsync(key, aesjs.utils.hex.fromBytes(encryptionKey));
+    await SecureStore.setItemAsync(key, aesjs.utils.hex.fromBytes(encryptionKey), {
+      keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
+    });
     await AsyncStorage.setItem(key, aesjs.utils.hex.fromBytes(encrypted));
   },
 

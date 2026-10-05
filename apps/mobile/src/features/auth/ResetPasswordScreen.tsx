@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { requestPasswordReset, setNewPassword, verifyResetCode } from './auth';
 import { AUTH_FAILURE_MESSAGE, MIN_PASSWORD_LENGTH } from './authErrors';
-import { Body, Button, EmailField, ErrorText, Field, Heading, PasswordField, Screen, TextLink } from './ui';
+import { Body, Button, EmailField, ErrorText, Field, Heading, PasswordField, Screen, TextLink } from '../../components/ui';
 
 /**
  * Password reset by emailed 6-digit code: ask for the email, then the code and a

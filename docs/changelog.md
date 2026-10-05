@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-05 17:01 MDT
+damo8852
+
+## Emergency contacts screen with offline cache
+
+[feature] Added the contacts list and add-contact screens with numbers normalized to E.164, the limit of 5 and opted-out contacts shown in words, and an encrypted on-device cache, built test-first, that survives sign-out, never empties on a failed fetch, and is replaced when a different account signs in. Also fixed the stored session and cache being unreadable on a locked iPhone by storing the Keychain key as readable after first unlock.
+
+Issues: #32
+
+---
+
 2026-10-05 16:32 MDT
 damo8852
 

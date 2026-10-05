@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { theme } from '../../lib/theme';
+import { theme } from '../lib/theme';
 
 /** Page container for the auth screens: safe area, keyboard-aware, scrolls on small phones. */
 export function Screen({ children }: { children: React.ReactNode }): React.JSX.Element {
@@ -112,11 +112,28 @@ export function Button({
   );
 }
 
-export function TextLink({ label, onPress }: { label: string; onPress: () => void }): React.JSX.Element {
+export function TextLink({
+  label,
+  onPress,
+  accessibilityLabel,
+}: {
+  label: string;
+  onPress: () => void;
+  accessibilityLabel?: string;
+}): React.JSX.Element {
   return (
-    <Pressable accessibilityRole="link" onPress={onPress} style={styles.link}>
+    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="link" onPress={onPress} style={styles.link}>
       <Text style={styles.linkLabel}>{label}</Text>
     </Pressable>
+  );
+}
+
+/** Banner for a state the user must not miss. Always a sentence, never color alone. */
+export function Banner({ tone, children }: { tone: 'warn' | 'info'; children: string }): React.JSX.Element {
+  return (
+    <View accessibilityRole="alert" style={[styles.banner, tone === 'warn' ? styles.bannerWarn : styles.bannerInfo]}>
+      <Text style={tone === 'warn' ? styles.bannerWarnLabel : styles.bannerInfoLabel}>{children}</Text>
+    </View>
   );
 }
 
@@ -165,4 +182,9 @@ const styles = StyleSheet.create({
   link: { minHeight: TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' },
   linkLabel: { color: theme.color.accent, fontSize: theme.fontSize.sm, fontWeight: '600' },
   error: { color: theme.color.danger, fontSize: theme.fontSize.sm },
+  banner: { padding: theme.space.md, borderRadius: theme.radius.md },
+  bannerWarn: { backgroundColor: theme.color.warn },
+  bannerInfo: { backgroundColor: theme.color.surface, borderWidth: 1, borderColor: theme.color.border },
+  bannerWarnLabel: { color: theme.color.bg, fontSize: theme.fontSize.sm, fontWeight: '600' },
+  bannerInfoLabel: { color: theme.color.text, fontSize: theme.fontSize.sm, fontWeight: '600' },
 });

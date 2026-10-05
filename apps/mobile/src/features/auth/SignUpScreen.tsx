@@ -5,7 +5,7 @@ import { StyleSheet, Text } from 'react-native';
 import { theme } from '../../lib/theme';
 import { signUp } from './auth';
 import { AUTH_FAILURE_MESSAGE, MIN_PASSWORD_LENGTH } from './authErrors';
-import { Body, Button, EmailField, ErrorText, PasswordField, Screen, TextLink } from './ui';
+import { Body, Button, EmailField, ErrorText, PasswordField, Screen, TextLink } from '../../components/ui';
 
 /**
  * Create-account form. Locally the new account is signed in at once and the root
