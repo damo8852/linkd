@@ -35,6 +35,8 @@ All are tunable constants (starting values, to be tuned on real hardware). The c
 
 Known risk: the 5 s button window is short for a passcode unlock, so an accidental hold may send. Accepted (false alert over missed alert); revisit with real usage.
 
+**No screen lock (Decided).** A phone with no passcode, PIN, pattern, or biometrics has nothing to unlock with, so cancel and "I'm safe" work with a plain tap, and the home screen shows a persistent warning to set a screen lock. Blocking cancel instead would turn every accidental hold into a real SOS.
+
 ## States
 
 ```

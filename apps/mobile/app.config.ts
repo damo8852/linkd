@@ -31,6 +31,8 @@ const config: ExpoConfig = {
     'expo-router',
     // Holds the key that encrypts the stored session (src/lib/sessionStorage.ts).
     'expo-secure-store',
+    // Device unlock (Face ID / fingerprint / passcode) gates cancelling an SOS and "I'm safe".
+    ['expo-local-authentication', { faceIDPermission: 'Allow LINKD to use Face ID to confirm it is you before cancelling an SOS.' }],
     // Embedded at build time so the display font can never fail to load at runtime.
     // File name matches the font's PostScript name, so 'BagelFatOne-Regular' works on iOS and Android.
     ['expo-font', { fonts: ['./assets/fonts/BagelFatOne-Regular.ttf'] }],

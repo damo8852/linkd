@@ -9,6 +9,10 @@ jest.mock('../src/features/emergency-contacts/contacts', () => ({
   useContacts: () => ({ contacts: [], loading: false, fresh: true, reload: jest.fn() }),
 }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('../src/features/sos/sos', () => ({
+  useSos: () => ({ hold: jest.fn() }),
+  useHasScreenLock: () => true,
+}));
 
 describe('HomeScreen', () => {
   it('renders the placeholder home route', () => {
