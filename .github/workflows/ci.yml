@@ -38,6 +38,10 @@ jobs:
         working-directory: supabase/functions/send-alert
         run: npx deno check index.ts && npx deno lint && npx deno test
 
+      - name: end-alert function
+        working-directory: supabase/functions/end-alert
+        run: npx deno check index.ts && npx deno lint && npx deno test
+
       - name: sms-status function
         working-directory: supabase/functions/sms-status
         run: npx deno check index.ts && npx deno lint && npx deno test

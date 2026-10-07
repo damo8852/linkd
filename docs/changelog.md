@@ -1,8 +1,19 @@
-# Changeloghttps://github.com/damo8852/linkd/pull/43/conflict?name=docs%252Fchangelog.md&ancestor_oid=1fdff7cb2fc73c7af23f25b170f7cf5d2c7e3a73&base_oid=bf04d9ef9f28d63aed4e08b1f41123b0fc1138c8&head_oid=a7a7f64d46c128d5a22d66720fa824a5a0d3c689
+# Changelog
 
 Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the oldest when a 21st is added. Insert via str_replace, never rewrite the file.
 
 <!-- New entries go here, directly below this line and above the format section. -->
+
+2026-10-07 12:10 MDT
+damo8852
+
+## End an alert with "I'm safe"
+
+[feature] Added the `end-alert` Edge Function and its migration: an alert ends once, and every contact whose SOS text was sent gets one end text, "confirmed safe" for a user end or "ended automatically, NOT confirmed safe" for the 60 min auto-end. An ended alert now sends no further SOS texts, and the changelog heading lost a URL pasted into it during an earlier merge.
+
+Issues: #36
+
+---
 
 2026-10-05 17:01 MDT
 damo8852
