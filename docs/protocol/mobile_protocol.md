@@ -29,6 +29,7 @@ The app must keep a live link to the bangle while backgrounded and detect a lost
 - **Android:** a **foreground service** (type `connectedDevice`) with a persistent notification keeps the connection alive; request `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` (Android 12+) and notification permission (Android 13+). Ask users to exempt the app from battery optimization.
 - **Permissions are onboarding steps, not surprises.** Each permission (Bluetooth, notifications, location, background location) gets its own explained screen; a denied permission shows exactly what no longer works.
 - **Reconnect automatically** after a drop, and keep reporting link state to the alert state machine. A reconnect inside the grace period cancels the pending alert only once the link has stayed up `RECONNECT_STABLE_MS` ([sos_alert_flow.md](../design/sos_alert_flow.md#reconnect-and-flapping)).
+- **JS timers do not run while the OS has the app suspended.** The SOS controller therefore keeps absolute deadlines and catches up on `AppState` `active`, but a countdown that expires while the app is suspended sends only when the app runs again. Until background execution is solved, treat "app left during a countdown" as a missed-alert risk.
 - **Document every platform quirk on discovery** in this file, in the same PR.
 
 ## UI rules for a safety app
