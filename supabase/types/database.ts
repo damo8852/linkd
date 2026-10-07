@@ -25,13 +25,13 @@ export type Database = {
           Tables: {
             "alert_recipients": {
                   Row: {
-                    "alert_id": string,"contact_id": string | null,"delivery_error": string | null,"delivery_status": string | null,"error": string | null,"name": string,"phone_e164": string,"provider_message_id": string | null,"status": string,"updated_at": string
+                    "alert_id": string,"contact_id": string | null,"delivery_error": string | null,"delivery_status": string | null,"end_error": string | null,"end_provider_message_id": string | null,"end_status": string | null,"end_updated_at": string | null,"error": string | null,"name": string,"phone_e164": string,"provider_message_id": string | null,"status": string,"updated_at": string
                   }
                   Insert: {
-                    "alert_id": string,"contact_id"?: string | null,"delivery_error"?: string | null,"delivery_status"?: string | null,"error"?: string | null,"name": string,"phone_e164": string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
+                    "alert_id": string,"contact_id"?: string | null,"delivery_error"?: string | null,"delivery_status"?: string | null,"end_error"?: string | null,"end_provider_message_id"?: string | null,"end_status"?: string | null,"end_updated_at"?: string | null,"error"?: string | null,"name": string,"phone_e164": string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "alert_id"?: string,"contact_id"?: string | null,"delivery_error"?: string | null,"delivery_status"?: string | null,"error"?: string | null,"name"?: string,"phone_e164"?: string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
+                    "alert_id"?: string,"contact_id"?: string | null,"delivery_error"?: string | null,"delivery_status"?: string | null,"end_error"?: string | null,"end_provider_message_id"?: string | null,"end_status"?: string | null,"end_updated_at"?: string | null,"error"?: string | null,"name"?: string,"phone_e164"?: string,"provider_message_id"?: string | null,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -50,13 +50,13 @@ isOneToOne: false
                   ]
                 },"alerts": {
                   Row: {
-                    "accuracy_m": number | null,"created_at": string,"id": string,"latitude": number | null,"located_at": string | null,"longitude": number | null,"trigger": string,"triggered_at": string,"user_id": string
+                    "accuracy_m": number | null,"created_at": string,"ended_at": string | null,"ended_reason": string | null,"id": string,"latitude": number | null,"located_at": string | null,"longitude": number | null,"trigger": string,"triggered_at": string,"user_id": string
                   }
                   Insert: {
-                    "accuracy_m"?: number | null,"created_at"?: string,"id": string,"latitude"?: number | null,"located_at"?: string | null,"longitude"?: number | null,"trigger": string,"triggered_at": string,"user_id": string
+                    "accuracy_m"?: number | null,"created_at"?: string,"ended_at"?: string | null,"ended_reason"?: string | null,"id": string,"latitude"?: number | null,"located_at"?: string | null,"longitude"?: number | null,"trigger": string,"triggered_at": string,"user_id": string
                   }
                   Update: {
-                    "accuracy_m"?: number | null,"created_at"?: string,"id"?: string,"latitude"?: number | null,"located_at"?: string | null,"longitude"?: number | null,"trigger"?: string,"triggered_at"?: string,"user_id"?: string
+                    "accuracy_m"?: number | null,"created_at"?: string,"ended_at"?: string | null,"ended_reason"?: string | null,"id"?: string,"latitude"?: number | null,"located_at"?: string | null,"longitude"?: number | null,"trigger"?: string,"triggered_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -93,13 +93,26 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "claim_alert_recipients":
+            "claim_alert_end_recipients":
 { Args: { "p_alert_id": string }; Returns: {
               "phone_e164": string
             }[]
                            },
+"claim_alert_recipients":
+{ Args: { "p_alert_id": string }; Returns: {
+              "phone_e164": string
+            }[]
+                           },
+"end_alert":
+{ Args: { "p_id": string,"p_reason": string,"p_user_id": string }; Returns: {
+              "display_name": string,"ended_at": string,"ended_reason": string,"phone_e164": string,"recipient_count": number
+            }[]
+                           },
 "record_alert_delivery":
 { Args: { "p_error_code": string,"p_provider_message_id": string,"p_status": string }; Returns: boolean
+                           },
+"record_alert_end_recipient":
+{ Args: { "p_alert_id": string,"p_error": string,"p_phone_e164": string,"p_provider_message_id": string,"p_status": string }; Returns: undefined
                            },
 "record_alert_recipient":
 { Args: { "p_alert_id": string,"p_error": string,"p_phone_e164": string,"p_provider_message_id": string,"p_status": string }; Returns: undefined

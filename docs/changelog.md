@@ -4,6 +4,14 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-07 12:10 MDT
+damo8852
+
+## End an alert with "I'm safe"
+
+[feature] Added the `end-alert` Edge Function and its migration: an alert ends once, and every contact whose SOS text was sent gets one end text, "confirmed safe" for a user end or "ended automatically, NOT confirmed safe" for the 60 min auto-end. An ended alert now sends no further SOS texts, and the changelog heading lost a URL pasted into it during an earlier merge.
+
+Issues: #36
 2026-10-07 12:08 MDT
 damo8852
 

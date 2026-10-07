@@ -102,6 +102,11 @@ If phone Bluetooth off or phone dying is reported while the grace period is runn
 
 **Decided.** "I'm safe" (device unlock required) ends the alert: contacts get an "I'm safe" SMS, the live location link stops, and dispatch is cancelled through the vendor API where supported. With no action the alert auto-ends after `LIVE_LOCATION_MS`.
 
+- **Who is texted:** only the contacts whose SOS text was sent, once each.
+- **Auto-end never says "safe":** contacts are told the alert ended automatically and that the user has **not** confirmed they are safe, with the callback number.
+- **The first end wins.** A later end never changes when or how the alert ended, or what contacts are told.
+- **An ended alert sends no more SOS texts.** A contact whose SOS text had not been sent by then is not texted it afterwards, so an SOS can never arrive after the end text.
+
 ## iOS force-quit
 
 **Decided.** iOS does not relaunch a force-quit app for BLE events (verify against current Apple docs at implementation), and the v1 bangle cannot warn the user. Mitigation: explain it in onboarding, and keep a scheduled local notification that the running app reschedules, so it fires ("LINKD is not running, open it") if the app is gone. Needs on-device verification.
