@@ -1,8 +1,19 @@
-# Changeloghttps://github.com/damo8852/linkd/pull/43/conflict?name=docs%252Fchangelog.md&ancestor_oid=1fdff7cb2fc73c7af23f25b170f7cf5d2c7e3a73&base_oid=bf04d9ef9f28d63aed4e08b1f41123b0fc1138c8&head_oid=a7a7f64d46c128d5a22d66720fa824a5a0d3c689
+# Changelog
 
 Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the oldest when a 21st is added. Insert via str_replace, never rewrite the file.
 
 <!-- New entries go here, directly below this line and above the format section. -->
+
+2026-10-07 12:08 MDT
+damo8852
+
+## In-app SOS: hold button, countdown, active alert
+
+[feature] Added the hold-to-trigger SOS button on home, a full-screen cancel countdown and active alert that cover any route, and a controller that runs the state machine, calls `send-alert` for real with retries on one alert id, and gates cancel and "I'm safe" on a device unlock via `expo-local-authentication`. Built test-first and mutation-checked; decided that a phone with no screen lock cancels with a plain tap plus a warning, and filed the background-countdown and location follow-ups.
+
+Issues: #33, #48, #49
+
+---
 
 2026-10-05 17:01 MDT
 damo8852

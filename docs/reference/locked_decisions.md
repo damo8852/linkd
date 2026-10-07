@@ -44,7 +44,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Battery            | User-replaceable coin cell; bangle reports battery and sends battery-critical before shutdown | Hard      |
 | Alert recipients   | SMS to chosen emergency contacts (always) + emergency dispatch (user setting, default on)    | Hard      |
 | Alert timings      | Hold 3 s; cancel 5 s (button), 20 s grace + 30 s cancel (link loss); live location 60 min    | Soft      |
-| Cancel / end auth  | Device unlock to cancel a countdown or end an alert; no input means it sends                 | Hard      |
+| Cancel / end auth  | Device unlock to cancel or end an alert; no input sends. No screen lock: plain tap + warning | Hard      |
 | Link reconnect     | Never cancels by itself; must be up 5 s during grace; hold in link-loss window sends now     | Hard      |
 | Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
