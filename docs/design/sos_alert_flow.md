@@ -81,7 +81,7 @@ If phone Bluetooth off or phone dying is reported while the grace period is runn
 | Channel                          | Status      | Notes                                                                      |
 |----------------------------------|-------------|----------------------------------------------------------------------------|
 | SMS to chosen emergency contacts | **Decided** | Always texted. Via Twilio from a Supabase Edge Function. Up to 5 contacts. |
-| Emergency dispatch               | **Decided** | User setting chosen in onboarding, default on. Vendor open, behind an interface. |
+| Emergency dispatch               | **Decided** | User setting chosen in onboarding, default on, changed in Settings. Vendor open, behind an interface. |
 | Push to contacts with the app    | Deferred    |                                                                            |
 
 **Contacts (Decided):** up to 5. Adding a contact sends a one-time intro SMS (who added them, reply STOP to opt out). The contact is active immediately. A STOP marks them opted out and warns the user: they are never texted, no longer count toward the 5, and stay listed so the number cannot be re-added. A phone number cannot be edited; changing it is remove and re-add, so the new number gets the intro SMS.
