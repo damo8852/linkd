@@ -128,6 +128,27 @@ export function TextLink({
   );
 }
 
+/** Raised surface with a title, one line of text per entry, and optional controls below. */
+export function Card({
+  title,
+  lines,
+  children,
+}: {
+  title: string;
+  lines: readonly string[];
+  children?: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{title}</Text>
+      {lines.map((line) => (
+        <Body key={line}>{line}</Body>
+      ))}
+      {children}
+    </View>
+  );
+}
+
 /** Banner for a state the user must not miss. Always a sentence, never color alone. */
 export function Banner({ tone, children }: { tone: 'warn' | 'info'; children: string }): React.JSX.Element {
   return (
@@ -182,6 +203,8 @@ const styles = StyleSheet.create({
   link: { minHeight: TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' },
   linkLabel: { color: theme.color.accent, fontSize: theme.fontSize.sm, fontWeight: '600' },
   error: { color: theme.color.danger, fontSize: theme.fontSize.sm },
+  card: { gap: theme.space.xs, padding: theme.space.md, borderRadius: theme.radius.lg, backgroundColor: theme.color.surface },
+  cardTitle: { color: theme.color.text, fontSize: theme.fontSize.lg, fontWeight: '600' },
   banner: { padding: theme.space.md, borderRadius: theme.radius.md },
   bannerWarn: { backgroundColor: theme.color.warn },
   bannerInfo: { backgroundColor: theme.color.surface, borderWidth: 1, borderColor: theme.color.border },

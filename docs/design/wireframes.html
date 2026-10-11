@@ -546,7 +546,9 @@
           <strong>Permission explainer, step 2 of 6</strong>
           <ul>
             <li>One screen per permission, shown before the system prompt: what it enables and what breaks without it.</li>
-            <li>Same layout for notifications, location, and background location.</li>
+            <li>Same layout for notifications, location, and background location. The step count is shown in words ("Step 2 of 6").</li>
+            <li>On iPhone this step cannot ask yet (the phone asks at pairing), so it shows Continue, and warns not to swipe LINKD closed.</li>
+            <li>Refusing location skips the background location step.</li>
             <li>A denied permission shows later in Settings; it is never silently ignored.</li>
           </ul>
         </figcaption>
@@ -577,6 +579,36 @@
             <li>Contacts are always texted; dispatch is a setting that starts on.</li>
             <li>The switch shows On / Off as text for screen readers and beside the control in the build.</li>
             <li class="open">dispatch vendor, and any consent or verification step it requires.</li>
+            <li class="open">the "change this in Settings" line ships with the dispatch switch in Settings, once that is true.</li>
+          </ul>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="ph">
+          <div class="sb"><span>9:41</span><span>LTE &middot; 82%</span></div>
+          <div class="scr">
+            <p class="h">Settings</p>
+            <div class="card"><b>Bluetooth: Not asked yet</b><p class="sub">Your phone will ask when you pair your bangle.</p></div>
+            <div class="card"><b>Notifications: On</b></div>
+            <div class="card">
+              <b>Location: Off</b>
+              <p class="sub">Your contacts get the SOS with no location.</p>
+              <div class="btn primary">Turn on Location</div>
+            </div>
+            <div class="card">
+              <b>Background location: Off</b>
+              <p class="sub">Your location is only sent if LINKD is open on screen when the SOS goes out.</p>
+              <div class="btn primary">Turn on Background location</div>
+            </div>
+          </div>
+        </div>
+        <figcaption>
+          <strong>Settings, permissions</strong>
+          <ul>
+            <li>Each permission's state in words, and what is not working while it is off.</li>
+            <li>Turn on asks again; once the phone no longer asks, it opens the system settings.</li>
+            <li>On iPhone, Bluetooth is asked for at pairing, so it reads "Not asked yet" until then.</li>
           </ul>
         </figcaption>
       </figure>
@@ -600,7 +632,7 @@
     </ul>
     <header>
       <h2>Not drawn yet</h2>
-      <p>Settings and device screens (pairing, bangle status, alert settings, signed-out banner, remove this device), the offline SMS composer hand-off, and the remaining three permission screens. Icons are placeholders until an icon set is chosen, and the bottom tab bar is an assumption until navigation is decided.</p>
+      <p>The rest of Settings and the device screens (pairing, bangle status, alert settings, signed-out banner, remove this device), the offline SMS composer hand-off, and the remaining three permission screens. Icons are placeholders until an icon set is chosen, and the bottom tab bar is an assumption until navigation is decided.</p>
     </header>
   </section>
 </div>

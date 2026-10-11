@@ -26,6 +26,8 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Asked for in onboarding. The BLE library's config plugin takes these over once the bangle link is built.
+    permissions: ['android.permission.BLUETOOTH_SCAN', 'android.permission.BLUETOOTH_CONNECT'],
   },
   plugins: [
     'expo-router',
@@ -33,6 +35,21 @@ const config: ExpoConfig = {
     'expo-secure-store',
     // Device unlock (Face ID / fingerprint / passcode) gates cancelling an SOS and "I'm safe".
     ['expo-local-authentication', { faceIDPermission: 'Allow LINKD to use Face ID to confirm it is you before cancelling an SOS.' }],
+    // Location goes in the SOS text; "always" so it is still sent with the phone locked or the app in the background.
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission: 'LINKD puts your location in the SOS text so your contacts know where you are.',
+        locationAlwaysAndWhenInUsePermission:
+          'LINKD sends your location with an SOS even when your phone is locked or the app is not on screen.',
+        locationAlwaysPermission:
+          'LINKD sends your location with an SOS even when your phone is locked or the app is not on screen.',
+        motionUsagePermission: false,
+        isAndroidBackgroundLocationEnabled: true,
+      },
+    ],
+    // Warnings before an SOS sends and when the bangle is out of reach.
+    'expo-notifications',
     // Embedded at build time so the display font can never fail to load at runtime.
     // File name matches the font's PostScript name, so 'BagelFatOne-Regular' works on iOS and Android.
     ['expo-font', { fonts: ['./assets/fonts/BagelFatOne-Regular.ttf'] }],
