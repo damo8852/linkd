@@ -34,7 +34,7 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 
 **Purpose:** SMS alerts to emergency contacts.
 
-**Setup:** `<account, messaging service / sender number>`. `SMS_PROVIDER` picks the provider in `send-alert`: `fake` (no network; tests and local dev), `sandbox` (Twilio test credentials: validated, never delivered, sender fixed to Twilio's test number), `live` (production only). Unset or unknown makes `send-alert` fail loud rather than skip texting. Locally, put `SMS_PROVIDER=fake` in `supabase/functions/.env` (gitignored) and run `npx supabase functions serve send-alert --env-file supabase/functions/.env`.
+**Setup:** `<account, messaging service / sender number>`. `SMS_PROVIDER` picks the provider in `send-alert` and `end-alert`: `fake` (no network; tests and local dev), `sandbox` (Twilio test credentials: validated, never delivered, sender fixed to Twilio's test number), `live` (production only). Unset or unknown makes `send-alert` fail loud rather than skip texting. Locally, put `SMS_PROVIDER=fake` in `supabase/functions/.env` (gitignored) and run `npx supabase functions serve send-alert --env-file supabase/functions/.env`.
 
 | Variable                  | Holds                                  | Used by        |
 |---------------------------|----------------------------------------|----------------|
