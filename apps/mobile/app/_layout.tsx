@@ -3,11 +3,13 @@ import { useEffect } from 'react';
 
 import { useSession } from '../src/features/auth/auth';
 import { refreshContacts } from '../src/features/emergency-contacts/contacts';
+import { useNeedsOnboarding } from '../src/features/onboarding/profile';
 import { SosOverlay } from '../src/features/sos/SosOverlay';
 import { theme } from '../src/lib/theme';
 
 export default function RootLayout(): React.JSX.Element | null {
   const { loading, signedIn } = useSession();
+  const needsOnboarding = useNeedsOnboarding(signedIn);
 
   // Keep the offline contacts cache current from app start and sign-in, not only when the
   // contacts screen is opened. Signing in as another account replaces the cache here.
@@ -31,10 +33,15 @@ export default function RootLayout(): React.JSX.Element | null {
           contentStyle: { backgroundColor: theme.color.bg },
         }}
       >
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={signedIn && !needsOnboarding}>
           <Stack.Screen name="index" options={{ title: 'LINKD' }} />
           <Stack.Screen name="contacts/index" options={{ title: 'Contacts' }} />
           <Stack.Screen name="contacts/add" options={{ title: 'Add a contact' }} />
+          <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+        </Stack.Protected>
+        {/* A signed-in user with no profile yet. Home shows first; this takes over once the server confirms. */}
+        <Stack.Protected guard={signedIn && needsOnboarding}>
+          <Stack.Screen name="onboarding" options={{ title: 'Set up LINKD' }} />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="sign-in" options={{ title: 'Sign in' }} />

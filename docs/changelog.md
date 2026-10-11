@@ -12,6 +12,17 @@ damo8852
 [feature] Added the `end-alert` Edge Function and its migration: an alert ends once, and every contact whose SOS text was sent gets one end text, "confirmed safe" for a user end or "ended automatically, NOT confirmed safe" for the 60 min auto-end. An ended alert now sends no further SOS texts, and the changelog heading lost a URL pasted into it during an earlier merge.
 
 Issues: #36
+2026-10-11 13:40 MDT
+damo8852
+
+## Onboarding permission screens
+
+[feature] Added first-run onboarding that collects the user's name, number (entered twice), and dispatch choice, with one explained screen per permission (Bluetooth, notifications, location, background location) saying what it enables and what breaks without it, and a Settings screen that lists each permission's state in words with a way to turn it on. The profile is saved only on Finish and a slow or failed profile check never keeps a user from the home screen; the Android battery-optimization step and changing dispatch in Settings were filed as follow-ups.
+
+Issues: #35, #51, #52
+
+---
+
 2026-10-07 12:08 MDT
 damo8852
 
