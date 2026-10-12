@@ -591,7 +591,6 @@
             <li>Contacts are always texted; dispatch is a setting that starts on.</li>
             <li>The switch shows On / Off as text for screen readers and beside the control in the build.</li>
             <li class="open">dispatch vendor, and any consent or verification step it requires.</li>
-            <li class="open">the "change this in Settings" line ships with the dispatch switch in Settings, once that is true.</li>
           </ul>
         </figcaption>
       </figure>
@@ -601,6 +600,12 @@
           <div class="sb"><span>9:41</span><span>LTE &middot; 82%</span></div>
           <div class="scr">
             <p class="h">Settings</p>
+            <div class="card">
+              <b>Who gets your SOS</b>
+              <p class="sub">Your contacts: always.</p>
+              <div class="row"><b>Emergency dispatch: On</b><span class="toggle" role="img" aria-label="On"></span></div>
+              <p class="sub">On: trained dispatchers are told too and can send help to you.</p>
+            </div>
             <div class="card"><b>Bluetooth: Not asked yet</b><p class="sub">Your phone will ask when you pair your bangle.</p></div>
             <div class="card"><b>Notifications: On</b></div>
             <div class="card">
@@ -624,6 +629,8 @@
         <figcaption>
           <strong>Settings, permissions</strong>
           <ul>
+            <li>The dispatch switch shows what the server has saved. It only moves once a change is saved; a failed save says so and names the setting still in force.</li>
+            <li>If the setting cannot be read, the card shows that and a Try again button, never a guessed switch.</li>
             <li>Each permission's state in words, and what is not working while it is off.</li>
             <li>Turn on asks again; once the phone no longer asks, it opens the system settings.</li>
             <li>On iPhone, Bluetooth is asked for at pairing, so it reads "Not asked yet" until then.</li>

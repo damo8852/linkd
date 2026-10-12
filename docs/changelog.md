@@ -15,6 +15,17 @@ Issues: #22
 
 ---
 
+2026-10-11 13:52 MDT
+damo8852
+
+## Dispatch setting in Settings
+
+[feature] Added the emergency dispatch switch to Settings, built test-first: it shows only what the server has saved, moves only once a change is confirmed, names the setting still in force when a save fails, and shows no switch at all when the setting cannot be read. Onboarding now shares the same switch and says the choice can be changed in Settings; whether turning dispatch off should need a device unlock was filed as a decision.
+
+Issues: #52, #54
+
+---
+
 2026-10-07 12:10 MDT
 damo8852
 
@@ -198,17 +209,6 @@ damo8852
 [internal] Added a Semgrep job to CI on the stock `p/default` ruleset, pinned to a container image and failing on ERROR findings only, after confirming the narrower rulesets caught nothing against deliberately vulnerable code. Also made "delete the branch once its PR is merged" a written rule across the working agreement, the protocols, and both session skills.
 
 Issues: #3, #5, PR #6, PR #7
-
----
-
-2026-09-28 17:43 MDT
-damo8852
-
-## Monorepo scaffold
-
-[internal] Scaffolded the npm workspaces monorepo: a trimmed expo-router app in `apps/mobile` with a placeholder home route and a passing render test, `supabase/` config, a shared strict base tsconfig and ESLint config, and a GitHub Actions workflow running typecheck, lint, and Jest on PRs. Also pinned `react-dom` to stop npm installing a second, newer `react` that broke the test runner, and filed the Semgrep CI check as follow-up work.
-
-Issues: #2, #3, PR #4
 
 ---
 

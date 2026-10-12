@@ -71,6 +71,7 @@ describe('OnboardingScreen', () => {
     expect(screen.getByText(/keeps sending SOS alerts for your account until you remove it/)).toBeOnTheScreen();
     fireEvent(screen.getByLabelText('Emergency dispatch'), 'valueChange', false);
     expect(screen.getByText('Emergency dispatch: Off')).toBeOnTheScreen();
+    expect(screen.getByText('You can change this in Settings.')).toBeOnTheScreen();
     fireEvent.press(screen.getByRole('button', { name: 'Finish' }));
 
     await waitFor(() =>
