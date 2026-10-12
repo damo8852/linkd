@@ -1,6 +1,7 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import * as LocalAuthentication from 'expo-local-authentication';
 
+import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
 import { newAlertId, sendAlertRequest } from './sendAlertRequest';
 import { hasScreenLock, requestUnlock } from './unlock';
@@ -12,11 +13,16 @@ jest.mock('expo-local-authentication', () => ({
   authenticateAsync: jest.fn(),
 }));
 jest.mock('../../lib/supabase', () => ({ supabase: { functions: { invoke: jest.fn() } } }));
+jest.mock('../../lib/encryptedStorage', () => ({ encryptedStorage: { getItem: jest.fn() } }));
 
 const auth = jest.mocked(LocalAuthentication);
 const invoke = jest.mocked(supabase.functions.invoke);
+const getItem = jest.mocked(encryptedStorage.getItem);
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  getItem.mockResolvedValue(null);
+});
 
 describe('requestUnlock', () => {
   it('reports noLock without prompting when the phone has no screen lock', async () => {
@@ -64,6 +70,22 @@ describe('sendAlertRequest', () => {
     expect(invoke).toHaveBeenCalledWith('send-alert', {
       body: { id: alert.id, trigger: 'inApp', triggeredAt: new Date(alert.triggeredAt).toISOString(), location: null },
     });
+  });
+
+  it('sends the stored alert token, so the alert goes out signed out or with a dead session', async () => {
+    getItem.mockResolvedValue(JSON.stringify({ userId: 'user-a', deviceId: 'device-1', token: 'token-1' }));
+    invoke.mockResolvedValue({ data: {}, error: null });
+
+    expect(await sendAlertRequest(alert)).toBe('delivered');
+    expect(invoke).toHaveBeenCalledWith('send-alert', expect.objectContaining({ headers: { 'X-Alert-Token': 'token-1' } }));
+  });
+
+  it('still sends when the stored token cannot be read', async () => {
+    getItem.mockRejectedValue(new Error('keychain unavailable'));
+    invoke.mockResolvedValue({ data: {}, error: null });
+
+    expect(await sendAlertRequest(alert)).toBe('delivered');
+    expect(invoke).toHaveBeenCalledTimes(1);
   });
 
   it('reports noContacts for 422, which a retry cannot fix', async () => {

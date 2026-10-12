@@ -2,7 +2,9 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 // Polyfills crypto.getRandomValues, which React Native does not provide.
 import 'react-native-get-random-values';
 
+import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
+import { readAlertToken } from './alertToken';
 import type { OutgoingAlert, SendResult } from './sosController';
 
 /** A random UUID v4. The server uses it to make retries of the same alert idempotent. */
@@ -17,11 +19,16 @@ export function newAlertId(): string {
 /**
  * Calls the send-alert Edge Function. Safe to repeat with the same alert: the server texts
  * each contact once per id.
- * On failure: any error (network, 5xx, some texts failed) is `failed` so the caller retries;
- * 422 means there is nobody to text, which a retry cannot fix.
+ * The stored alert token rides along on every send: the server uses the session when it is
+ * valid and the token otherwise, so signed out or a dead session still sends.
+ * On failure: an unreadable token is skipped, never a reason not to send; any error (network,
+ * 5xx, some texts failed) is `failed` so the caller retries; 422 means there is nobody to text,
+ * which a retry cannot fix.
  */
 export async function sendAlertRequest(alert: OutgoingAlert): Promise<SendResult> {
+  const alertToken = await readAlertToken(encryptedStorage).catch(() => null);
   const { error } = await supabase.functions.invoke('send-alert', {
+    ...(alertToken !== null && { headers: { 'X-Alert-Token': alertToken.token } }),
     body: {
       id: alert.id,
       trigger: alert.trigger,

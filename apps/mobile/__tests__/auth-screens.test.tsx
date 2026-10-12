@@ -17,6 +17,9 @@ jest.mock('../src/features/auth/auth', () => ({
   setNewPassword: jest.fn(),
 }));
 
+// Covered in device-screens.test.tsx; mocked so the real client behind it is never loaded.
+jest.mock('../src/features/device/SignedOutBanner', () => ({ SignedOutBanner: () => null }));
+
 const mocked = jest.mocked(auth);
 
 beforeEach(() => {

@@ -1,7 +1,8 @@
 /**
  * POST /functions/v1/send-alert
  * Body: { id, trigger, triggeredAt, location | null } (see parseAlertInput).
- * Auth: the user's JWT. Identity comes from the verified token, never the body.
+ * Auth: the user's JWT, or an alert token in X-Alert-Token when signed out (see auth.ts).
+ * Identity comes from the verified credential, never the body.
  * Returns 200 when every recipient has been texted; 502 with counts when any failed (the app
  * shows it, falls back to the SMS composer, and retries with the same id).
  */
@@ -9,6 +10,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '../../types/database.ts';
+import { resolveUser, supabaseIdentity } from './auth.ts';
 import { AlertOwnershipError, type AlertStore, parseAlertInput, sendAlert } from './sendAlert.ts';
 import { smsProviderFromEnv } from './sms.ts';
 
@@ -63,9 +65,14 @@ Deno.serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  const token = req.headers.get('Authorization')?.replace(/^Bearer /, '');
-  const { data: auth, error: authError } = token ? await db.auth.getUser(token) : { data: null, error: true };
-  if (authError || !auth?.user) return json(401, { error: 'unauthorized' });
+  let userId: string | null;
+  try {
+    userId = await resolveUser(req.headers, supabaseIdentity(db));
+  } catch (e) {
+    console.error('send-alert auth failed:', e instanceof Error ? e.message : 'unknown error');
+    return json(500, { error: 'internal' });
+  }
+  if (!userId) return json(401, { error: 'unauthorized' });
 
   let body: unknown;
   try {
@@ -77,7 +84,7 @@ Deno.serve(async (req) => {
   if ('error' in input) return json(400, { error: input.error });
 
   try {
-    const result = await sendAlert(supabaseStore(db), smsProviderFromEnv(env), auth.user.id, input);
+    const result = await sendAlert(supabaseStore(db), smsProviderFromEnv(env), userId, input);
     return json(result.status, result.body);
   } catch (e) {
     // Message only: never log request bodies (location) or phone numbers.

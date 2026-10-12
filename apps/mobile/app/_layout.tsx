@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 
 import { useSession } from '../src/features/auth/auth';
+import { syncAlertToken } from '../src/features/device/device';
 import { refreshContacts } from '../src/features/emergency-contacts/contacts';
 import { useNeedsOnboarding } from '../src/features/onboarding/profile';
 import { SosOverlay } from '../src/features/sos/SosOverlay';
@@ -12,10 +13,12 @@ export default function RootLayout(): React.JSX.Element | null {
   const needsOnboarding = useNeedsOnboarding(signedIn);
 
   // Keep the offline contacts cache current from app start and sign-in, not only when the
-  // contacts screen is opened. Signing in as another account replaces the cache here.
+  // contacts screen is opened, and make sure this phone holds an alert token for the account.
+  // Signing in as another account replaces both here.
   useEffect(() => {
     if (signedIn) {
       void refreshContacts();
+      void syncAlertToken();
     }
   }, [signedIn]);
 
