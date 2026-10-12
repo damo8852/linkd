@@ -1,7 +1,8 @@
 /**
  * POST /functions/v1/end-alert
  * Body: { id, reason: 'user' | 'timeout' } (see parseEndInput).
- * Auth: the user's JWT. Identity comes from the verified token, never the body.
+ * Auth: the user's JWT, or an alert token in X-Alert-Token when signed out (see auth.ts).
+ * Identity comes from the verified credential, never the body.
  * Returns 200 when the alert is ended and every recipient owed the end text has it; 502 with
  * counts when any text failed (the alert is still ended; the app shows it and retries with the
  * same id).
@@ -10,6 +11,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '../../types/database.ts';
+import { resolveUser, supabaseIdentity } from '../send-alert/auth.ts';
 import { AlertOwnershipError } from '../send-alert/sendAlert.ts';
 import { smsProviderFromEnv } from '../send-alert/sms.ts';
 import { AlertNotFoundError, endAlert, type EndReason, type EndStore, parseEndInput } from './endAlert.ts';
@@ -66,9 +68,14 @@ Deno.serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  const token = req.headers.get('Authorization')?.replace(/^Bearer /, '');
-  const { data: auth, error: authError } = token ? await db.auth.getUser(token) : { data: null, error: true };
-  if (authError || !auth?.user) return json(401, { error: 'unauthorized' });
+  let userId: string | null;
+  try {
+    userId = await resolveUser(req.headers, supabaseIdentity(db));
+  } catch (e) {
+    console.error('end-alert auth failed:', e instanceof Error ? e.message : 'unknown error');
+    return json(500, { error: 'internal' });
+  }
+  if (!userId) return json(401, { error: 'unauthorized' });
 
   let body: unknown;
   try {
@@ -83,7 +90,7 @@ Deno.serve(async (req) => {
     // ponytail: no delivery reports for end texts (sms-status only knows SOS message ids and
     // would answer 404). Add end_delivery_status columns if handset delivery of these matters.
     const sms = smsProviderFromEnv({ ...env, SMS_STATUS_CALLBACK_URL: undefined });
-    const result = await endAlert(supabaseStore(db), sms, auth.user.id, input);
+    const result = await endAlert(supabaseStore(db), sms, userId, input);
     return json(result.status, result.body);
   } catch (e) {
     // Message only: never log request bodies or phone numbers.

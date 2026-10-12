@@ -94,9 +94,9 @@ If phone Bluetooth off or phone dying is reported while the grace period is runn
 
 **Decided.** Being signed out never disarms the bangle or blocks an SOS. At sign-in the app gets a per-install **alert token**, kept in secure storage; the server stores only its hash. When there is no valid session, the app sends the alert with this token instead, and the server treats it exactly like a signed-in send: contacts are texted and dispatch follows the user's saved setting. The native SMS composer also opens, as for offline.
 
-- The token can only send, update, and end alerts for its own user and device. It reads nothing else.
-- Signing out keeps the cached contacts, alert settings, and token, and shows a persistent "signed out" banner. Signing in as a different account replaces them.
-- **Remove this device** (on the phone, or from another signed-in device) revokes the token and wipes the cache; that is the only way to disarm a phone.
+- The token can only send, update, and end alerts for its own user, exactly as that user's signed-in phone could, so an alert sent while signed in can still be ended after the session is lost. It reads nothing else.
+- Signing out keeps the cached contacts, alert settings, and token, and shows a persistent "signed out" banner with the in-app SOS button beside it, so that trigger is not lost with the home screen. Signing in as a different account replaces them.
+- **Remove this device** (on the phone, or from another signed-in device) revokes the token and wipes the cache; that is the only way to disarm a phone. On the phone it needs a device unlock, like cancelling, and works signed out.
 
 ## Ending an alert
 

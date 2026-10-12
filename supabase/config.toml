@@ -422,3 +422,11 @@ enabled = true
 # Called by Twilio, which has no user JWT; the function verifies X-Twilio-Signature itself.
 [functions.sms-status]
 verify_jwt = false
+
+# The alert functions check the caller themselves (session JWT, else alert token), so the gateway
+# must not reject an expired session before the token is tried: that would be a missed alert.
+[functions.send-alert]
+verify_jwt = false
+
+[functions.end-alert]
+verify_jwt = false

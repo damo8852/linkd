@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-11 18:26 MDT
+damo8852
+
+## Alert token for a signed-out SOS
+
+[feature] Added the per-install alert token: an `alert_devices` table that stores only the token's hash, `send-alert` and `end-alert` accepting the token when there is no valid session, and the app issuing it at sign-in, keeping it through sign-out, and sending it with every SOS. A signed-out phone now shows a banner with the SOS button and "Remove this device" (device unlock required), Settings lists the account's devices, and the token was decided to act for its user rather than one device; built test-first with pgTAP, Deno, and Jest suites and a local end-to-end run.
+
+Issues: #22
+
+---
+
 2026-10-07 12:10 MDT
 damo8852
 

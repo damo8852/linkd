@@ -19,6 +19,9 @@ jest.mock('../src/lib/supabase', () => ({
   supabase: { from: () => ({ select: () => ({ maybeSingle: mockMaybeSingle }), insert: mockInsert }) },
 }));
 
+// Covered in device-screens.test.tsx; mocked so the real client behind it is never loaded.
+jest.mock('../src/features/device/DevicesCard', () => ({ DevicesCard: () => null }));
+
 const permissions = jest.mocked(permissionsModule);
 
 beforeEach(() => {
@@ -65,6 +68,7 @@ describe('OnboardingScreen', () => {
     }
 
     expect(await screen.findByText('Emergency dispatch: On')).toBeOnTheScreen();
+    expect(screen.getByText(/keeps sending SOS alerts for your account until you remove it/)).toBeOnTheScreen();
     fireEvent(screen.getByLabelText('Emergency dispatch'), 'valueChange', false);
     expect(screen.getByText('Emergency dispatch: Off')).toBeOnTheScreen();
     fireEvent.press(screen.getByRole('button', { name: 'Finish' }));

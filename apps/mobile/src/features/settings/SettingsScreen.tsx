@@ -1,6 +1,7 @@
 import { Linking } from 'react-native';
 
 import { Button, Card, Heading, Screen } from '../../components/ui';
+import { DevicesCard } from '../device/DevicesCard';
 import {
   PERMISSION_COPY,
   PERMISSION_IDS,
@@ -40,6 +41,7 @@ export function SettingsScreen(): React.JSX.Element {
             </Card>
           );
         })}
+      <DevicesCard />
     </Screen>
   );
 }

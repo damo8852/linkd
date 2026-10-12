@@ -126,6 +126,10 @@ export function OnboardingScreen(): React.JSX.Element {
               ? 'On: trained dispatchers are told too and can send help to you.'
               : 'Off: only your contacts are told. No dispatcher is asked to send help.'}
           </Body>
+          <Card
+            title="Signing out does not turn LINKD off"
+            lines={['This phone keeps sending SOS alerts for your account until you remove it in Settings.']}
+          />
           {error !== null && <ErrorText>{error}</ErrorText>}
           <Button label="Finish" disabled={busy} onPress={() => void finish()} />
         </>

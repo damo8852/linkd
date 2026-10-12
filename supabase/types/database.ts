@@ -23,7 +23,20 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "alert_recipients": {
+            "alert_devices": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"token_hash": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"token_hash": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"token_hash"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"alert_recipients": {
                   Row: {
                     "alert_id": string,"contact_id": string | null,"delivery_error": string | null,"delivery_status": string | null,"end_error": string | null,"end_provider_message_id": string | null,"end_status": string | null,"end_updated_at": string | null,"error": string | null,"name": string,"phone_e164": string,"provider_message_id": string | null,"status": string,"updated_at": string
                   }
@@ -93,7 +106,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "claim_alert_end_recipients":
+            "alert_token_user":
+{ Args: { "p_token": string }; Returns: string
+                           },
+"claim_alert_end_recipients":
 { Args: { "p_alert_id": string }; Returns: {
               "phone_e164": string
             }[]
@@ -108,6 +124,11 @@ isOneToOne: false
               "display_name": string,"ended_at": string,"ended_reason": string,"phone_e164": string,"recipient_count": number
             }[]
                            },
+"issue_alert_token":
+{ Args: { "p_device_name": string }; Returns: {
+              "device_id": string,"token": string
+            }[]
+                           },
 "record_alert_delivery":
 { Args: { "p_error_code": string,"p_provider_message_id": string,"p_status": string }; Returns: boolean
                            },
@@ -116,6 +137,9 @@ isOneToOne: false
                            },
 "record_alert_recipient":
 { Args: { "p_alert_id": string,"p_error": string,"p_phone_e164": string,"p_provider_message_id": string,"p_status": string }; Returns: undefined
+                           },
+"revoke_alert_token":
+{ Args: { "p_token": string }; Returns: boolean
                            },
 "start_alert":
 { Args: { "p_accuracy_m": number,"p_id": string,"p_latitude": number,"p_located_at": string,"p_longitude": number,"p_trigger": string,"p_triggered_at": string,"p_user_id": string }; Returns: {
