@@ -1,0 +1,8 @@
+// Cloudflare Workers static assets. Deploy: cd apps/web && npx wrangler deploy
+// (build.command writes the gitignored public/config.js first).
+{
+  "name": "linkd",
+  "compatibility_date": "2026-10-01",
+  "build": { "command": "node gen-config.mjs" },
+  "assets": { "directory": "./public" }
+}

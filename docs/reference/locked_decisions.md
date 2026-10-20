@@ -26,6 +26,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | App testing        | Jest (`jest-expo`) + React Native Testing Library                           | Soft      |
 | Backend testing    | pgTAP (`supabase test db`) + `deno test`                                    | Soft      |
 | Builds / releases  | EAS Build + EAS Update                                                      | Soft      |
+| Landing page host  | Cloudflare Workers static assets, deployed with wrangler ([integrations.md](integrations.md#cloudflare-workers-landing-page)) | Soft      |
 
 ## Architecture
 

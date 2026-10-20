@@ -25,9 +25,9 @@ damo8852
 
 ## Landing page with early-bird waitlist
 
-[feature] Added `apps/web`, a static landing page in the "Pink drink" style that explains LINKD and offers early-bird pricing ($37.99, regular $59.99) through a waitlist form. Signups go to a new `waitlist` table that anyone can add an email to but no client can read, update, or delete, with one row per address regardless of case; a repeat signup gets the same success message so the page does not reveal who is on the list. The repo-shape lock now includes `apps/web`; hosting, rate limiting, and confirmation emails are not done yet.
+[feature] Added `apps/web`, a static landing page in the "Pink drink" style that explains LINKD and offers early-bird pricing ($37.99, regular $59.99) through a waitlist form; holding the bangle button in the hero for 3 s plays a demo of the alert going out (nothing is sent). Signups go to a new `waitlist` table that anyone can add an email to but no client can read, update, or delete, with one row per address regardless of case; a repeat signup gets the same success message so the page does not reveal who is on the list. The repo-shape lock now includes `apps/web`. The page is live on Cloudflare Workers at linkd.linkdjewelery.workers.dev against the new hosted Supabase project, which now has every migration; rate limiting and confirmation emails are not done yet.
 
-Issues: #63
+Issues: #63, #65
 
 ---
 

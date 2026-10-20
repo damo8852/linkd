@@ -13,6 +13,7 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 | Resend                | SMTP for Supabase Auth email                | staging, prod           |
 | Noonlight / RapidSOS  | Emergency dispatch (vendor not chosen)      | sandbox in dev, live in prod |
 | Expo / EAS            | Dev builds, store builds, OTA updates       | all                     |
+| Cloudflare Workers    | Hosts the landing page (`apps/web`)        | prod                    |
 
 ---
 
@@ -29,6 +30,14 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 | `SUPABASE_SERVICE_ROLE_KEY`     | Service-role key (secret)              | Edge Functions only |
 
 **Verification:** `supabase status` locally; app signs in against local stack.
+
+## Cloudflare Workers (landing page)
+
+**Purpose:** hosts the static landing page in `apps/web/public` at https://linkd.linkdjewelery.workers.dev (Workers static assets, free tier). No GitHub connection; deploys are run by hand.
+
+**Setup:** `npx wrangler login` once, then `cd apps/web && npx wrangler deploy` (config in `apps/web/wrangler.jsonc`). `wrangler deploy` first runs `node gen-config.mjs`, which writes the gitignored `public/config.js` with the hosted and (if `supabase start` is running) local Supabase URL + anon key, picked by hostname; run it by hand for a local preview. Both values are public by design (the anon key can only insert into `waitlist`), but they stay out of git. Needs `npx supabase login`. The hosted project must have the `waitlist` migration (`supabase db push`).
+
+**Verification:** the live page loads, a malformed email shows an inline error, a real signup shows the success message and lands in `waitlist` (dashboard), and an anon `GET /rest/v1/waitlist` returns 401.
 
 ## Twilio
 
