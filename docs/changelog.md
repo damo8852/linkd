@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-20 10:30 MDT
+damo8852
+
+## Landing page with early-bird waitlist
+
+[feature] Added `apps/web`, a static landing page in the "Pink drink" style that explains LINKD and offers early-bird pricing ($37.99, regular $59.99) through a waitlist form. Signups go to a new `waitlist` table that anyone can add an email to but no client can read, update, or delete, with one row per address regardless of case; a repeat signup gets the same success message so the page does not reveal who is on the list. The repo-shape lock now includes `apps/web`; hosting, rate limiting, and confirmation emails are not done yet.
+
+Issues: #63
+
+---
+
 2026-10-11 13:52 MDT
 damo8852
 

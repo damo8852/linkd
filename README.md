@@ -88,6 +88,7 @@ flowchart LR
 ```
 linkd/
 ├── apps/
+│   ├── web/               # Landing page + early-bird waitlist (static HTML)
 │   └── mobile/            # Expo app
 ├── packages/
 │   └── ble-protocol/      # Single source of truth for app <-> bangle messages (planned)
