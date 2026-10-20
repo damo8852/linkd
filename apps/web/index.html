@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LINKD - One press. Your people know.</title>
+  <meta name="description" content="A discreet safety bangle that alerts your people with one press, no phone needed. Join the waitlist for early-bird pricing.">
+  <meta name="theme-color" content="#1B1033">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap" rel="stylesheet">
+  <style>
+    /* Tokens from docs/design/style_guide.md ("Pink drink"). */
+    :root {
+      --bg: #1B1033; --surface: #2A1B4D; --border: #7A66A8;
+      --text: #FFFFFF; --muted: #C9BFE0; --accent: #FF4FA3; --on-accent: #1B1033;
+      --danger: #FF4D4D; --success: #6EE7B7; --warn: #FFE36E; --highlight: #FF8A3D;
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    h1, h2, .logo { font-family: "Bagel Fat One", system-ui, sans-serif; font-weight: 400; line-height: 1.1; margin: 0 0 16px; }
+    h1 { font-size: clamp(2.5rem, 8vw, 4.5rem); }
+    h2 { font-size: clamp(1.8rem, 5vw, 2.6rem); }
+    h3 { margin: 0 0 8px; font-size: 1.15rem; }
+    p { margin: 0 0 16px; color: var(--muted); }
+    a { color: var(--accent); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    section { padding: 72px 0; }
+    .star { color: var(--warn); }
+
+    header { padding: 20px 0; }
+    header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .logo { font-size: 1.8rem; margin: 0; color: var(--accent); text-decoration: none; }
+
+    .btn {
+      display: inline-block; border: 0; cursor: pointer; text-decoration: none;
+      background: var(--accent); color: var(--on-accent); font: inherit; font-weight: 700;
+      padding: 14px 28px; border-radius: 999px; min-height: 48px;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:focus-visible, input:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px; }
+    .btn[disabled] { opacity: .6; cursor: progress; }
+
+    .hero { padding-top: 40px; }
+    .hero .wrap { display: grid; gap: 40px; align-items: center; }
+    .hero .lede { font-size: 1.2rem; max-width: 34ch; }
+    .tag { display: inline-block; background: var(--surface); color: var(--warn); border-radius: 999px; padding: 6px 14px; font-size: .9rem; font-weight: 600; margin-bottom: 20px; }
+    .bangle { width: min(360px, 80vw); margin: 0 auto; display: block; }
+
+    .grid { display: grid; gap: 20px; }
+    .card { background: var(--surface); border-radius: var(--radius); padding: 28px; }
+    .card .num { font-family: "Bagel Fat One", system-ui, sans-serif; font-size: 2rem; color: var(--accent); line-height: 1; margin-bottom: 12px; }
+    .card p { margin: 0; }
+
+    .pricing { text-align: center; }
+    .price-card { max-width: 520px; margin: 32px auto 0; background: var(--surface); border: 2px solid var(--accent); border-radius: var(--radius); padding: 36px 24px; }
+    .price { font-family: "Bagel Fat One", system-ui, sans-serif; font-size: 4rem; line-height: 1; color: var(--text); }
+    .was { color: var(--muted); text-decoration: line-through; font-size: 1.3rem; margin-left: 8px; }
+    .save { display: inline-block; margin-top: 12px; background: var(--warn); color: var(--on-accent); font-weight: 700; border-radius: 999px; padding: 4px 14px; }
+
+    form { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; justify-content: center; }
+    label.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    input[type=email] {
+      flex: 1 1 260px; min-height: 48px; padding: 12px 20px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
+    }
+    input::placeholder { color: var(--muted); opacity: .8; }
+    .msg { width: 100%; margin: 8px 0 0; min-height: 1.6em; font-weight: 600; }
+    .msg.ok { color: var(--success); }
+    .msg.err { color: var(--danger); }
+    .fine { font-size: .9rem; margin-top: 16px; }
+
+    footer { padding: 40px 0; border-top: 1px solid var(--surface); }
+    footer p { font-size: .9rem; }
+
+    @media (min-width: 760px) {
+      .hero .wrap { grid-template-columns: 1.2fr 1fr; }
+      .grid.three { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="#">LINKD</a>
+      <a class="btn" href="#waitlist">Join the waitlist</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <span class="tag"><span class="star" aria-hidden="true">&#9733;</span> Early-bird pricing for waitlist members</span>
+          <h1>One press. Your people know.</h1>
+          <p class="lede">LINKD is a discreet bangle with a single button. Press and hold it, and the people you choose are alerted with your location. No unlocking, no fumbling for your phone.</p>
+          <a class="btn" href="#waitlist">Get early-bird access</a>
+        </div>
+        <svg class="bangle" viewBox="0 0 200 200" role="img" aria-label="Illustration of the LINKD bangle with its single button">
+          <circle cx="100" cy="100" r="72" fill="none" stroke="#FF4FA3" stroke-width="22"/>
+          <circle cx="100" cy="100" r="72" fill="none" stroke="#FF8A3D" stroke-width="4" stroke-dasharray="2 14" opacity=".7"/>
+          <circle cx="100" cy="28" r="16" fill="#2A1B4D" stroke="#FFE36E" stroke-width="4"/>
+          <circle cx="100" cy="28" r="7" fill="#FFE36E"/>
+          <text x="166" y="40" fill="#FFE36E" font-size="20" aria-hidden="true">&#9733;</text>
+          <text x="22" y="176" fill="#FFE36E" font-size="14" aria-hidden="true">&#9733;</text>
+        </svg>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <h2>Help, without the steps</h2>
+        <p>In a scary moment, getting to your phone, unlocking it, and finding the right app takes time you may not have. LINKD removes the steps.</p>
+        <div class="grid three">
+          <div class="card">
+            <div class="num">1</div>
+            <h3>Wear it</h3>
+            <p>The bangle stays linked to your phone over Bluetooth, all day, in the background.</p>
+          </div>
+          <div class="card">
+            <div class="num">2</div>
+            <h3>Press and hold</h3>
+            <p>Hold the button for a few seconds. A short countdown lets you cancel a mistake.</p>
+          </div>
+          <div class="card">
+            <div class="num">3</div>
+            <h3>Your people know</h3>
+            <p>Your emergency contacts get a text with your live location, and you can choose to alert emergency services too.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>Built for the moments that matter</h2>
+        <div class="grid three">
+          <div class="card">
+            <h3>If the link is cut</h3>
+            <p>If the bangle is pulled off or your phone is taken out of range, LINKD waits a short grace period, then starts the alert countdown.</p>
+          </div>
+          <div class="card">
+            <h3>A low battery is not an emergency</h3>
+            <p>The bangle is designed to warn you before its battery runs out, so a dying battery tells you, not your contacts.</p>
+          </div>
+          <div class="card">
+            <h3>Discreet by design</h3>
+            <p>It looks like jewelry, not a gadget. One button, a replaceable coin cell, nothing to charge every night.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="waitlist" class="pricing">
+      <div class="wrap">
+        <h2>Lock in the early-bird price</h2>
+        <p>Join the waitlist and we will hold the early-bird price for you when LINKD launches.</p>
+        <div class="price-card">
+          <div><span class="price">$37.99</span><span class="was">$59.99</span></div>
+          <span class="save">Save $22 as an early bird</span>
+          <form id="waitlist-form" novalidate>
+            <label class="sr" for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254">
+            <button class="btn" type="submit">Join the waitlist</button>
+            <p class="msg" id="msg" role="status" aria-live="polite"></p>
+          </form>
+          <p class="fine">No payment now. We only use your email to tell you when LINKD is available.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p><span class="logo" style="font-size:1.2rem">LINKD</span></p>
+      <p>LINKD is in development. Features may change before launch. LINKD helps you reach people faster; it does not replace calling emergency services when you can.</p>
+      <p>&copy; <span id="year">2026</span> LINKD</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const form = document.getElementById('waitlist-form');
+    const msg = document.getElementById('msg');
+    const button = form.querySelector('button');
+
+    function show(text, kind) {
+      msg.textContent = text;
+      msg.className = 'msg ' + kind;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 254) {
+        show('Please enter a valid email address.', 'err');
+        form.email.focus();
+        return;
+      }
+      const cfg = window.LINKD_CONFIG;
+      if (!cfg) {
+        show('Signups are not set up yet. Please try again later.', 'err');
+        return;
+      }
+      button.disabled = true;
+      try {
+        // Insert-only: the anon key cannot read the list back, so ask for no response body.
+        const res = await fetch(cfg.supabaseUrl + '/rest/v1/waitlist', {
+          method: 'POST',
+          headers: {
+            apikey: cfg.supabaseAnonKey,
+            Authorization: 'Bearer ' + cfg.supabaseAnonKey,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({ email }),
+        });
+        // 409 = already on the list; same answer so the page does not reveal who signed up.
+        if (res.ok || res.status === 409) {
+          show("You're on the list! We'll email you when early-bird ordering opens.", 'ok');
+          form.reset();
+        } else {
+          show('Something went wrong. Please try again.', 'err');
+        }
+      } catch {
+        show('Could not reach the server. Check your connection and try again.', 'err');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

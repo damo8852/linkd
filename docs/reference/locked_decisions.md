@@ -31,7 +31,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 
 | Item                  | Locked Value / State                                                                                   | Lock Type |
 |-----------------------|--------------------------------------------------------------------------------------------------------|-----------|
-| Repo shape            | Monorepo: `apps/mobile`, `packages/ble-protocol`, `supabase/`, `firmware/` (dormant). [core_protocol.md](../protocol/core_protocol.md#repo-layout) | Hard      |
+| Repo shape            | Monorepo: `apps/mobile`, `apps/web` (static landing page), `packages/ble-protocol`, `supabase/`, `firmware/` (dormant). [core_protocol.md](../protocol/core_protocol.md#repo-layout) | Hard      |
 | BLE source of truth   | `packages/ble-protocol`; firmware uses a generated C header. [ble_protocol.md](../protocol/ble_protocol.md) | Hard      |
 | Alert logic placement | Platform-free TS state machine in `apps/mobile/src/features/sos/`, clock injected                     | Hard      |
 | Secrets               | Only in Edge Function secrets; the app ships only the Supabase URL + anon key                          | Hard      |
