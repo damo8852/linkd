@@ -111,6 +111,7 @@
       border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit;
     }
     input::placeholder { color: var(--muted); opacity: .8; }
+    .ts { width: 100%; display: flex; justify-content: center; min-height: 65px; }
     .msg { width: 100%; margin: 8px 0 0; min-height: 1.6em; font-weight: 600; }
     .msg.ok { color: var(--success); }
     .msg.err { color: var(--danger); }
@@ -229,6 +230,7 @@
             <label class="sr" for="email">Email address</label>
             <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required maxlength="254">
             <button class="btn" type="submit">Join the waitlist</button>
+            <div class="ts" id="turnstile"></div>
             <p class="msg" id="msg" role="status" aria-live="polite"></p>
           </form>
           <p class="fine">No payment now. We only use your email to tell you when LINKD is available.</p>
@@ -245,7 +247,14 @@
     </div>
   </footer>
 
-  <script src="config.js"></script>
+  <script>
+    // Public identifiers, not secrets: the project URL and the Cloudflare Turnstile site key.
+    // Signups go through the join-waitlist Edge Function, which verifies the Turnstile token.
+    // Local preview uses `supabase start` and Cloudflare's always-pass test site key.
+    window.LINKD_CONFIG = ['localhost', '127.0.0.1'].includes(location.hostname)
+      ? { supabaseUrl: 'http://127.0.0.1:54321', turnstileSiteKey: '1x00000000000000000000AA' }
+      : { supabaseUrl: 'https://qxulsfiminjhqenjogvr.supabase.co', turnstileSiteKey: '' };
+  </script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -300,6 +309,13 @@
       hold.addEventListener('contextmenu', (e) => e.preventDefault());
     })();
 
+    // Cloudflare Turnstile (spam check), rendered once its script loads.
+    let widgetId;
+    window.onTurnstileLoad = () => {
+      if (!window.LINKD_CONFIG.turnstileSiteKey) return;
+      widgetId = turnstile.render('#turnstile', { sitekey: window.LINKD_CONFIG.turnstileSiteKey, theme: 'dark' });
+    };
+
     const form = document.getElementById('waitlist-form');
     const msg = document.getElementById('msg');
     const button = form.querySelector('button');
@@ -318,27 +334,30 @@
         return;
       }
       const cfg = window.LINKD_CONFIG;
-      if (!cfg) {
+      if (!cfg.turnstileSiteKey || !window.turnstile) {
         show('Signups are not set up yet. Please try again later.', 'err');
+        return;
+      }
+      const token = turnstile.getResponse(widgetId);
+      if (!token) {
+        show('Please complete the check below, then try again.', 'err');
         return;
       }
       button.disabled = true;
       try {
-        // Insert-only: the anon key cannot read the list back, so ask for no response body.
-        const res = await fetch(cfg.supabaseUrl + '/rest/v1/waitlist', {
+        const res = await fetch(cfg.supabaseUrl + '/functions/v1/join-waitlist', {
           method: 'POST',
-          headers: {
-            apikey: cfg.supabaseAnonKey,
-            Authorization: 'Bearer ' + cfg.supabaseAnonKey,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-          },
-          body: JSON.stringify({ email }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, token }),
         });
-        // 409 = already on the list; same answer so the page does not reveal who signed up.
-        if (res.ok || res.status === 409) {
+        // A repeat signup also answers 200, so the page does not reveal who signed up.
+        if (res.ok) {
           show("You're on the list! We'll email you when early-bird ordering opens.", 'ok');
           form.reset();
+        } else if (res.status === 400) {
+          show('Please enter a valid email address.', 'err');
+        } else if (res.status === 403) {
+          show('The check did not pass. Please try again.', 'err');
         } else {
           show('Something went wrong. Please try again.', 'err');
         }
@@ -346,8 +365,10 @@
         show('Could not reach the server. Check your connection and try again.', 'err');
       } finally {
         button.disabled = false;
+        turnstile.reset(widgetId); // tokens are single-use
       }
     });
   </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 </body>
 </html>

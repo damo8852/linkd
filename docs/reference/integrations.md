@@ -14,6 +14,7 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 | Noonlight / RapidSOS  | Emergency dispatch (vendor not chosen)      | sandbox in dev, live in prod |
 | Expo / EAS            | Dev builds, store builds, OTA updates       | all                     |
 | Cloudflare Workers    | Hosts the landing page (`apps/web`)        | prod                    |
+| Cloudflare Turnstile  | Spam check on waitlist signups              | test keys locally, prod |
 
 ---
 
@@ -35,9 +36,21 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 
 **Purpose:** hosts the static landing page in `apps/web/public` at https://linkd.linkdjewelery.workers.dev (Workers static assets, free tier). No GitHub connection; deploys are run by hand.
 
-**Setup:** `npx wrangler login` once, then `cd apps/web && npx wrangler deploy` (config in `apps/web/wrangler.jsonc`). `wrangler deploy` first runs `node gen-config.mjs`, which writes the gitignored `public/config.js` with the hosted and (if `supabase start` is running) local Supabase URL + anon key, picked by hostname; run it by hand for a local preview. Both values are public by design (the anon key can only insert into `waitlist`), but they stay out of git. Needs `npx supabase login`. The hosted project must have the `waitlist` migration (`supabase db push`).
+**Setup:** `npx wrangler login` once, then `cd apps/web && npx wrangler deploy` (config in `apps/web/wrangler.jsonc`). The page holds only public identifiers (Supabase project URL, Turnstile site key), chosen by hostname; localhost uses `supabase start` and Cloudflare's test site key. Signups go through the `join-waitlist` Edge Function (see Turnstile below), so the page needs no Supabase key.
 
-**Verification:** the live page loads, a malformed email shows an inline error, a real signup shows the success message and lands in `waitlist` (dashboard), and an anon `GET /rest/v1/waitlist` returns 401.
+**Verification:** the live page loads, a malformed email shows an inline error, a real signup shows the success message and lands in `waitlist` (dashboard), and an anon `GET` or `POST /rest/v1/waitlist` returns 401.
+
+## Cloudflare Turnstile (waitlist spam check)
+
+**Purpose:** proves a waitlist signup comes from a person. The page renders the widget; `join-waitlist` verifies the token with Cloudflare's siteverify API, then inserts with the service role. Clients cannot insert into `waitlist` directly.
+
+**Setup:** Cloudflare dashboard -> Turnstile -> Add widget (Managed mode, hostname `linkd.linkdjewelery.workers.dev`). Put the **site key** (public) in `apps/web/public/index.html` (`turnstileSiteKey`). Set the **secret key** with `npx supabase secrets set TURNSTILE_SECRET_KEY=...`, then `npx supabase functions deploy join-waitlist`. Locally, serve the function with Cloudflare's always-pass test secret (`1x0000000000000000000000000000000AA`) in an env file: `npx supabase functions serve join-waitlist --env-file <file>`.
+
+| Variable               | Holds                          | Used by        |
+|------------------------|--------------------------------|----------------|
+| `TURNSTILE_SECRET_KEY` | Turnstile secret key (secret)  | `join-waitlist` |
+
+**Verification:** a signup without solving the widget is refused (403); with it, the email is stored once; unset secret makes the function fail loud (500).
 
 ## Twilio
 
