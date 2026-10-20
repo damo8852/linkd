@@ -448,13 +448,21 @@
             <p class="link">Create an account</p>
             <div class="grow"></div>
             <div class="banner info">Signed out, your bangle still works. An SOS will still reach your contacts.</div>
+            <div class="sos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v5"/><path d="M12 17.6v.2"/></svg>
+              <b>SOS</b>
+              <span>Hold 3 seconds</span>
+            </div>
+            <div class="btn ghost">Remove this device</div>
           </div>
         </div>
         <figcaption>
           <strong>Sign in, with an error</strong>
           <ul>
             <li>Error states: wrong password, unconfirmed email, no network. Each says what to do next.</li>
-            <li>Being signed out never disarms the bangle, and the screen says so. The banner ships with the alert token, once that is true.</li>
+            <li>Being signed out never disarms the bangle, and the screen says so. The banner and the SOS button show only on a phone that holds an alert token.</li>
+            <li>The in-app SOS button stays within reach signed out: same hold, same cancel countdown.</li>
+            <li>Remove this device asks for a device unlock, then wipes the phone's token and saved contacts. It is the only way to disarm.</li>
           </ul>
         </figcaption>
       </figure>
@@ -568,6 +576,10 @@
               <div class="row"><b>Emergency dispatch</b><span class="toggle" role="img" aria-label="On"></span></div>
               <p class="sub">On: trained dispatchers are told too and can send help to you.</p>
             </div>
+            <div class="card">
+              <b>Signing out does not turn LINKD off</b>
+              <p class="sub">This phone keeps sending SOS alerts for your account until you remove it in Settings.</p>
+            </div>
             <div class="grow"></div>
             <div class="btn primary">Finish</div>
             <p class="small" style="text-align:center">You can change this in Settings.</p>
@@ -606,6 +618,12 @@
               <p class="sub">Your location is only sent if LINKD is open on screen when the SOS goes out.</p>
               <div class="btn primary">Turn on Background location</div>
             </div>
+            <div class="card">
+              <b>Devices</b>
+              <p class="sub">A phone here sends SOS alerts for your account even when it is signed out. Removing it is the only way to turn that off.</p>
+              <div class="btn ghost">Remove this device</div>
+              <div class="btn ghost">Remove Android phone</div>
+            </div>
           </div>
         </div>
         <figcaption>
@@ -616,6 +634,7 @@
             <li>Each permission's state in words, and what is not working while it is off.</li>
             <li>Turn on asks again; once the phone no longer asks, it opens the system settings.</li>
             <li>On iPhone, Bluetooth is asked for at pairing, so it reads "Not asked yet" until then.</li>
+            <li>Devices lists every phone armed for the account. Removing this one asks for a device unlock and signs out.</li>
           </ul>
         </figcaption>
       </figure>
@@ -639,7 +658,7 @@
     </ul>
     <header>
       <h2>Not drawn yet</h2>
-      <p>The rest of Settings and the device screens (pairing, bangle status, alert settings, signed-out banner, remove this device), the offline SMS composer hand-off, and the remaining three permission screens. Icons are placeholders until an icon set is chosen, and the bottom tab bar is an assumption until navigation is decided.</p>
+      <p>The rest of Settings and the device screens (pairing, bangle status, alert settings), the offline SMS composer hand-off, and the remaining three permission screens. Icons are placeholders until an icon set is chosen, and the bottom tab bar is an assumption until navigation is decided.</p>
     </header>
   </section>
 </div>

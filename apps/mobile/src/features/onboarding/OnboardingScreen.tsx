@@ -113,6 +113,10 @@ export function OnboardingScreen(): React.JSX.Element {
           <Heading>Who gets your SOS</Heading>
           <Card title="Your contacts: always" lines={['A text with your location, every time.']} />
           <DispatchSwitch value={dispatch} onChange={setDispatch} />
+          <Card
+            title="Signing out does not turn LINKD off"
+            lines={['This phone keeps sending SOS alerts for your account until you remove it in Settings.']}
+          />
           {error !== null && <ErrorText>{error}</ErrorText>}
           <Button label="Finish" disabled={busy} onPress={() => void finish()} />
           <Body>You can change this in Settings.</Body>

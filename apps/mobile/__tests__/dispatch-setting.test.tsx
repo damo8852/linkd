@@ -13,6 +13,8 @@ const mockSave = jest.fn();
 const mockEq = jest.fn(() => ({ select: () => ({ maybeSingle: mockSave }) }));
 const mockUpdate = jest.fn(() => ({ eq: mockEq }));
 const mockGetSession = jest.fn();
+// Covered in device-screens.test.tsx; mocked so the native storage behind it is never loaded.
+jest.mock('../src/features/device/DevicesCard', () => ({ DevicesCard: () => null }));
 jest.mock('../src/lib/supabase', () => ({
   supabase: {
     auth: { getSession: () => mockGetSession() },

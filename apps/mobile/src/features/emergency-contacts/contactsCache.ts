@@ -79,6 +79,11 @@ export async function syncContactsCache(
   return { cache: fresh, fresh: true };
 }
 
+/** Wipes the cache. Only "Remove this device" calls this; sign-out never does. */
+export async function clearContactsCache(storage: KeyValueStorage): Promise<void> {
+  await storage.removeItem(CACHE_KEY);
+}
+
 /** The contacts an SOS texts. Opted-out contacts are never texted and never count toward the limit. */
 export function activeContacts(cache: ContactsCache | null): Contact[] {
   return cache?.contacts.filter((contact) => contact.status === 'active') ?? [];

@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { signIn } from './auth';
 import { AUTH_FAILURE_MESSAGE } from './authErrors';
+import { SignedOutBanner } from '../device/SignedOutBanner';
 import { Button, EmailField, ErrorText, Heading, PasswordField, Screen, TextLink } from '../../components/ui';
 
 /** Sign-in form. On success the root layout's guard swaps to the signed-in routes. */
@@ -32,6 +33,7 @@ export function SignInScreen(): React.JSX.Element {
       <Button label="Sign in" disabled={busy || email.trim() === '' || password === ''} onPress={() => void submit()} />
       <TextLink label="Reset my password" onPress={() => router.push('/reset-password')} />
       <TextLink label="Create an account" onPress={() => router.push('/sign-up')} />
+      <SignedOutBanner />
     </Screen>
   );
 }
