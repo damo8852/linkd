@@ -100,6 +100,19 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"waitlist": {
+                  Row: {
+                    "created_at": string,"email": string,"id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"email": string,"id"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string,"id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {

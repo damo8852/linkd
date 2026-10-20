@@ -12,6 +12,22 @@ damo8852
 [feature] Added the per-install alert token: an `alert_devices` table that stores only the token's hash, `send-alert` and `end-alert` accepting the token when there is no valid session, and the app issuing it at sign-in, keeping it through sign-out, and sending it with every SOS. A signed-out phone now shows a banner with the SOS button and "Remove this device" (device unlock required), Settings lists the account's devices, and the token was decided to act for its user rather than one device; built test-first with pgTAP, Deno, and Jest suites and a local end-to-end run.
 
 Issues: #22
+2026-10-19 22:45 MDT
+damo8852
+
+## ESP32-C6 as the bangle SoC
+
+[docs] Locked the Espressif ESP32-C6 as the bangle SoC and replaced the Nordic nRF52/nRF54 references in the README, firmware protocol, and firmware agent; the toolchain question now assumes ESP-IDF. The coin cell stays, and whether it can supply the ESP32-C6's peak BLE current was filed as an open question, since a brown-out could cause a false or missed SOS.
+
+Issues: #61
+2026-10-20 10:30 MDT
+damo8852
+
+## Landing page with early-bird waitlist
+
+[feature] Added `apps/web`, a static landing page in the "Pink drink" style that explains LINKD and offers early-bird pricing ($37.99, regular $59.99) through a waitlist form. Signups go to a new `waitlist` table that anyone can add an email to but no client can read, update, or delete, with one row per address regardless of case; a repeat signup gets the same success message so the page does not reveal who is on the list. The repo-shape lock now includes `apps/web`; hosting, rate limiting, and confirmation emails are not done yet.
+
+Issues: #63
 
 ---
 

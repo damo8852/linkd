@@ -63,6 +63,7 @@ npm workspaces monorepo. Folders marked *(planned)* do not exist yet; create the
 ```
 linkd/
 ├── apps/
+│   ├── web/                        ← static landing page + waitlist (plain HTML, no build; config.js gitignored)
 │   └── mobile/                     ← Expo app (expo-router)          [mobile_protocol.md]
 │       ├── app/                    ← routes only: thin screens that compose features
 │       ├── src/features/<name>/    ← feature code: components, hooks, logic (sos/, device/, contacts/, onboarding/, settings/)

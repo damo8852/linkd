@@ -2,7 +2,7 @@
 
 > **Status: dormant.** No firmware lives in this repo yet. When firmware work starts, the first Tracked issue locks the toolchain and test approach (see Open Questions in [locked_decisions.md](../reference/locked_decisions.md)) and fills in this file.
 
-Rules for `firmware/` - the bangle firmware on a Nordic nRF52/nRF54 SoC running on a coin cell. BLE message shapes come from the generated header in `packages/ble-protocol` ([ble_protocol.md](ble_protocol.md)).
+Rules for `firmware/` - the bangle firmware on an Espressif ESP32-C6 running on a coin cell. BLE message shapes come from the generated header in `packages/ble-protocol` ([ble_protocol.md](ble_protocol.md)).
 
 ---
 
@@ -14,6 +14,7 @@ The bangle runs on a user-replaceable coin cell (CR2025/CR2032 class). Every cha
 - Long BLE connection intervals (around 1 s or more) while idle.
 - No constant-current peripherals (mechanical button, not capacitive touch).
 - Load bursts (radio TX) are why the board has a bulk capacitor; firmware must not stack high-current actions at the moment an alert fires.
+- **Unverified risk:** ESP32-C6 BLE TX peaks are reportedly around 100 mA, far above a coin cell's rated pulse current. Until measured on the real board (see Open Questions in [locked_decisions.md](../reference/locked_decisions.md)), assume a TX burst can brown out the SoC.
 
 ## Safety behavior the firmware owns
 
