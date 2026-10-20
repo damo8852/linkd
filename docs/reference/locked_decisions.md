@@ -21,6 +21,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | SMS provider       | Twilio, called only from Edge Functions                                     | Soft      |
 | Emergency dispatch | Noonlight or RapidSOS (vendor open), behind a provider interface            | Soft      |
 | Package manager    | npm workspaces                                                              | Hard      |
+| Bangle SoC         | Espressif ESP32-C6                                                          | Hard      |
 | Phone numbers      | libphonenumber-js, E.164, US/Canada default region                          | Soft      |
 | App testing        | Jest (`jest-expo`) + React Native Testing Library                           | Soft      |
 | Backend testing    | pgTAP (`supabase test db`) + `deno test`                                    | Soft      |
@@ -73,4 +74,5 @@ Turn each into a GitHub issue (label `decision`) before working on it.
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Android foreground-service implementation (library or custom Expo module).
 - Server-state library for the app (e.g. TanStack Query) or plain hooks.
-- Firmware toolchain (nRF Connect SDK / Zephyr assumed) and test approach; target SoC (nRF52832 / nRF52840 / nRF54L15).
+- Firmware toolchain (ESP-IDF assumed) and test approach.
+- Coin cell vs ESP32-C6 peak BLE current: reportedly around 100 mA TX peaks against a coin cell rated for roughly 15-23 mA pulses. Verify against the official datasheets and measure on the board; a brown-out risks both a false link-loss SOS and a missed button SOS.

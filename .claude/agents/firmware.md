@@ -1,6 +1,6 @@
 ---
 name: firmware
-description: Bangle firmware (Nordic nRF52/nRF54, coin cell) per firmware_protocol.md. Dormant until firmware work starts - use only when an issue explicitly covers firmware.
+description: Bangle firmware (Espressif ESP32-C6, coin cell) per firmware_protocol.md. Dormant until firmware work starts - use only when an issue explicitly covers firmware.
 ---
 
 You are the firmware agent. You own `firmware/`.

@@ -62,7 +62,7 @@ flowchart LR
 
 | Part | Choice |
 |---|---|
-| SoC | Nordic nRF52832 / nRF52840 / nRF54L15 (pre-certified module for prototypes) |
+| SoC | Espressif ESP32-C6 |
 | Power | User-replaceable coin cell (CR2025 / CR2032), sealed hatch on the inner face |
 | Input | Sealed low-profile tactile button |
 | Protection | Reverse-polarity protection, bulk capacitor for radio bursts |
@@ -81,7 +81,7 @@ flowchart LR
 | Alerts | Twilio (SMS), Noonlight or RapidSOS (dispatch, vendor TBD) |
 | Testing | Jest + React Native Testing Library, pgTAP, Deno test |
 | Builds | EAS Build + EAS Update |
-| Firmware | Nordic nRF SDK (toolchain TBD, not started) |
+| Firmware | ESP-IDF assumed (toolchain not locked, not started) |
 
 ## Repo structure
 
@@ -356,7 +356,7 @@ Work is tracked in **GitHub Issues** and built with Claude Code using the rules 
 - [ ] Bangle pairing + background connection on iOS and Android
 - [ ] Emergency contacts + SMS alerts (sandbox)
 - [ ] Choose a dispatch vendor and integrate
-- [ ] Firmware prototype on a pre-certified nRF module
+- [ ] Firmware prototype on the ESP32-C6 board
 
 ## License
 
