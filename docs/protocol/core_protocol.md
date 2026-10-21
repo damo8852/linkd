@@ -73,7 +73,7 @@ linkd/
 ├── packages/
 │   └── ble-protocol/               ← single source of truth for the BLE link  [ble_protocol.md]
 │       ├── src/                    ← UUIDs, message types, codec (TS)
-│       └── generated/              ← C header for firmware (generated, never hand-edited)
+│       └── generated/              ← MicroPython module for firmware (generated, never hand-edited)
 ├── supabase/                                                         [supabase_protocol.md]
 │   ├── migrations/                 ← SQL migrations (schema + RLS), append-only
 │   ├── functions/<name>/           ← Edge Functions (Deno/TS): send-alert, dispatch, ...

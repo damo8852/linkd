@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-21 09:30 MDT
+damo8852
+
+## MicroPython firmware toolchain
+
+[docs] Locked MicroPython (v1.29.0 on the prototype board) as the ESP32-C6 firmware toolchain and unlocked the Hard BLE source-of-truth decision so the firmware consumes a generated MicroPython module instead of a C header, since MicroPython cannot use one. The firmware and BLE protocols, the firmware and ble-link agents, the ble-change skill, the repo layout, the README, and CLAUDE.md now say so; the firmware test approach stays open, and the coin cell question points at its decision issue.
+
+Issues: #58
+
+---
+
 2026-10-11 18:26 MDT
 damo8852
 

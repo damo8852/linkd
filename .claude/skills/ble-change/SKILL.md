@@ -1,6 +1,6 @@
 ---
 name: ble-change
-description: Change the app <-> bangle BLE protocol - update ble_link_spec.md and packages/ble-protocol together, codec tests first, regenerate the firmware header, then update app (and firmware) mapping.
+description: Change the app <-> bangle BLE protocol - update ble_link_spec.md and packages/ble-protocol together, codec tests first, regenerate the firmware module, then update app (and firmware) mapping.
 ---
 
 Rules: [ble_protocol.md](../../../docs/protocol/ble_protocol.md). Spec: [ble_link_spec.md](../../../docs/design/ble_link_spec.md).
@@ -16,5 +16,5 @@ Rules: [ble_protocol.md](../../../docs/protocol/ble_protocol.md). Spec: [ble_lin
 ## Checks
 - [ ] spec doc and package agree
 - [ ] codec tests red then green, including malformed + old versions
-- [ ] generated header current
+- [ ] generated module current
 - [ ] app mapping updated + tested

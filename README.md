@@ -81,7 +81,7 @@ flowchart LR
 | Alerts | Twilio (SMS), Noonlight or RapidSOS (dispatch, vendor TBD) |
 | Testing | Jest + React Native Testing Library, pgTAP, Deno test |
 | Builds | EAS Build + EAS Update |
-| Firmware | ESP-IDF assumed (toolchain not locked, not started) |
+| Firmware | MicroPython on the ESP32-C6 (not started) |
 
 ## Repo structure
 

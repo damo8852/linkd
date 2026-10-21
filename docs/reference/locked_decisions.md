@@ -22,6 +22,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Emergency dispatch | Noonlight or RapidSOS (vendor open), behind a provider interface            | Soft      |
 | Package manager    | npm workspaces                                                              | Hard      |
 | Bangle SoC         | Espressif ESP32-C6                                                          | Hard      |
+| Firmware toolchain | MicroPython (v1.29.0 on the prototype board). [firmware_protocol.md](../protocol/firmware_protocol.md) | Soft      |
 | Phone numbers      | libphonenumber-js, E.164, US/Canada default region                          | Soft      |
 | App testing        | Jest (`jest-expo`) + React Native Testing Library                           | Soft      |
 | Backend testing    | pgTAP (`supabase test db`) + `deno test`                                    | Soft      |
@@ -33,7 +34,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Item                  | Locked Value / State                                                                                   | Lock Type |
 |-----------------------|--------------------------------------------------------------------------------------------------------|-----------|
 | Repo shape            | Monorepo: `apps/mobile`, `apps/web` (static landing page), `packages/ble-protocol`, `supabase/`, `firmware/` (dormant). [core_protocol.md](../protocol/core_protocol.md#repo-layout) | Hard      |
-| BLE source of truth   | `packages/ble-protocol`; firmware uses a generated C header. [ble_protocol.md](../protocol/ble_protocol.md) | Hard      |
+| BLE source of truth   | `packages/ble-protocol`; firmware uses a generated MicroPython module. [ble_protocol.md](../protocol/ble_protocol.md) | Hard      |
 | Alert logic placement | Platform-free TS state machine in `apps/mobile/src/features/sos/`, clock injected                     | Hard      |
 | Secrets               | Only in Edge Function secrets; the app ships only the Supabase URL + anon key                          | Hard      |
 | Data access           | RLS on every table; identity from the verified JWT                                                    | Hard      |
@@ -75,5 +76,5 @@ Turn each into a GitHub issue (label `decision`) before working on it.
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Android foreground-service implementation (library or custom Expo module).
 - Server-state library for the app (e.g. TanStack Query) or plain hooks.
-- Firmware toolchain (ESP-IDF assumed) and test approach.
-- Coin cell vs ESP32-C6 peak BLE current: reportedly around 100 mA TX peaks against a coin cell rated for roughly 15-23 mA pulses. Verify against the official datasheets and measure on the board; a brown-out risks both a false link-loss SOS and a missed button SOS.
+- Firmware test approach on MicroPython (which logic runs in host-side tests, which only on the board).
+- Coin cell vs ESP32-C6 peak BLE current (decision: [#59](https://github.com/damo8852/linkd/issues/59)): reportedly around 100 mA TX peaks against a coin cell rated for roughly 15-23 mA pulses. Verify against the official datasheets and measure on the board; a brown-out risks both a false link-loss SOS and a missed button SOS.
