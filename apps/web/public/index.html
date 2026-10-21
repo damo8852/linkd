@@ -253,7 +253,7 @@
     // Local preview uses `supabase start` and Cloudflare's always-pass test site key.
     window.LINKD_CONFIG = ['localhost', '127.0.0.1'].includes(location.hostname)
       ? { supabaseUrl: 'http://127.0.0.1:54321', turnstileSiteKey: '1x00000000000000000000AA' }
-      : { supabaseUrl: 'https://qxulsfiminjhqenjogvr.supabase.co', turnstileSiteKey: '' };
+      : { supabaseUrl: 'https://qxulsfiminjhqenjogvr.supabase.co', turnstileSiteKey: '0x4AAAAAAFehzoGmroq2Z2Rc' };
   </script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
