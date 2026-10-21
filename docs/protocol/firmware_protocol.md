@@ -28,6 +28,13 @@ The bangle runs on a user-replaceable coin cell (CR2025/CR2032 class). Every cha
 In: BLE SoC, coin cell + holder + sealed hatch, reverse-polarity protection, bulk capacitor, sealed tactile button, antenna, flex/rigid-flex PCB.
 Out for now: haptic motor, status LED, accelerometer.
 
+## Layout and running on the board
+
+- `firmware/main.py`: thin glue (Pin, BLE GATT server, advertising). `firmware/button.py` (debounce) and `firmware/frames.py` (BLE frames) are pure and host-tested in `firmware/tests/`. The protocol constants are `packages/ble-protocol/generated/linkd_ble.py`.
+- Prototype board: Seeed XIAO ESP32-C6, button between D7 (GPIO17) and GND, onboard LED on GPIO15 (active-low). It shows up as a USB serial device (Espressif VID 303A).
+- Host tests: `cd firmware && python -m unittest`.
+- Copy to the board (`pip install mpremote`; replace COM3 with your port): `python -m mpremote connect COM3 fs cp packages/ble-protocol/generated/linkd_ble.py :linkd_ble.py + fs cp firmware/button.py :button.py + fs cp firmware/frames.py :frames.py + fs cp firmware/main.py :main.py + reset`.
+
 ## Testing
 
 - **Pure logic lives in modules that import no hardware** (`machine`, `bluetooth`): button debounce and hold timing, frame building. They run unchanged under CPython and MicroPython, with the clock passed in.

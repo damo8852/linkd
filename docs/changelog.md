@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-21 11:15 MDT
+damo8852
+
+## Bangle button over BLE (firmware + protocol package)
+
+[feature] Added `packages/ble-protocol`: the LINKD GATT service, a readable protocol version, and a display-only `BUTTON_EVENT` frame with a TS codec built test-first (malformed, short, unknown-version, and unknown-type frames all decode to nothing), plus a generated MicroPython module with a staleness test and the encoder's frames as test vectors. Added `firmware/` for the ESP32-C6: a host-tested debouncer and frame builder and a thin `main.py` that advertises the service and notifies every debounced press and release; it boots and advertises on the board. Locked the firmware test approach (CPython `unittest` on the host, `mpremote` on the board), and CI now runs the firmware tests and the `join-waitlist` function. The app side of the link and a phone-side check of the notifications are not done yet.
+
+Issues: #60
+
+---
+
 2026-10-21 09:30 MDT
 damo8852
 

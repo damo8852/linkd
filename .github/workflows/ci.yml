@@ -46,6 +46,19 @@ jobs:
         working-directory: supabase/functions/sms-status
         run: npx deno check index.ts && npx deno lint && npx deno test
 
+      - name: join-waitlist function
+        working-directory: supabase/functions/join-waitlist
+        run: npx deno check index.ts && npx deno lint && npx deno test
+
+      # Firmware pure modules (no machine/bluetooth imports) run under CPython; standard library only.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: firmware host tests
+        working-directory: firmware
+        run: python -m unittest -v
+
   # pgTAP tests (RLS and constraints) against a local Postgres, plus a check that the
   # committed DB types match the migrations. Linux only: the Supabase CLI runs
   # Postgres in Docker, which GitHub provides only on ubuntu runners.
