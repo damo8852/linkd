@@ -1,8 +1,8 @@
 # Firmware Protocol
 
-> **Status: dormant.** No firmware lives in this repo yet. When firmware work starts, the first Tracked issue locks the toolchain and test approach (see Open Questions in [locked_decisions.md](../reference/locked_decisions.md)) and fills in this file.
+> **Status: dormant.** No firmware lives in this repo yet. The toolchain is locked (MicroPython); the first firmware issue locks the test approach (see Open Questions in [locked_decisions.md](../reference/locked_decisions.md)) and fills in this file.
 
-Rules for `firmware/` - the bangle firmware on an Espressif ESP32-C6 running on a coin cell. BLE message shapes come from the generated header in `packages/ble-protocol` ([ble_protocol.md](ble_protocol.md)).
+Rules for `firmware/` - the bangle firmware, written in **MicroPython** (v1.29.0 on the prototype board) on an Espressif ESP32-C6 running on a coin cell. BLE message shapes come from the generated MicroPython module in `packages/ble-protocol` ([ble_protocol.md](ble_protocol.md)).
 
 ---
 
@@ -30,4 +30,4 @@ Out for now: haptic motor, status LED, accelerometer.
 
 ## Testing
 
-To be decided with the toolchain. Minimum bar: protocol encoding tested against the generated header, and the trigger/battery-critical paths tested on hardware before any release.
+To be decided with the toolchain. Minimum bar: protocol encoding tested against the generated module, and the trigger/battery-critical paths tested on hardware before any release.

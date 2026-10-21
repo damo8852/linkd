@@ -7,7 +7,7 @@ Rules for changing how the app and the bangle talk. The *content* of the protoco
 ## One source of truth
 
 - `packages/ble-protocol` is the single source of truth in code: UUIDs, message types, byte layouts, the protocol version, and the TS encoder/decoder the app uses.
-- The firmware consumes a **generated C header** (`packages/ble-protocol/generated/`), never a hand-copied one. CI fails if the generated header is stale.
+- The firmware consumes a **generated MicroPython module** (`packages/ble-protocol/generated/`), never a hand-copied one. CI fails if the generated module is stale.
 - [ble_link_spec.md](../design/ble_link_spec.md) describes meaning and timing; it must agree with the package. Change both in the same PR.
 
 ## Compatibility
@@ -23,7 +23,7 @@ Bangles in the field cannot be force-updated as easily as the app, so:
 
 1. Update the spec doc and the package definitions together.
 2. **Test-first in the package:** encode/decode round-trip, boundary values, malformed frames, old-version frames. Show red, then green.
-3. Regenerate the C header.
+3. Regenerate the MicroPython module.
 4. App side: update the event mapping in `apps/mobile/src/lib/ble/` with a test against the new frames.
-5. Firmware side (once active): update and test against the regenerated header.
+5. Firmware side (once active): update and test against the regenerated module.
 6. PR Risk section states the version impact.
