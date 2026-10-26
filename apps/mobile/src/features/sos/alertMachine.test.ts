@@ -29,6 +29,9 @@ function run(steps: [number, SosEvent][], from: SosState = INITIAL_STATE) {
 
 const tick: SosEvent = { type: 'tick' };
 const sent = (r: ReturnType<typeof run>) => r.commands.filter((c) => c.command.type === 'sendAlert');
+/** Commands that text anyone (send or end); arming and disarming the server do not. */
+const alertCommands = (r: ReturnType<typeof run>) =>
+  r.commands.filter((c) => c.command.type === 'sendAlert' || c.command.type === 'endAlert');
 
 describe('timing constants match sos_alert_flow.md', () => {
   it('uses the decided starting values', () => {
@@ -54,7 +57,7 @@ describe('button and in-app hold', () => {
   it('device unlock during the window cancels and nothing is sent', () => {
     const r = run([[0, { type: 'sosHold', source: 'button' }], [3 * S, { type: 'cancel' }], [60 * S, tick]]);
     expect(r.state.kind).toBe('idle');
-    expect(r.commands).toHaveLength(0);
+    expect(alertCommands(r)).toHaveLength(0);
   });
 
   it('a second hold during the window sends immediately', () => {
@@ -91,7 +94,7 @@ describe('link loss', () => {
   it('a reconnect that stays up 5 s during grace returns to idle and never sends', () => {
     const r = run([[0, { type: 'linkLost' }], [3 * S, { type: 'linkUp' }], [8 * S, tick], [120 * S, tick]]);
     expect(r.state.kind).toBe('idle');
-    expect(r.commands).toHaveLength(0);
+    expect(alertCommands(r)).toHaveLength(0);
   });
 
   it('a reconnect shorter than 5 s does not clear grace', () => {
@@ -130,7 +133,7 @@ describe('link loss', () => {
   it('device unlock cancels the link-loss window', () => {
     const r = run([[0, { type: 'linkLost' }], [20 * S, tick], [30 * S, { type: 'cancel' }], [60 * S, tick]]);
     expect(r.state.kind).toBe('idle');
-    expect(r.commands).toHaveLength(0);
+    expect(alertCommands(r)).toHaveLength(0);
   });
 
   it('device unlock during silent grace does not stop the alert', () => {
@@ -159,19 +162,19 @@ describe('benign link loss never sends', () => {
   it('battery critical, then link loss: unprotected', () => {
     const r = run([[0, { type: 'batteryCritical' }], [1 * S, { type: 'linkLost' }], [10 * MIN, tick]]);
     expect(r.state).toEqual({ kind: 'unprotected', reason: 'batteryCritical' });
-    expect(r.commands).toHaveLength(0);
+    expect(alertCommands(r)).toHaveLength(0);
   });
 
   it.each(['bluetoothOff', 'phoneDying'] as const)('%s while idle: unprotected', (type) => {
     const r = run([[0, { type }], [1 * S, { type: 'linkLost' }], [10 * MIN, tick]]);
     expect(r.state).toEqual({ kind: 'unprotected', reason: type });
-    expect(r.commands).toHaveLength(0);
+    expect(alertCommands(r)).toHaveLength(0);
   });
 
   it.each(['bluetoothOff', 'phoneDying'] as const)('%s reported during grace: unprotected', (type) => {
     const r = run([[0, { type: 'linkLost' }], [50, { type }], [10 * MIN, tick]]);
     expect(r.state).toEqual({ kind: 'unprotected', reason: type });
-    expect(r.commands).toHaveLength(0);
+    expect(alertCommands(r)).toHaveLength(0);
   });
 
   it.each(['bluetoothOff', 'phoneDying'] as const)('%s during the link-loss window: still sends', (type) => {
@@ -270,5 +273,79 @@ describe('nextDeadline', () => {
     expect(nextDeadline(run([[0, { type: 'linkLost' }]]).state)).toBe(20 * S);
     expect(nextDeadline(run([[0, { type: 'linkLost' }], [3 * S, { type: 'linkUp' }]]).state)).toBe(8 * S);
     expect(nextDeadline(run([[0, { type: 'sosHold', source: 'button' }], [5 * S, tick]]).state)).toBe(5 * S + 60 * MIN);
+  });
+});
+
+describe('arming the server', () => {
+  const serverCommands = (r: ReturnType<typeof run>) =>
+    r.commands.filter((c) => c.command.type === 'arm' || c.command.type === 'disarm');
+
+  it.each(['button', 'inApp'] as const)('a %s hold arms for the end of the 5 s window', (source) => {
+    const r = run([[1 * S, { type: 'sosHold', source }]]);
+    expect(serverCommands(r)).toEqual([{ at: 1 * S, command: { type: 'arm', trigger: source, sendAt: 6 * S } }]);
+  });
+
+  it('a link loss arms for grace plus the link-loss window, and the window does not re-arm', () => {
+    const r = run([[0, { type: 'linkLost' }], [20 * S, tick], [50 * S, tick]]);
+    expect(serverCommands(r)).toEqual([{ at: 0, command: { type: 'arm', trigger: 'linkLoss', sendAt: 50 * S } }]);
+    expect(sent(r)).toHaveLength(1);
+  });
+
+  it('a link loss after battery-critical arms nothing', () => {
+    const r = run([[0, { type: 'batteryCritical' }], [1 * S, { type: 'linkLost' }]]);
+    expect(serverCommands(r)).toEqual([]);
+  });
+
+  it('a hold during grace re-arms for the sooner button window', () => {
+    const r = run([[0, { type: 'linkLost' }], [3 * S, { type: 'sosHold', source: 'button' }]]);
+    expect(serverCommands(r).at(-1)).toEqual({ at: 3 * S, command: { type: 'arm', trigger: 'button', sendAt: 8 * S } });
+  });
+
+  it('a cancel in time disarms; a cancel after the window does not', () => {
+    const inTime = run([[0, { type: 'sosHold', source: 'button' }], [2 * S, { type: 'cancel' }]]);
+    expect(serverCommands(inTime).at(-1)).toEqual({ at: 2 * S, command: { type: 'disarm', reason: 'cancel' } });
+
+    const late = run([[0, { type: 'sosHold', source: 'button' }], [6 * S, { type: 'cancel' }]]);
+    expect(serverCommands(late).map((c) => c.command.type)).toEqual(['arm']);
+  });
+
+  it('a stable reconnect during grace disarms', () => {
+    const r = run([[0, { type: 'linkLost' }], [3 * S, { type: 'linkUp' }], [8 * S, tick]]);
+    expect(r.state.kind).toBe('idle');
+    expect(serverCommands(r).at(-1)).toEqual({ at: 8 * S, command: { type: 'disarm', reason: 'reconnect' } });
+  });
+
+  it.each(['bluetoothOff', 'phoneDying'] as const)('%s during grace disarms', (type) => {
+    const r = run([[0, { type: 'linkLost' }], [3 * S, { type }]]);
+    expect(serverCommands(r).at(-1)).toEqual({ at: 3 * S, command: { type: 'disarm', reason: 'benign' } });
+  });
+
+  it('a send never disarms: the server send is on the same id', () => {
+    const timeout = run([[0, { type: 'sosHold', source: 'button' }], [5 * S, tick]]);
+    const holdAgain = run([[0, { type: 'sosHold', source: 'button' }], [2 * S, { type: 'sosHold', source: 'button' }]]);
+    for (const r of [timeout, holdAgain]) {
+      expect(serverCommands(r).map((c) => c.command.type)).toEqual(['arm']);
+      expect(sent(r)).toHaveLength(1);
+    }
+  });
+});
+
+describe('the server sent while the phone thought it was idle', () => {
+  it.each([
+    ['idle', INITIAL_STATE],
+    ['unprotected', { kind: 'unprotected', reason: 'bluetoothOff' } as SosState],
+  ])('from %s it becomes the active alert and sends on that trigger', (_name, from) => {
+    const r = run([[10 * S, { type: 'serverSent', trigger: 'linkLoss' }]], from);
+    expect(r.state).toMatchObject({ kind: 'active', trigger: 'linkLoss', endsAt: 10 * S + LIVE_LOCATION_MS });
+    expect(sent(r)).toEqual([{ at: 10 * S, command: { type: 'sendAlert', trigger: 'linkLoss' } }]);
+  });
+
+  it('is ignored while another countdown or alert is running', () => {
+    const r = run([
+      [0, { type: 'sosHold', source: 'button' }],
+      [1 * S, { type: 'serverSent', trigger: 'linkLoss' }],
+    ]);
+    expect(r.state.kind).toBe('cancelWindow');
+    expect(sent(r)).toEqual([]);
   });
 });

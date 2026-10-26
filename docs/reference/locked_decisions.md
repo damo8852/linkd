@@ -50,7 +50,8 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Alert timings      | Hold 3 s; cancel 5 s (button), 20 s grace + 30 s cancel (link loss); live location 60 min    | Soft      |
 | Cancel / end auth  | Device unlock to cancel or end an alert; no input sends. No screen lock: plain tap + warning | Hard      |
 | Link reconnect     | Never cancels by itself; must be up 5 s during grace; hold in link-loss window sends now     | Hard      |
-| Benign link loss   | Battery-critical, phone Bluetooth off, phone dying: warn only, never an SOS                  | Hard      |
+| Benign link loss   | Battery-critical, phone BT off, phone dying: warn only, never an SOS (but see next row)      | Hard      |
+| Countdown arming   | Also armed on the server; a phone dying before it disarms sends. [sos_alert_flow.md](../design/sos_alert_flow.md#countdowns-run-on-the-server) | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
 | Emergency contacts | Max 5 active; intro SMS on add, active immediately; STOP opts out (kept, never texted)       | Soft      |
 | Signed-out SOS     | Alert token sends as if signed in; sign-out keeps cache; only device removal disarms         | Hard      |

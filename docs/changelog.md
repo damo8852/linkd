@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-26 16:44 MDT
+damo8852
+
+## SOS countdowns armed on the server
+
+[feature] Every cancel window and grace period is now also armed on the server (`armed_alerts`, the `countdown` and `fire-armed-alerts` Edge Functions, and a per-second `pg_cron` job), so an SOS still goes out on time when the OS suspends or kills the app; the phone sends on the same id, a disarm that loses the race warns and ends the alert as safe, and a discreet notification opens the countdown. Built test-first across pgTAP, Deno, and Jest, verified end to end locally, and the phone-dying lock was amended to accept a send when the phone dies before disarming.
+
+Issues: #48
+
+---
+
 2026-10-26 16:08 MDT
 damo8852
 
@@ -203,17 +214,6 @@ damo8852
 [internal] Decided that a signed-out phone still sends an SOS through the server with a per-install alert token, dispatch follows the saved setting, and sign-out keeps the cache and token so only removing the device disarms it. Recorded it in the alert flow, Supabase protocol, locked decisions, and glossary, reordered the changelog after the last merges, and filed the implementation work.
 
 Issues: #19, #22
-
----
-
-2026-10-01 15:15 MDT
-damo8852
-
-## Link-loss reconnect behavior
-
-[internal] Decided that a bangle reconnect never cancels an alert by itself: the link-loss cancel window keeps counting down, and a reconnect during grace only counts once the link stays up 5 s. A button hold during the link-loss cancel window now sends immediately.
-
-Issues: #13, PR #21
 
 ---
 

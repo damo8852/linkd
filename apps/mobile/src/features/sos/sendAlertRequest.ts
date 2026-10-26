@@ -4,9 +4,9 @@ import 'react-native-get-random-values';
 
 import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
-import type { EndReason } from './alertMachine';
+import type { EndReason, Trigger } from './alertMachine';
 import { readAlertToken } from './alertToken';
-import type { OutgoingAlert, SendResult } from './sosController';
+import type { DisarmResult, OutgoingAlert, SendResult } from './sosController';
 
 /** The stored alert token as a header, or none: an unreadable token is never a reason not to call. */
 async function alertTokenHeaders(): Promise<{ headers?: { 'X-Alert-Token': string } }> {
@@ -62,4 +62,31 @@ export async function sendAlertRequest(alert: OutgoingAlert): Promise<SendResult
 export async function endAlertRequest(id: string, reason: EndReason): Promise<boolean> {
   const { error } = await supabase.functions.invoke('end-alert', { ...(await alertTokenHeaders()), body: { id, reason } });
   return !error;
+}
+
+/**
+ * Arms the server to send this alert after `delayMs` unless disarmed (the countdown function).
+ * On failure: rejects; the caller's own countdown still sends.
+ */
+export async function armRequest(id: string, trigger: Trigger, delayMs: number): Promise<void> {
+  const { error } = await supabase.functions.invoke('countdown', {
+    ...(await alertTokenHeaders()),
+    body: { action: 'arm', id, trigger, delayMs: Math.round(delayMs) },
+  });
+  if (error) throw error;
+}
+
+/**
+ * Disarms the server's send. Resolves `fired` when the server had already sent it.
+ * On failure: rejects for any error or unexpected answer, so the caller retries.
+ */
+export async function disarmRequest(id: string): Promise<DisarmResult> {
+  const { data, error } = await supabase.functions.invoke('countdown', {
+    ...(await alertTokenHeaders()),
+    body: { action: 'disarm', id },
+  });
+  // `data` is the parsed JSON body; supabase-js types it as `any`.
+  const state = (data as { state?: unknown } | null)?.state;
+  if (error || (state !== 'disarmed' && state !== 'fired')) throw error ?? new Error('unexpected disarm answer');
+  return state;
 }

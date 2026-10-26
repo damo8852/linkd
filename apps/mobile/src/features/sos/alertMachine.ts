@@ -46,6 +46,8 @@ export type SosEvent =
   | { type: 'cancel' }
   /** Device unlock succeeded on the "I'm safe" action of an active alert. */
   | { type: 'imSafe' }
+  /** The server sent this countdown's alert after a disarm that did not need an unlock came too late. */
+  | { type: 'serverSent'; trigger: Trigger }
   | { type: 'alertDelivered' }
   | { type: 'alertFailed' }
   | { type: 'tick' };
@@ -53,7 +55,18 @@ export type SosEvent =
 /** `user`: "I'm safe" after a device unlock. `timeout`: auto-end after `LIVE_LOCATION_MS`, never "safe". */
 export type EndReason = 'user' | 'timeout';
 
-export type Command = { type: 'sendAlert'; trigger: Trigger } | { type: 'endAlert'; reason: EndReason };
+/** Why a countdown's server-side send is disarmed; only `cancel` came from a device unlock. */
+export type DisarmReason = 'cancel' | 'reconnect' | 'benign';
+
+/**
+ * `arm`: the server sends at `sendAt` unless disarmed, so a suspended app still sends
+ * (sos_alert_flow.md, Countdowns run on the server). A send never disarms: both sends share one id.
+ */
+export type Command =
+  | { type: 'sendAlert'; trigger: Trigger }
+  | { type: 'endAlert'; reason: EndReason }
+  | { type: 'arm'; trigger: Trigger; sendAt: number }
+  | { type: 'disarm'; reason: DisarmReason };
 
 export type Result = { state: SosState; commands: Command[] };
 
@@ -79,8 +92,21 @@ function send(trigger: Trigger, now: number, commands: Command[]): SosState {
   return { kind: 'active', trigger, endsAt: now + LIVE_LOCATION_MS, delivery: 'pending' };
 }
 
-function holdWindow(source: HoldSource, now: number): SosState {
-  return { kind: 'cancelWindow', trigger: source, endsAt: now + BUTTON_CANCEL_WINDOW_MS, bangleReconnected: false };
+function holdWindow(source: HoldSource, now: number, commands: Command[]): SosState {
+  const endsAt = now + BUTTON_CANCEL_WINDOW_MS;
+  commands.push({ type: 'arm', trigger: source, sendAt: endsAt });
+  return { kind: 'cancelWindow', trigger: source, endsAt, bangleReconnected: false };
+}
+
+function startGrace(now: number, commands: Command[]): SosState {
+  const endsAt = now + GRACE_PERIOD_MS;
+  commands.push({ type: 'arm', trigger: 'linkLoss', sendAt: endsAt + LINK_LOSS_CANCEL_WINDOW_MS });
+  return { kind: 'grace', endsAt, linkUpSince: null };
+}
+
+function disarm(reason: DisarmReason, next: SosState, commands: Command[]): SosState {
+  commands.push({ type: 'disarm', reason });
+  return next;
 }
 
 /** Applies every deadline at or before `now`, in the order they fell due. */
@@ -93,7 +119,7 @@ function catchUp(state: SosState, now: number, commands: Command[]): SosState {
         const stableAt = state.linkUpSince === null ? Infinity : state.linkUpSince + RECONNECT_STABLE_MS;
         state =
           stableAt <= state.endsAt
-            ? INITIAL_STATE
+            ? disarm('reconnect', INITIAL_STATE, commands)
             : {
                 kind: 'cancelWindow',
                 trigger: 'linkLoss',
@@ -132,11 +158,11 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
     case 'idle':
       switch (event.type) {
         case 'sosHold':
-          return holdWindow(event.source, now);
+          return holdWindow(event.source, now, commands);
         case 'linkLost':
           return state.batteryCritical
             ? { kind: 'unprotected', reason: 'batteryCritical' }
-            : { kind: 'grace', endsAt: now + GRACE_PERIOD_MS, linkUpSince: null };
+            : startGrace(now, commands);
         case 'linkUp':
           return INITIAL_STATE;
         case 'batteryCritical':
@@ -144,6 +170,8 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
         case 'bluetoothOff':
         case 'phoneDying':
           return { kind: 'unprotected', reason: event.type };
+        case 'serverSent':
+          return send(event.trigger, now, commands);
         default:
           return state;
       }
@@ -151,7 +179,9 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
     case 'unprotected':
       switch (event.type) {
         case 'sosHold':
-          return holdWindow(event.source, now);
+          return holdWindow(event.source, now, commands);
+        case 'serverSent':
+          return send(event.trigger, now, commands);
         case 'linkUp':
           return INITIAL_STATE;
         default:
@@ -161,7 +191,7 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
     case 'grace':
       switch (event.type) {
         case 'sosHold':
-          return holdWindow(event.source, now);
+          return holdWindow(event.source, now, commands);
         case 'linkUp':
           return state.linkUpSince === null ? { ...state, linkUpSince: now } : state;
         case 'linkLost':
@@ -169,7 +199,7 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
         // The OS may report the disconnect before the Bluetooth-off / shutdown that caused it.
         case 'bluetoothOff':
         case 'phoneDying':
-          return { kind: 'unprotected', reason: event.type };
+          return disarm('benign', { kind: 'unprotected', reason: event.type }, commands);
         default:
           // Grace is silent: there is nothing on screen to cancel, so `cancel` is ignored.
           return state;
@@ -180,7 +210,7 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
         case 'sosHold':
           return send(event.source, now, commands);
         case 'cancel':
-          return INITIAL_STATE;
+          return disarm('cancel', INITIAL_STATE, commands);
         case 'linkUp':
           return state.trigger === 'linkLoss' ? { ...state, bangleReconnected: true } : state;
         case 'linkLost':

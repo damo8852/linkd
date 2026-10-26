@@ -42,6 +42,14 @@ jobs:
         working-directory: supabase/functions/end-alert
         run: npx deno check index.ts && npx deno lint && npx deno test
 
+      - name: countdown function
+        working-directory: supabase/functions/countdown
+        run: npx deno check index.ts && npx deno lint && npx deno test
+
+      - name: fire-armed-alerts function
+        working-directory: supabase/functions/fire-armed-alerts
+        run: npx deno check index.ts && npx deno lint && npx deno test
+
       - name: sms-status function
         working-directory: supabase/functions/sms-status
         run: npx deno check index.ts && npx deno lint && npx deno test

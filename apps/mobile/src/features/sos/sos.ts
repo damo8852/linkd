@@ -1,7 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import * as Notifications from 'expo-notifications';
 import { AppState } from 'react-native';
 
-import { endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
+import { createCountdownNotifier } from './countdownNotification';
+import { armRequest, disarmRequest, endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
 import { createSosController, type SosController, type SosSnapshot } from './sosController';
 import { hasScreenLock, requestUnlock } from './unlock';
 
@@ -13,7 +15,36 @@ const controller = createSosController({
   newId: newAlertId,
   send: sendAlertRequest,
   unlock: requestUnlock,
+  arm: armRequest,
+  disarm: disarmRequest,
   end: endAlertRequest,
+});
+
+const COUNTDOWN_NOTIFICATION = 'sos-countdown';
+
+const syncCountdownNotification = createCountdownNotifier({
+  schedule: (at) =>
+    Notifications.scheduleNotificationAsync({
+      identifier: COUNTDOWN_NOTIFICATION,
+      // Discreet by default: nothing on a lock screen says SOS.
+      content: { title: 'LINKD', body: 'Tap to open.' },
+      trigger: at > Date.now() ? { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at } : null,
+    }),
+  clear: () =>
+    Promise.all([
+      Notifications.cancelScheduledNotificationAsync(COUNTDOWN_NOTIFICATION),
+      Notifications.dismissNotificationAsync(COUNTDOWN_NOTIFICATION),
+    ]),
+});
+controller.subscribe(() => syncCountdownNotification(controller.getSnapshot().state));
+
+// In the foreground the overlay already shows the countdown, so no banner; it still goes to the
+// list, so it is there to tap once the phone is locked.
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => {
+    const countdown = notification.request.identifier === COUNTDOWN_NOTIFICATION;
+    return { shouldShowBanner: !countdown, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false };
+  },
 });
 
 // Timers do not run while the OS has the app suspended; catch up the moment it is back.
