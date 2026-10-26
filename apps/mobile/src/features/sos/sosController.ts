@@ -63,6 +63,7 @@ export type SosDeps = {
  * `disarmFailed`: a cancelled countdown's disarm has not reached the server yet, so it may still send.
  * `lateCancel`: the server sent the SOS before the cancel reached it; the alert is being ended as safe.
  * `fallback`: what the SMS composer fallback did for the active alert, or null if it has not run.
+ * `alertId`: the id of the sent alert while it is active, so a screen can read its recipients.
  */
 export type SosSnapshot = {
   state: SosState;
@@ -71,6 +72,7 @@ export type SosSnapshot = {
   disarmFailed: boolean;
   lateCancel: boolean;
   fallback: FallbackResult | null;
+  alertId: string | null;
 };
 
 export type SosController = {
@@ -98,6 +100,7 @@ export function createSosController(deps: SosDeps): SosController {
     disarmFailed: false,
     lateCancel: false,
     fallback: null,
+    alertId: null,
   };
   const listeners = new Set<() => void>();
   let deadlineTimer: unknown = null;
@@ -214,10 +217,10 @@ export function createSosController(deps: SosDeps): SosController {
       if (command.type === 'sendAlert') {
         current = { id: armed?.id ?? deps.newId(), trigger: command.trigger, triggeredAt: now };
         armed = null;
-        update({ noContacts: false, fallback: null });
+        update({ noContacts: false, fallback: null, alertId: current.id });
         attempt(current);
       } else {
-        update({ noContacts: false, fallback: null });
+        update({ noContacts: false, fallback: null, alertId: null });
         if (ending !== null) attemptEnd(ending.id, command.reason);
       }
     }

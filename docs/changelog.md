@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-26 17:05 MDT
+damo8852
+
+## Location in the SOS and per-contact status
+
+[feature] Every SOS now carries the phone's last known location, capped at one second so no permission, no fix, or a slow lookup sends `location: null` instead of failing or delaying the send, and the SMS fallback uses the same lookup. The active alert screen lists each contact as Sending, Texted, Delivered, or Failed from the owner's `alert_recipients` rows, hidden when they cannot be read; built test-first.
+
+Issues: #49
+
+---
+
 2026-10-26 16:53 MDT
 damo8852
 
@@ -203,17 +214,6 @@ damo8852
 [feature] Added the platform-free SOS state machine in `apps/mobile/src/features/sos/`, a pure reducer with injected time that catches up on overdue deadlines so a late timer can never skip or postpone a send. Built test-first with 35 Jest tests checked against deliberate safety mutations, and wrote the newly decided transitions (holds during countdowns and grace, Bluetooth off during grace, cancel vs "I'm safe") into the alert flow.
 
 Issues: #25
-
----
-
-2026-10-01 21:28 MDT
-damo8852
-
-## Emergency contacts table
-
-[feature] Added the first migration: `emergency_contacts` with RLS so users see and change only their own contacts, an E.164 check, a database-enforced limit of 5 active contacts, and an opted-out status only the server can set. Added 24 pgTAP tests written test-first, a synthetic seed, committed DB types, and a CI job that runs the database tests and fails on stale types.
-
-Issues: #12
 
 ---
 

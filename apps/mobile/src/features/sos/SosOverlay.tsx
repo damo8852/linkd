@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../../lib/theme';
 import { ActiveAlertScreen } from './ActiveAlertScreen';
 import { CountdownScreen } from './CountdownScreen';
+import { useAlertRecipients } from './recipients';
 import { useSos } from './sos';
 
 /**
@@ -13,6 +14,7 @@ import { useSos } from './sos';
 export function SosOverlay(): React.JSX.Element | null {
   const { snapshot, cancel, imSafe, textContacts } = useSos();
   const { state } = snapshot;
+  const recipients = useAlertRecipients(snapshot.alertId);
 
   if (state.kind !== 'cancelWindow' && state.kind !== 'active') {
     return null;
@@ -30,6 +32,7 @@ export function SosOverlay(): React.JSX.Element | null {
           onImSafe={imSafe}
           fallback={snapshot.fallback}
           onTextContacts={textContacts}
+          recipients={recipients}
         />
       )}
     </SafeAreaView>
