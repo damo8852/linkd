@@ -22,6 +22,14 @@ export default function HomeScreen(): React.JSX.Element {
       <View style={styles.content}>
         <Text style={styles.title}>LINKD</Text>
         <Text style={styles.tagline}>One press. Your people know.</Text>
+        {snapshot.lateCancel && (
+          <Banner tone="warn">
+            {"Your SOS went out before your cancel reached LINKD. Your contacts are being told you're safe."}
+          </Banner>
+        )}
+        {snapshot.disarmFailed && (
+          <Banner tone="warn">Could not confirm your cancel with LINKD. Trying again. Your SOS may still be sent.</Banner>
+        )}
         {snapshot.endFailed && <Banner tone="warn">Could not tell your contacts your alert ended. Trying again.</Banner>}
         {!loading && !hasActiveContact && <Banner tone="warn">No one will be texted if you send an SOS.</Banner>}
         {hasScreenLock === false && (

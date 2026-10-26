@@ -74,6 +74,19 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"armed_alerts": {
+                  Row: {
+                    "created_at": string,"disarmed_at": string | null,"fired_at": string | null,"id": string,"retry_at": string | null,"send_at": string | null,"trigger": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"disarmed_at"?: string | null,"fired_at"?: string | null,"id": string,"retry_at"?: string | null,"send_at"?: string | null,"trigger"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"disarmed_at"?: string | null,"fired_at"?: string | null,"id"?: string,"retry_at"?: string | null,"send_at"?: string | null,"trigger"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"emergency_contacts": {
                   Row: {
                     "created_at": string,"id": string,"name": string,"phone_e164": string,"status": string,"updated_at": string,"user_id": string
@@ -122,6 +135,9 @@ isOneToOne: false
             "alert_token_user":
 { Args: { "p_token": string }; Returns: string
                            },
+"arm_alert":
+{ Args: { "p_delay_ms": number,"p_id": string,"p_trigger": string,"p_user_id": string }; Returns: string
+                           },
 "claim_alert_end_recipients":
 { Args: { "p_alert_id": string }; Returns: {
               "phone_e164": string
@@ -131,6 +147,14 @@ isOneToOne: false
 { Args: { "p_alert_id": string }; Returns: {
               "phone_e164": string
             }[]
+                           },
+"claim_due_armed_alerts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": string,"send_at": string,"trigger": string,"user_id": string
+            }[]
+                           },
+"disarm_alert":
+{ Args: { "p_id": string,"p_user_id": string }; Returns: string
                            },
 "end_alert":
 { Args: { "p_id": string,"p_reason": string,"p_user_id": string }; Returns: {
@@ -150,6 +174,9 @@ isOneToOne: false
                            },
 "record_alert_recipient":
 { Args: { "p_alert_id": string,"p_error": string,"p_phone_e164": string,"p_provider_message_id": string,"p_status": string }; Returns: undefined
+                           },
+"retry_armed_alert":
+{ Args: { "p_delay_ms": number,"p_id": string }; Returns: undefined
                            },
 "revoke_alert_token":
 { Args: { "p_token": string }; Returns: boolean

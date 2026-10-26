@@ -431,6 +431,13 @@ verify_jwt = false
 [functions.end-alert]
 verify_jwt = false
 
+[functions.countdown]
+verify_jwt = false
+
+# Called only by pg_cron, which has no user; the function checks ARMED_ALERTS_CRON_SECRET itself.
+[functions.fire-armed-alerts]
+verify_jwt = false
+
 # Called by the public landing page, which has no user; the function verifies a Turnstile token itself.
 [functions.join-waitlist]
 verify_jwt = false

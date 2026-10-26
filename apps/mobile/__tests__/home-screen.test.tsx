@@ -9,9 +9,9 @@ jest.mock('../src/features/emergency-contacts/contacts', () => ({
   useContacts: () => ({ contacts: [], loading: false, fresh: true, reload: jest.fn() }),
 }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
-let mockEndFailed = false;
+let mockSnapshot = { endFailed: false, disarmFailed: false, lateCancel: false };
 jest.mock('../src/features/sos/sos', () => ({
-  useSos: () => ({ hold: jest.fn(), snapshot: { endFailed: mockEndFailed } }),
+  useSos: () => ({ hold: jest.fn(), snapshot: mockSnapshot }),
   useHasScreenLock: () => true,
 }));
 
@@ -28,15 +28,18 @@ describe('HomeScreen', () => {
     expect(screen.getByText('No one will be texted if you send an SOS.')).toBeOnTheScreen();
   });
 
-  it('says while an ended alert has not reached the server yet', () => {
-    const message = 'Could not tell your contacts your alert ended. Trying again.';
+  it.each([
+    ['endFailed', 'Could not tell your contacts your alert ended. Trying again.'],
+    ['disarmFailed', 'Could not confirm your cancel with LINKD. Trying again. Your SOS may still be sent.'],
+    ['lateCancel', "Your SOS went out before your cancel reached LINKD. Your contacts are being told you're safe."],
+  ])('shows %s only while it is true', (flag, message) => {
     render(<HomeScreen />);
     expect(screen.queryByText(message)).toBeNull();
 
-    mockEndFailed = true;
+    mockSnapshot = { endFailed: false, disarmFailed: false, lateCancel: false, [flag]: true };
     render(<HomeScreen />);
     expect(screen.getByText(message)).toBeOnTheScreen();
-    mockEndFailed = false;
+    mockSnapshot = { endFailed: false, disarmFailed: false, lateCancel: false };
   });
 
   it('styles the wordmark from the theme', () => {

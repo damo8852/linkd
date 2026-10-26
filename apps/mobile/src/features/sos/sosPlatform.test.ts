@@ -3,7 +3,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
-import { endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
+import { armRequest, disarmRequest, endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
 import { hasScreenLock, requestUnlock } from './unlock';
 
 // Factories, so neither the native module nor the real client (and its storage) loads.
@@ -132,6 +132,47 @@ describe('endAlertRequest', () => {
   it('is false for a network error', async () => {
     invoke.mockResolvedValue({ data: null, error: new Error('Failed to send a request to the Edge Function') });
     expect(await endAlertRequest(id, 'user')).toBe(false);
+  });
+});
+
+describe('armRequest and disarmRequest', () => {
+  const id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+  it('arms the countdown function with the id, trigger, delay, and alert token', async () => {
+    getItem.mockResolvedValue(JSON.stringify({ userId: 'user-a', deviceId: 'device-1', token: 'token-1' }));
+    invoke.mockResolvedValue({ data: { alertId: id, state: 'armed' }, error: null });
+
+    await armRequest(id, 'linkLoss', 50_000);
+    expect(invoke).toHaveBeenCalledWith('countdown', {
+      headers: { 'X-Alert-Token': 'token-1' },
+      body: { action: 'arm', id, trigger: 'linkLoss', delayMs: 50_000 },
+    });
+  });
+
+  it('rounds the delay to whole milliseconds, which the server requires', async () => {
+    invoke.mockResolvedValue({ data: { alertId: id, state: 'armed' }, error: null });
+    await armRequest(id, 'button', 4999.6);
+    expect(invoke).toHaveBeenCalledWith('countdown', { body: { action: 'arm', id, trigger: 'button', delayMs: 5000 } });
+  });
+
+  it('rejects a failed arm, so the caller knows only the phone is counting', async () => {
+    invoke.mockResolvedValue({ data: null, error: new FunctionsHttpError({ status: 500 }) });
+    await expect(armRequest(id, 'button', 5000)).rejects.toThrow();
+  });
+
+  it.each(['disarmed', 'fired'] as const)('disarm reports %s from the server', async (state) => {
+    invoke.mockResolvedValue({ data: { alertId: id, state }, error: null });
+
+    expect(await disarmRequest(id)).toBe(state);
+    expect(invoke).toHaveBeenCalledWith('countdown', { body: { action: 'disarm', id } });
+  });
+
+  it('rejects a disarm the server did not confirm, so the caller retries', async () => {
+    invoke.mockResolvedValue({ data: null, error: new Error('Failed to send a request to the Edge Function') });
+    await expect(disarmRequest(id)).rejects.toThrow();
+
+    invoke.mockResolvedValue({ data: { alertId: id, state: 'armed' }, error: null });
+    await expect(disarmRequest(id)).rejects.toThrow();
   });
 });
 

@@ -51,6 +51,18 @@ Idle ──button / in-app hold──▶ CancelWindow(5 s) ──timeout──�
 Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ Unprotected warning, never an SOS
 ```
 
+## Countdowns run on the server
+
+**Decided.** The phone cannot keep a countdown running on its own: iOS gives a backgrounded app a finite, unpromised amount of time ([`backgroundTimeRemaining`](https://developer.apple.com/documentation/uikit/uiapplication/backgroundtimeremaining)), and a link loss almost always happens with the phone in a pocket. So every countdown is also **armed on the server**:
+
+- **Arming.** When a cancel window or a grace period starts, the app arms the server with the alert id, the trigger, and how long until it sends (the remaining delay, never a phone timestamp, so clock skew cannot move it). A link loss arms for grace plus the link-loss cancel window (50 s). A hold during grace re-arms the same id for the shorter button window. The server sends it when due, even if the app is suspended or killed.
+- **The phone still sends too.** The local countdown is unchanged and sends on the same id, so whichever comes first wins and contacts are never texted twice.
+- **Disarming.** A cancel (device unlock), a stable reconnect during grace, and a benign link loss during grace disarm the server. A disarm that reaches the server first leaves nothing armed for that id, so an arm still in flight cannot revive it.
+- **A disarm that loses the race.** The app keeps retrying it. If the server had already sent, the app says the SOS went out before the cancel reached LINKD and ends the alert as "I'm safe", so contacts get the safe text.
+- **No network at trigger.** Arming fails and the phone's own countdown is the only one, as before; the offline fallback applies.
+
+Known risk (accepted): after a link loss, a phone that dies before its disarm reaches the server sends an SOS 50 s later. A missed alert is worse.
+
 ## Reconnect and flapping
 
 **Decided.** A reconnect never cancels an alert on its own; only a device unlock does.
@@ -70,7 +82,7 @@ Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ 
 | Phone Bluetooth turned off              | OS Bluetooth state change                   |
 | Phone battery dying / shutting down     | OS battery / shutdown signal (to verify per platform) |
 
-If phone Bluetooth off or phone dying is reported while the grace period is running, grace ends and the warning shows instead: the OS may report the disconnect before its cause. Once the link-loss cancel window is showing, it keeps counting.
+If phone Bluetooth off or phone dying is reported while the grace period is running, grace ends, the server is disarmed, and the warning shows instead: the OS may report the disconnect before its cause. Once the link-loss cancel window is showing, it keeps counting. A phone that dies before the disarm reaches the server sends (see Countdowns run on the server).
 
 ## Location
 

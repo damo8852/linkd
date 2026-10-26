@@ -1,5 +1,12 @@
-import { BUTTON_CANCEL_WINDOW_MS, LIVE_LOCATION_MS } from './alertMachine';
-import { RETRY_MS, createSosController, type SendResult, type SosDeps, type UnlockResult } from './sosController';
+import { BUTTON_CANCEL_WINDOW_MS, GRACE_PERIOD_MS, LIVE_LOCATION_MS } from './alertMachine';
+import {
+  RETRY_MS,
+  createSosController,
+  type DisarmResult,
+  type SendResult,
+  type SosDeps,
+  type UnlockResult,
+} from './sosController';
 
 const S = 1000;
 
@@ -13,6 +20,10 @@ function harness(overrides: Partial<SosDeps> = {}) {
   let unlockResult: UnlockResult | Promise<UnlockResult> = 'unlocked';
   const ends: { id: string; reason: string; at: number }[] = [];
   let endResults: (boolean | Error)[] = [];
+  const arms: { id: string; trigger: string; delayMs: number }[] = [];
+  let armResult: Error | null = null;
+  const disarms: { id: string; at: number }[] = [];
+  let disarmResults: (DisarmResult | Error)[] = [];
   let ids = 0;
 
   const deps: SosDeps = {
@@ -32,6 +43,15 @@ function harness(overrides: Partial<SosDeps> = {}) {
       return result instanceof Error ? Promise.reject(result) : Promise.resolve(result);
     },
     unlock: () => Promise.resolve(unlockResult),
+    arm: (id, trigger, delayMs) => {
+      arms.push({ id, trigger, delayMs });
+      return armResult ? Promise.reject(armResult) : Promise.resolve('armed');
+    },
+    disarm: (id) => {
+      disarms.push({ id, at: now });
+      const result = disarmResults.shift() ?? 'disarmed';
+      return result instanceof Error ? Promise.reject(result) : Promise.resolve(result);
+    },
     end: (id, reason) => {
       ends.push({ id, reason, at: now });
       const result = endResults.shift() ?? true;
@@ -66,6 +86,14 @@ function harness(overrides: Partial<SosDeps> = {}) {
     sends,
     ends,
     timers,
+    arms,
+    disarms,
+    armWill: (result: Error | null) => {
+      armResult = result;
+    },
+    disarmWill: (...results: (DisarmResult | Error)[]) => {
+      disarmResults = results;
+    },
     endWill: (...results: (boolean | Error)[]) => {
       endResults = results;
     },
@@ -372,5 +400,127 @@ describe('telling the server the alert ended', () => {
 
     expect(h.ends.map((e) => e.id)).toEqual(['alert-1', 'alert-1', 'alert-1']);
     expect(h.controller.getSnapshot()).toMatchObject({ endFailed: false, state: { kind: 'active' } });
+  });
+});
+
+describe('arming the server', () => {
+  it('a hold arms the server for the 5 s window, and the phone sends on the same id', async () => {
+    const h = harness();
+    h.controller.hold('inApp');
+    expect(h.arms).toEqual([{ id: 'alert-1', trigger: 'inApp', delayMs: BUTTON_CANCEL_WINDOW_MS }]);
+
+    await h.advance(5 * S);
+    expect(h.sends.map((s) => s.id)).toEqual(['alert-1']);
+  });
+
+  it('a link loss arms for 50 s; a hold during grace re-arms the same id for 5 s', async () => {
+    const h = harness();
+    h.controller.dispatch({ type: 'linkLost' });
+    await h.advance(3 * S);
+    h.controller.hold('button');
+    await h.advance(5 * S);
+
+    expect(h.arms).toEqual([
+      { id: 'alert-1', trigger: 'linkLoss', delayMs: 50 * S },
+      { id: 'alert-1', trigger: 'button', delayMs: 5 * S },
+    ]);
+    expect(h.sends.map((s) => s.id)).toEqual(['alert-1']);
+  });
+
+  it('an arm that fails leaves the phone countdown to send by itself', async () => {
+    const h = harness();
+    h.armWill(new Error('offline'));
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+
+    expect(h.sends).toHaveLength(1);
+  });
+
+  it('a cancel disarms that id, and the next countdown gets a new one', async () => {
+    const h = harness();
+    h.controller.hold('inApp');
+    await h.controller.cancel();
+    h.controller.hold('inApp');
+
+    expect(h.disarms.map((d) => d.id)).toEqual(['alert-1']);
+    expect(h.arms.map((a) => a.id)).toEqual(['alert-1', 'alert-2']);
+    expect(h.controller.getSnapshot()).toMatchObject({ disarmFailed: false, lateCancel: false });
+  });
+
+  it('a cancel that reached the server after it sent warns and ends the alert as safe', async () => {
+    const h = harness();
+    h.disarmWill('fired');
+    h.controller.hold('inApp');
+    await h.controller.cancel();
+    await h.flush();
+
+    expect(h.kind()).toBe('idle');
+    expect(h.controller.getSnapshot().lateCancel).toBe(true);
+    expect(h.ends).toEqual([{ id: 'alert-1', reason: 'user', at: 0 }]);
+  });
+
+  it('a disarm that cannot reach the server is shown and retried on the same id', async () => {
+    const h = harness();
+    h.disarmWill(new Error('offline'), new Error('offline'), 'disarmed');
+    h.controller.hold('inApp');
+    await h.controller.cancel();
+    await h.flush();
+    expect(h.controller.getSnapshot().disarmFailed).toBe(true);
+
+    await h.advance(2 * RETRY_MS);
+    expect(h.disarms).toEqual([
+      { id: 'alert-1', at: 0 },
+      { id: 'alert-1', at: RETRY_MS },
+      { id: 'alert-1', at: 2 * RETRY_MS },
+    ]);
+    expect(h.controller.getSnapshot()).toMatchObject({ disarmFailed: false, lateCancel: false });
+    await h.advance(10 * RETRY_MS);
+    expect(h.disarms).toHaveLength(3);
+  });
+
+  it('a retried disarm that finds the alert sent still warns and ends it', async () => {
+    const h = harness();
+    h.disarmWill(new Error('offline'), 'fired');
+    h.controller.hold('inApp');
+    await h.controller.cancel();
+    await h.advance(RETRY_MS);
+
+    expect(h.controller.getSnapshot()).toMatchObject({ disarmFailed: false, lateCancel: true });
+    expect(h.ends.map((e) => [e.id, e.reason])).toEqual([['alert-1', 'user']]);
+  });
+
+  it('a reconnect disarm that was too late shows the alert as active instead, never as safe', async () => {
+    const h = harness();
+    h.disarmWill('fired');
+    h.controller.dispatch({ type: 'linkLost' });
+    await h.advance(1 * S);
+    h.controller.dispatch({ type: 'linkUp' });
+    await h.advance(5 * S);
+
+    expect(h.disarms.map((d) => d.id)).toEqual(['alert-1']);
+    expect(h.controller.getSnapshot().state).toMatchObject({ kind: 'active', trigger: 'linkLoss' });
+    expect(h.sends.map((s) => s.id)).toEqual(['alert-1']);
+    expect(h.ends).toEqual([]);
+  });
+
+  it('a benign link loss during grace disarms', async () => {
+    const h = harness();
+    h.controller.dispatch({ type: 'linkLost' });
+    await h.advance(GRACE_PERIOD_MS / 2);
+    h.controller.dispatch({ type: 'bluetoothOff' });
+
+    expect(h.disarms.map((d) => d.id)).toEqual(['alert-1']);
+    expect(h.kind()).toBe('unprotected');
+  });
+
+  it('a new hold clears the late-cancel warning', async () => {
+    const h = harness();
+    h.disarmWill('fired');
+    h.controller.hold('inApp');
+    await h.controller.cancel();
+    await h.flush();
+    h.controller.hold('inApp');
+
+    expect(h.controller.getSnapshot().lateCancel).toBe(false);
   });
 });

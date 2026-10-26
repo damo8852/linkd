@@ -24,13 +24,16 @@ Setup runbook per service. Shape: **Purpose -> Setup -> Env vars -> Verification
 
 **Setup:** install the Supabase CLI; `supabase start` for local; link the hosted project with `supabase link`. Hosted Auth settings must mirror `supabase/config.toml`: minimum password length 8, and the reset-password email template set to `supabase/templates/recovery.html` (it shows the 6-digit `{{ .Token }}`, not a link).
 
-| Variable                        | Holds                                  | Used by          |
-|---------------------------------|----------------------------------------|------------------|
-| `EXPO_PUBLIC_SUPABASE_URL`      | Project URL (public)                   | app              |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Anon key (public, RLS-protected)       | app              |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Service-role key (secret)              | Edge Functions only |
+| Variable                        | Holds                                           | Used by             |
+|---------------------------------|-------------------------------------------------|---------------------|
+| `EXPO_PUBLIC_SUPABASE_URL`      | Project URL (public)                            | app                 |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Anon key (public, RLS-protected)                | app                 |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Service-role key (secret)                       | Edge Functions only |
+| `ARMED_ALERTS_CRON_SECRET`      | Shared secret for the armed-alert cron (secret) | `fire-armed-alerts` |
 
-**Verification:** `supabase status` locally; app signs in against local stack.
+**Armed countdowns (Supabase Cron).** A `pg_cron` job (`fire-armed-alerts`) checks every second for a due armed countdown and, only then, calls the `fire-armed-alerts` Edge Function through `pg_net`. It reads two **Vault** secrets: `project_url` (the project URL) and `armed_alerts_cron_secret` (a long random string). Set the same value as the function secret: `npx supabase secrets set ARMED_ALERTS_CRON_SECRET=...`, and in SQL `select vault.create_secret('<value>', 'armed_alerts_cron_secret'); select vault.create_secret('https://<ref>.supabase.co', 'project_url');`. Without them nothing armed is sent by the server (the phone's own countdown still is), and each failed call is logged in `cron.job_run_details`.
+
+**Verification:** `supabase status` locally; app signs in against local stack. Arm a countdown with the app closed and confirm the SOS arrives on time (`select * from cron.job_run_details order by start_time desc limit 5`).
 
 ## Cloudflare Workers (landing page)
 
