@@ -21,6 +21,7 @@ jest.mock('../src/lib/supabase', () => ({
 
 // Covered in device-screens.test.tsx; mocked so the real client behind it is never loaded.
 jest.mock('../src/features/device/DevicesCard', () => ({ DevicesCard: () => null }));
+jest.mock('../src/features/settings/PhoneCard', () => ({ PhoneCard: () => null }));
 
 const permissions = jest.mocked(permissionsModule);
 

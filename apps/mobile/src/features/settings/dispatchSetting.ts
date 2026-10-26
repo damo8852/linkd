@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { supabase } from '../../lib/supabase';
+import { requestUnlock } from '../sos/unlock';
 
 /** The saved dispatch setting, or null when the server could not be asked. Never throws. */
 async function loadDispatchEnabled(): Promise<boolean | null> {
@@ -39,12 +40,15 @@ async function saveDispatchEnabled(next: boolean): Promise<boolean | null> {
  * The dispatch setting as the server last confirmed it. `enabled` is null until it has been
  * read, and stays null if it cannot be: the screen must not show a guess. `change` never
  * updates `enabled` before the server has saved it; a failed save sets `saveFailed` instead.
+ * Turning dispatch off first needs a device unlock (sos_alert_flow.md, Turning dispatch off): a
+ * failed or thrown unlock saves nothing and sets `unlockFailed`; a phone with no lock goes through.
  */
 export function useDispatchSetting(): {
   enabled: boolean | null;
   loading: boolean;
   saving: boolean;
   saveFailed: boolean;
+  unlockFailed: boolean;
   reload: () => Promise<void>;
   change: (next: boolean) => Promise<void>;
 } {
@@ -52,6 +56,7 @@ export function useDispatchSetting(): {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [unlockFailed, setUnlockFailed] = useState(false);
 
   const reload = useCallback(async (): Promise<void> => {
     setLoading(true);
@@ -65,7 +70,13 @@ export function useDispatchSetting(): {
 
   const change = useCallback(async (next: boolean): Promise<void> => {
     setSaveFailed(false);
+    setUnlockFailed(false);
     setSaving(true);
+    if (!next && (await requestUnlock('dispatchOff').catch(() => 'failed' as const)) === 'failed') {
+      setUnlockFailed(true);
+      setSaving(false);
+      return;
+    }
     const saved = await saveDispatchEnabled(next);
     if (saved === null) {
       setSaveFailed(true);
@@ -75,5 +86,5 @@ export function useDispatchSetting(): {
     setSaving(false);
   }, []);
 
-  return { enabled, loading, saving, saveFailed, reload, change };
+  return { enabled, loading, saving, saveFailed, unlockFailed, reload, change };
 }

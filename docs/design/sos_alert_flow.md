@@ -37,6 +37,8 @@ Known risk: the 5 s button window is short for a passcode unlock, so an accident
 
 **No screen lock (Decided).** A phone with no passcode, PIN, pattern, or biometrics has nothing to unlock with, so cancel and "I'm safe" work with a plain tap, and the home screen shows a persistent warning to set a screen lock. Blocking cancel instead would turn every accidental hold into a real SOS.
 
+**Turning dispatch off (Decided).** Switching emergency dispatch off in Settings needs the same device unlock, so someone holding the unlocked phone cannot quietly stop dispatchers being told. A failed or abandoned unlock leaves dispatch on. A phone with no screen lock switches with a plain tap, covered by the same home warning. Turning dispatch on is always a plain tap.
+
 ## States
 
 ```
@@ -90,11 +92,11 @@ If phone Bluetooth off or phone dying is reported while the grace period is runn
 
 ## Recipients
 
-| Channel                          | Status      | Notes                                                                      |
-|----------------------------------|-------------|----------------------------------------------------------------------------|
-| SMS to chosen emergency contacts | **Decided** | Always texted. Via Twilio from a Supabase Edge Function. Up to 5 contacts. |
-| Emergency dispatch               | **Decided** | User setting chosen in onboarding, default on, changed in Settings. Vendor open, behind an interface. |
-| Push to contacts with the app    | Deferred    |                                                                            |
+| Channel                          | Status      | Notes                                                                                                                             |
+|----------------------------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| SMS to chosen emergency contacts | **Decided** | Always texted. Via Twilio from a Supabase Edge Function. Up to 5 contacts.                                                        |
+| Emergency dispatch               | **Decided** | User setting chosen in onboarding, default on, changed in Settings (off needs a device unlock). Vendor open, behind an interface. |
+| Push to contacts with the app    | Deferred    |                                                                                                                                   |
 
 **Contacts (Decided):** up to 5. Adding a contact sends a one-time intro SMS (who added them, reply STOP to opt out). The contact is active immediately. A STOP marks them opted out and warns the user: they are never texted, no longer count toward the 5, and stay listed so the number cannot be re-added. A phone number cannot be edited; changing it is remove and re-add, so the new number gets the intro SMS.
 

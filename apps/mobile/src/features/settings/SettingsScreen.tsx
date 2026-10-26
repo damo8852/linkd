@@ -10,9 +10,10 @@ import {
   type PermissionId,
 } from '../onboarding/permissions';
 import { DispatchSwitch } from './DispatchSwitch';
+import { PhoneCard } from './PhoneCard';
 import { useDispatchSetting } from './dispatchSetting';
 
-/** Settings: who gets the SOS, then each permission's state in words, what is not working while it is off, and a way to turn it on. */
+/** Settings: who gets the SOS, the user's own number, then each permission's state in words, what is not working while it is off, and a way to turn it on. */
 export function SettingsScreen(): React.JSX.Element {
   const { states, reload } = usePermissionStates();
   const dispatch = useDispatchSetting();
@@ -31,6 +32,7 @@ export function SettingsScreen(): React.JSX.Element {
       {dispatch.enabled !== null ? (
         <Card title="Who gets your SOS" lines={['Your contacts: always.']}>
           <DispatchSwitch value={dispatch.enabled} disabled={dispatch.saving} onChange={(next) => void dispatch.change(next)} />
+          {dispatch.unlockFailed && <ErrorText>Emergency dispatch is still on. Unlock your phone to turn it off.</ErrorText>}
           {dispatch.saveFailed && (
             <ErrorText>
               {`Couldn't save. Emergency dispatch is still ${dispatch.enabled ? 'on' : 'off'}. Check your connection and try again.`}
@@ -44,6 +46,7 @@ export function SettingsScreen(): React.JSX.Element {
           </Card>
         )
       )}
+      <PhoneCard />
       {states !== null &&
         PERMISSION_IDS.map((id) => {
           const { name, withoutIt } = PERMISSION_COPY[id];

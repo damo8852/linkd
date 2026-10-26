@@ -100,6 +100,19 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"phone_codes": {
+                  Row: {
+                    "attempts": number,"code_hash": string,"expires_at": string,"phone_e164": string,"sent_at": string,"user_id": string,"window_sends": number,"window_started_at": string
+                  }
+                  Insert: {
+                    "attempts"?: number,"code_hash": string,"expires_at": string,"phone_e164": string,"sent_at": string,"user_id": string,"window_sends": number,"window_started_at": string
+                  }
+                  Update: {
+                    "attempts"?: number,"code_hash"?: string,"expires_at"?: string,"phone_e164"?: string,"sent_at"?: string,"user_id"?: string,"window_sends"?: number,"window_started_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"profiles": {
                   Row: {
                     "created_at": string,"dispatch_enabled": boolean,"display_name": string,"phone_e164": string,"phone_verified": boolean,"updated_at": string,"user_id": string
@@ -153,6 +166,9 @@ isOneToOne: false
               "id": string,"send_at": string,"trigger": string,"user_id": string
             }[]
                            },
+"confirm_phone_code":
+{ Args: { "p_code": string }; Returns: string
+                           },
 "disarm_alert":
 { Args: { "p_id": string,"p_user_id": string }; Returns: string
                            },
@@ -184,6 +200,11 @@ isOneToOne: false
 "start_alert":
 { Args: { "p_accuracy_m": number,"p_id": string,"p_latitude": number,"p_located_at": string,"p_longitude": number,"p_trigger": string,"p_triggered_at": string,"p_user_id": string }; Returns: {
               "display_name": string,"phone_e164": string,"recipient_count": number
+            }[]
+                           },
+"start_phone_code":
+{ Args: { "p_user_id": string }; Returns: {
+              "code": string,"phone_e164": string,"status": string
             }[]
                            }
           }
