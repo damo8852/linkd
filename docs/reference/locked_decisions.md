@@ -74,7 +74,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 Turn each into a GitHub issue (label `decision`) before working on it.
 
 - Duress PIN, Bluetooth-off as an attack - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
-- BLE UUIDs, byte layouts, bonding/security - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
+- BLE bonding/security and the byte layouts of the messages not yet built - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Android foreground-service implementation (library or custom Expo module).
 - Server-state library for the app (e.g. TanStack Query) or plain hooks.
