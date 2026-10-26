@@ -1,6 +1,6 @@
 # Firmware Protocol
 
-> **Status: dormant.** No firmware lives in this repo yet. The toolchain is locked (MicroPython); the first firmware issue locks the test approach (see Open Questions in [locked_decisions.md](../reference/locked_decisions.md)) and fills in this file.
+> **Status: dormant.** No firmware lives in this repo yet. The toolchain (MicroPython) and test approach are locked; the first firmware issue fills in the rest of this file.
 
 Rules for `firmware/` - the bangle firmware, written in **MicroPython** (v1.29.0 on the prototype board) on an Espressif ESP32-C6 running on a coin cell. BLE message shapes come from the generated MicroPython module in `packages/ble-protocol` ([ble_protocol.md](ble_protocol.md)).
 
@@ -28,6 +28,16 @@ The bangle runs on a user-replaceable coin cell (CR2025/CR2032 class). Every cha
 In: BLE SoC, coin cell + holder + sealed hatch, reverse-polarity protection, bulk capacitor, sealed tactile button, antenna, flex/rigid-flex PCB.
 Out for now: haptic motor, status LED, accelerometer.
 
+## Layout and running on the board
+
+- `firmware/main.py`: thin glue (Pin, BLE GATT server, advertising). `firmware/button.py` (debounce) and `firmware/frames.py` (BLE frames) are pure and host-tested in `firmware/tests/`. The protocol constants are `packages/ble-protocol/generated/linkd_ble.py`.
+- Prototype board: Seeed XIAO ESP32-C6, button between D7 (GPIO17) and GND, onboard LED on GPIO15 (active-low). It shows up as a USB serial device (Espressif VID 303A).
+- Host tests: `cd firmware && python -m unittest`.
+- Copy to the board (`pip install mpremote`; replace COM3 with your port): `python -m mpremote connect COM3 fs cp packages/ble-protocol/generated/linkd_ble.py :linkd_ble.py + fs cp firmware/button.py :button.py + fs cp firmware/frames.py :frames.py + fs cp firmware/main.py :main.py + reset`.
+
 ## Testing
 
-To be decided with the toolchain. Minimum bar: protocol encoding tested against the generated module, and the trigger/battery-critical paths tested on hardware before any release.
+- **Pure logic lives in modules that import no hardware** (`machine`, `bluetooth`): button debounce and hold timing, frame building. They run unchanged under CPython and MicroPython, with the clock passed in.
+- **Host tests:** `python -m unittest` in `firmware/` on the PC (standard library only, so no extra tooling and CI can run them). Safety-critical logic (anything that leads to `SOS_TRIGGER`) is strictly test-first: failing test shown, then implement.
+- **Board checks:** the thin glue (`Pin`, `bluetooth`) is checked on the ESP32-C6 with `mpremote`, and from a central (laptop or phone) for BLE behavior.
+- Minimum bar before any release: protocol frames tested against the generated module, and the trigger/battery-critical paths tested on hardware.
