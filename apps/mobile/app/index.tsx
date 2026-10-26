@@ -14,7 +14,7 @@ export default function HomeScreen(): React.JSX.Element {
   const router = useRouter();
   const { contacts, loading } = useContacts();
   const hasActiveContact = contacts.some((contact) => contact.status === 'active');
-  const { hold } = useSos();
+  const { hold, snapshot } = useSos();
   const hasScreenLock = useHasScreenLock();
 
   return (
@@ -22,6 +22,7 @@ export default function HomeScreen(): React.JSX.Element {
       <View style={styles.content}>
         <Text style={styles.title}>LINKD</Text>
         <Text style={styles.tagline}>One press. Your people know.</Text>
+        {snapshot.endFailed && <Banner tone="warn">Could not tell your contacts your alert ended. Trying again.</Banner>}
         {!loading && !hasActiveContact && <Banner tone="warn">No one will be texted if you send an SOS.</Banner>}
         {hasScreenLock === false && (
           <Banner tone="warn">Set a screen lock on this phone. Without one, anyone holding it can cancel your SOS.</Banner>

@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-26 16:08 MDT
+damo8852
+
+## "I'm safe" ends the alert on the server
+
+[feature] "I'm safe" and the 60 min auto-end now call `end-alert` with the alert id, reason `user` or `timeout`, and the alert token, built test-first in the state machine, controller, and request. A failed end, 404 included, is retried with the same id until the server confirms, even after a new alert starts, with a home banner until then; surviving an app kill was filed as a follow-up.
+
+Issues: #56, #70
+
+---
+
 2026-10-21 11:15 MDT
 damo8852
 
@@ -203,50 +214,6 @@ damo8852
 [internal] Decided that a bangle reconnect never cancels an alert by itself: the link-loss cancel window keeps counting down, and a reconnect during grace only counts once the link stays up 5 s. A button hold during the link-loss cancel window now sends immediately.
 
 Issues: #13, PR #21
-
----
-
-2026-10-01 14:56 MDT
-damo8852
-
-## Auth method decision
-
-[internal] Chose email + password with Supabase Auth to stay on free tiers, with Resend's free tier as the auth SMTP, sessions that never time out, and password-reset email for recovery. The user's own phone number is required but unverified for now, and follow-up issues cover verifying it and sending an SOS while signed out.
-
-Issues: #10, #18, #19, PR #20
-
----
-
-2026-10-01 14:55 MDT
-damo8852
-
-## SOS alert flow design
-
-[internal] Resolved the SOS alert flow open questions: 3 s hold trigger, 5 s button cancel window, 20 s link-loss grace plus 30 s cancel window, device unlock to cancel, offline retry plus native SMS fallback, and warn-only benign link loss. Recorded the decisions in the design doc, locked decisions, and glossary, and opened follow-up decision issues for what remains open.
-
-Issues: #9, #12, #13, #14, #15, #16, PR #17
-
----
-
-2026-09-28 19:58 MDT
-damo8852
-
-## OS-agnostic setup
-
-[internal] Pinned the toolchain (`.nvmrc`, `engines`, `engine-strict`), normalized line endings and filename casing, and extended CI to run typecheck, lint, and tests on ubuntu, windows, and macos. Rewrote the README getting-started into selectable per-OS sections for macOS, Windows, and Linux, each a complete path from clone to the app on a phone.
-
-Issues: #1, PR #8
-
----
-
-2026-09-28 17:52 MDT
-damo8852
-
-## Semgrep security scan and branch cleanup
-
-[internal] Added a Semgrep job to CI on the stock `p/default` ruleset, pinned to a container image and failing on ERROR findings only, after confirming the narrower rulesets caught nothing against deliberately vulnerable code. Also made "delete the branch once its PR is merged" a written rule across the working agreement, the protocols, and both session skills.
-
-Issues: #3, #5, PR #6, PR #7
 
 ---
 

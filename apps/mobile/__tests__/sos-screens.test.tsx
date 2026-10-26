@@ -28,7 +28,7 @@ const cancel = jest.fn(async () => true);
 const imSafe = jest.fn(async () => true);
 
 function useSosReturns(state: SosState, noContacts = false): void {
-  mocked.useSos.mockReturnValue({ snapshot: { state, noContacts }, hold, cancel, imSafe });
+  mocked.useSos.mockReturnValue({ snapshot: { state, noContacts, endFailed: false }, hold, cancel, imSafe });
 }
 
 const idle: SosState = { kind: 'idle', batteryCritical: false };

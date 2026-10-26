@@ -9,8 +9,9 @@ jest.mock('../src/features/emergency-contacts/contacts', () => ({
   useContacts: () => ({ contacts: [], loading: false, fresh: true, reload: jest.fn() }),
 }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+let mockEndFailed = false;
 jest.mock('../src/features/sos/sos', () => ({
-  useSos: () => ({ hold: jest.fn() }),
+  useSos: () => ({ hold: jest.fn(), snapshot: { endFailed: mockEndFailed } }),
   useHasScreenLock: () => true,
 }));
 
@@ -25,6 +26,17 @@ describe('HomeScreen', () => {
     render(<HomeScreen />);
 
     expect(screen.getByText('No one will be texted if you send an SOS.')).toBeOnTheScreen();
+  });
+
+  it('says while an ended alert has not reached the server yet', () => {
+    const message = 'Could not tell your contacts your alert ended. Trying again.';
+    render(<HomeScreen />);
+    expect(screen.queryByText(message)).toBeNull();
+
+    mockEndFailed = true;
+    render(<HomeScreen />);
+    expect(screen.getByText(message)).toBeOnTheScreen();
+    mockEndFailed = false;
   });
 
   it('styles the wordmark from the theme', () => {

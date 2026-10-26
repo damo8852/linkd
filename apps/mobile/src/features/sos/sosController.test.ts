@@ -11,6 +11,8 @@ function harness(overrides: Partial<SosDeps> = {}) {
   const sends: { id: string; trigger: string; triggeredAt: number; at: number }[] = [];
   let sendResults: (SendResult | Error)[] = [];
   let unlockResult: UnlockResult | Promise<UnlockResult> = 'unlocked';
+  const ends: { id: string; reason: string; at: number }[] = [];
+  let endResults: (boolean | Error)[] = [];
   let ids = 0;
 
   const deps: SosDeps = {
@@ -30,6 +32,11 @@ function harness(overrides: Partial<SosDeps> = {}) {
       return result instanceof Error ? Promise.reject(result) : Promise.resolve(result);
     },
     unlock: () => Promise.resolve(unlockResult),
+    end: (id, reason) => {
+      ends.push({ id, reason, at: now });
+      const result = endResults.shift() ?? true;
+      return result instanceof Error ? Promise.reject(result) : Promise.resolve(result);
+    },
     ...overrides,
   };
   const controller = createSosController(deps);
@@ -57,7 +64,11 @@ function harness(overrides: Partial<SosDeps> = {}) {
     advance,
     flush,
     sends,
+    ends,
     timers,
+    endWill: (...results: (boolean | Error)[]) => {
+      endResults = results;
+    },
     setNow: (t: number) => {
       now = t;
     },
@@ -291,5 +302,75 @@ describe('ending an alert', () => {
     await h.flush();
 
     expect(h.controller.getSnapshot().state).toMatchObject({ kind: 'active', delivery: 'pending' });
+  });
+});
+
+describe('telling the server the alert ended', () => {
+  it('"I\'m safe" ends the alert on the server with reason user', async () => {
+    const h = harness();
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.controller.imSafe();
+
+    expect(h.ends).toEqual([{ id: 'alert-1', reason: 'user', at: 5 * S }]);
+    expect(h.controller.getSnapshot().endFailed).toBe(false);
+  });
+
+  it('the 60 min auto-end ends it on the server with reason timeout', async () => {
+    const h = harness();
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.advance(LIVE_LOCATION_MS);
+
+    expect(h.ends).toEqual([{ id: 'alert-1', reason: 'timeout', at: 5 * S + LIVE_LOCATION_MS }]);
+  });
+
+  it('ends on the server even when the send never confirmed', async () => {
+    const h = harness();
+    h.sendWill('failed');
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.controller.imSafe();
+
+    expect(h.ends.map((e) => e.id)).toEqual(['alert-1']);
+  });
+
+  it('a failed or thrown end is shown and retried with the same id and reason until it succeeds', async () => {
+    const h = harness();
+    h.endWill(false, new Error('offline'), true);
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.controller.imSafe();
+    await h.flush();
+    expect(h.controller.getSnapshot().endFailed).toBe(true);
+
+    await h.advance(RETRY_MS);
+    expect(h.controller.getSnapshot().endFailed).toBe(true);
+
+    await h.advance(RETRY_MS);
+    expect(h.ends).toEqual([
+      { id: 'alert-1', reason: 'user', at: 5 * S },
+      { id: 'alert-1', reason: 'user', at: 5 * S + RETRY_MS },
+      { id: 'alert-1', reason: 'user', at: 5 * S + 2 * RETRY_MS },
+    ]);
+    expect(h.controller.getSnapshot().endFailed).toBe(false);
+
+    await h.advance(10 * RETRY_MS);
+    expect(h.ends).toHaveLength(3);
+  });
+
+  it('a new alert never stops the retries that end the previous one', async () => {
+    const h = harness();
+    h.endWill(false, false, true);
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.controller.imSafe();
+
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.advance(2 * RETRY_MS);
+
+    expect(h.ends.map((e) => e.id)).toEqual(['alert-1', 'alert-1', 'alert-1']);
+    expect(h.controller.getSnapshot()).toMatchObject({ endFailed: false, state: { kind: 'active' } });
   });
 });

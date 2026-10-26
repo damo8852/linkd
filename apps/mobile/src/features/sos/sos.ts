@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 
-import { sendAlertRequest, newAlertId } from './sendAlertRequest';
+import { endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
 import { createSosController, type SosController, type SosSnapshot } from './sosController';
 import { hasScreenLock, requestUnlock } from './unlock';
 
@@ -13,6 +13,7 @@ const controller = createSosController({
   newId: newAlertId,
   send: sendAlertRequest,
   unlock: requestUnlock,
+  end: endAlertRequest,
 });
 
 // Timers do not run while the OS has the app suspended; catch up the moment it is back.
