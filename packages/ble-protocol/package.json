@@ -1,0 +1,12 @@
+{
+  "name": "@linkd/ble-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "node --test",
+    "typecheck": "tsc --noEmit",
+    "generate": "node scripts/generate-python.ts"
+  }
+}
