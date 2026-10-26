@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-26 17:12 MDT
+damo8852
+
+## Verify the user's own phone number by SMS
+
+[feature] Added phone verification with our own 6-digit code over the existing Twilio sender (about $0.012-0.013 per US text, against $0.055 for Twilio Verify): `verify-phone` texts a code that `start_phone_code` makes, rate-limits, and stores only as a hash, and the app confirms it with `confirm_phone_code`, which verifies only the number the code was sent to. Settings shows the number as Verified or Not verified with a way to verify it, home shows a banner until it is, and an unverified number never blocks an SOS.
+
+Issues: #18
+
+---
+
 2026-10-26 16:53 MDT
 damo8852
 
@@ -203,17 +214,6 @@ damo8852
 [feature] Added the platform-free SOS state machine in `apps/mobile/src/features/sos/`, a pure reducer with injected time that catches up on overdue deadlines so a late timer can never skip or postpone a send. Built test-first with 35 Jest tests checked against deliberate safety mutations, and wrote the newly decided transitions (holds during countdowns and grace, Bluetooth off during grace, cancel vs "I'm safe") into the alert flow.
 
 Issues: #25
-
----
-
-2026-10-01 21:28 MDT
-damo8852
-
-## Emergency contacts table
-
-[feature] Added the first migration: `emergency_contacts` with RLS so users see and change only their own contacts, an E.164 check, a database-enforced limit of 5 active contacts, and an opted-out status only the server can set. Added 24 pgTAP tests written test-first, a synthetic seed, committed DB types, and a CI job that runs the database tests and fails on stale types.
-
-Issues: #12
 
 ---
 
