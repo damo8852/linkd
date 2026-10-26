@@ -2,7 +2,12 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import type { UnlockResult } from './sosController';
 
-const PROMPTS = { cancel: 'Cancel SOS', imSafe: "Confirm you're safe", removeDevice: 'Remove this device' } as const;
+const PROMPTS = {
+  cancel: 'Cancel SOS',
+  imSafe: "Confirm you're safe",
+  removeDevice: 'Remove this device',
+  dispatchOff: 'Turn off emergency dispatch',
+} as const;
 
 /** Whether the phone has any screen lock (passcode, PIN, pattern, or biometrics). */
 export async function hasScreenLock(): Promise<boolean> {
@@ -14,7 +19,7 @@ export async function hasScreenLock(): Promise<boolean> {
  * A phone with no screen lock has nothing to unlock with, so it reports `noLock` and the caller
  * lets the action through. Any other failure (cancelled, lockout, timeout) is `failed`.
  */
-export async function requestUnlock(reason: 'cancel' | 'imSafe' | 'removeDevice'): Promise<UnlockResult> {
+export async function requestUnlock(reason: keyof typeof PROMPTS): Promise<UnlockResult> {
   if (!(await hasScreenLock())) {
     return 'noLock';
   }

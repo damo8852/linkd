@@ -31,6 +31,7 @@ export function SettingsScreen(): React.JSX.Element {
       {dispatch.enabled !== null ? (
         <Card title="Who gets your SOS" lines={['Your contacts: always.']}>
           <DispatchSwitch value={dispatch.enabled} disabled={dispatch.saving} onChange={(next) => void dispatch.change(next)} />
+          {dispatch.unlockFailed && <ErrorText>Emergency dispatch is still on. Unlock your phone to turn it off.</ErrorText>}
           {dispatch.saveFailed && (
             <ErrorText>
               {`Couldn't save. Emergency dispatch is still ${dispatch.enabled ? 'on' : 'off'}. Check your connection and try again.`}
