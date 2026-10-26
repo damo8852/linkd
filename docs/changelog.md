@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-26 17:20 MDT
+damo8852
+
+## Dispatch off needs a device unlock
+
+[internal] Decided that turning emergency dispatch off in Settings needs a device unlock, like cancel and "I'm safe": a failed unlock leaves it on, a phone with no screen lock uses a plain tap, and turning it on stays a plain tap. Recorded in locked_decisions.md and sos_alert_flow.md, and filed the implementation.
+
+Issues: #54, #75
+
+---
+
 2026-10-26 17:05 MDT
 damo8852
 
@@ -203,17 +214,6 @@ damo8852
 [feature] Added `profiles`, `alerts`, and `alert_recipients` with owner-only RLS and server-only SQL functions that record an alert once per client id, snapshot active contacts, and claim recipients atomically so no contact is texted twice. Added the `send-alert` Edge Function with Twilio behind a fake / sandbox / live provider, Deno pinned as an npm dev dependency, test-first pgTAP and Deno suites checked against deliberate safety mutations, and a local end-to-end run.
 
 Issues: #29, #36, #37, #38
-
----
-
-2026-10-01 21:40 MDT
-damo8852
-
-## SOS alert state machine
-
-[feature] Added the platform-free SOS state machine in `apps/mobile/src/features/sos/`, a pure reducer with injected time that catches up on overdue deadlines so a late timer can never skip or postpone a send. Built test-first with 35 Jest tests checked against deliberate safety mutations, and wrote the newly decided transitions (holds during countdowns and grace, Bluetooth off during grace, cancel vs "I'm safe") into the alert flow.
-
-Issues: #25
 
 ---
 
