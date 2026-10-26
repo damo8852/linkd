@@ -4,14 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
-2026-10-26 17:12 MDT
+2026-10-26 17:23 MDT
 damo8852
 
-## Verify the user's own phone number by SMS
+## Dispatch off gated on a device unlock
 
-[feature] Added phone verification with our own 6-digit code over the existing Twilio sender (about $0.012-0.013 per US text, against $0.055 for Twilio Verify): `verify-phone` texts a code that `start_phone_code` makes, rate-limits, and stores only as a hash, and the app confirms it with `confirm_phone_code`, which verifies only the number the code was sent to. Settings shows the number as Verified or Not verified with a way to verify it, home shows a banner until it is, and an unverified number never blocks an SOS.
+[feature] Turning emergency dispatch off in Settings now asks for a device unlock first: a failed or thrown unlock saves nothing and says dispatch is still on, a phone with no screen lock goes through with a tap, and turning it on never asks. Built test-first on the existing dispatch switch; onboarding is unchanged since it saves only at Finish.
 
-Issues: #18
+Issues: #75
+
+---
+
 2026-10-26 17:20 MDT
 damo8852
 
@@ -20,6 +23,17 @@ damo8852
 [internal] Decided that turning emergency dispatch off in Settings needs a device unlock, like cancel and "I'm safe": a failed unlock leaves it on, a phone with no screen lock uses a plain tap, and turning it on stays a plain tap. Recorded in locked_decisions.md and sos_alert_flow.md, and filed the implementation.
 
 Issues: #54, #75
+
+---
+
+2026-10-26 17:12 MDT
+damo8852
+
+## Verify the user's own phone number by SMS
+
+[feature] Added phone verification with our own 6-digit code over the existing Twilio sender (about $0.012-0.013 per US text, against $0.055 for Twilio Verify): `verify-phone` texts a code that `start_phone_code` makes, rate-limits, and stores only as a hash, and the app confirms it with `confirm_phone_code`, which verifies only the number the code was sent to. Settings shows the number as Verified or Not verified with a way to verify it, home shows a banner until it is, and an unverified number never blocks an SOS.
+
+Issues: #18
 
 ---
 
@@ -203,36 +217,6 @@ damo8852
 [internal] Added `docs/design/wireframes.html`, a self-contained page of themed mid-fi phone frames covering the SOS core, emergency contacts, and sign-in and onboarding screens, drawn from the style guide tokens. It is a living doc updated in the same PR as any screen layout change, and is listed in the docs inventory.
 
 Issues: #40
-
----
-
-2026-10-01 21:35 MDT
-damo8852
-
-## Theme tokens and style guide
-
-[feature] Filled the style guide with the dark-only "Pink drink" palette (hot pink on midnight, butter and tangerine accents), every pair contrast-checked to WCAG AA, with a red-plus-label SOS so it never relies on hue next to the pink accent. Added the theme module and `useTheme` hook, moved the home route and header onto it, and bundled the deck's Bagel Fat One at build time for headings while body and SOS text stay on the system font.
-
-Issues: #11
-2026-10-01 22:09 MDT
-damo8852
-
-## send-alert: record alerts and text contacts
-
-[feature] Added `profiles`, `alerts`, and `alert_recipients` with owner-only RLS and server-only SQL functions that record an alert once per client id, snapshot active contacts, and claim recipients atomically so no contact is texted twice. Added the `send-alert` Edge Function with Twilio behind a fake / sandbox / live provider, Deno pinned as an npm dev dependency, test-first pgTAP and Deno suites checked against deliberate safety mutations, and a local end-to-end run.
-
-Issues: #29, #36, #37, #38
-
----
-
-2026-10-01 21:40 MDT
-damo8852
-
-## SOS alert state machine
-
-[feature] Added the platform-free SOS state machine in `apps/mobile/src/features/sos/`, a pure reducer with injected time that catches up on overdue deadlines so a late timer can never skip or postpone a send. Built test-first with 35 Jest tests checked against deliberate safety mutations, and wrote the newly decided transitions (holds during countdowns and grace, Bluetooth off during grace, cancel vs "I'm safe") into the alert flow.
-
-Issues: #25
 
 ---
 
