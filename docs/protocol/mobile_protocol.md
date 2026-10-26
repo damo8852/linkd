@@ -37,6 +37,7 @@ The app must keep a live link to the bangle while backgrounded and detect a lost
 - **Not yet verified on a device:** whether Android 13+ shows the notification prompt before any notification channel exists.
 - **Reconnect automatically** after a drop, and keep reporting link state to the alert state machine. A reconnect inside the grace period cancels the pending alert only once the link has stayed up `RECONNECT_STABLE_MS` ([sos_alert_flow.md](../design/sos_alert_flow.md#reconnect-and-flapping)).
 - **JS timers do not run while the OS has the app suspended.** The SOS controller therefore keeps absolute deadlines and catches up on `AppState` `active`, but a countdown that expires while the app is suspended sends only when the app runs again. Until background execution is solved, treat "app left during a countdown" as a missed-alert risk.
+- **Ending an alert reaches the server or keeps trying.** "I'm safe" and the 60 min auto-end call `end-alert` with the alert id and reason (`user` / `timeout`) and the alert token. Any failure, 404 included (a send still in flight may create the alert later), is retried every `RETRY_MS`, even after a new alert starts, and home shows a banner until the server confirms. The retries live in memory only, so killing the app drops them, as it does the active alert.
 - **Document every platform quirk on discovery** in this file, in the same PR.
 
 ## UI rules for a safety app

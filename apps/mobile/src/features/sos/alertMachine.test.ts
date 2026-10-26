@@ -200,19 +200,19 @@ describe('benign link loss never sends', () => {
 describe('active alert', () => {
   const sendAt5s: [number, SosEvent][] = [[0, { type: 'sosHold', source: 'button' }], [5 * S, tick]];
 
-  it('ends after 60 min with endAlert', () => {
+  it('ends after 60 min with endAlert, reason timeout', () => {
     const before = run([...sendAt5s, [5 * S + 60 * MIN - 1, tick]]);
     expect(before.state.kind).toBe('active');
 
     const r = run([...sendAt5s, [5 * S + 60 * MIN, tick]]);
     expect(r.state.kind).toBe('idle');
-    expect(r.commands.at(-1)).toEqual({ at: 5 * S + 60 * MIN, command: { type: 'endAlert' } });
+    expect(r.commands.at(-1)).toEqual({ at: 5 * S + 60 * MIN, command: { type: 'endAlert', reason: 'timeout' } });
   });
 
-  it('"I\'m safe" (device unlock) ends it with endAlert', () => {
+  it('"I\'m safe" (device unlock) ends it with endAlert, reason user', () => {
     const r = run([...sendAt5s, [10 * MIN, { type: 'imSafe' }]]);
     expect(r.state.kind).toBe('idle');
-    expect(r.commands.at(-1)?.command).toEqual({ type: 'endAlert' });
+    expect(r.commands.at(-1)?.command).toEqual({ type: 'endAlert', reason: 'user' });
   });
 
   it('never sends twice for further triggers', () => {

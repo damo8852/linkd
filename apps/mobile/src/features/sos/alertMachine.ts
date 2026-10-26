@@ -50,7 +50,10 @@ export type SosEvent =
   | { type: 'alertFailed' }
   | { type: 'tick' };
 
-export type Command = { type: 'sendAlert'; trigger: Trigger } | { type: 'endAlert' };
+/** `user`: "I'm safe" after a device unlock. `timeout`: auto-end after `LIVE_LOCATION_MS`, never "safe". */
+export type EndReason = 'user' | 'timeout';
+
+export type Command = { type: 'sendAlert'; trigger: Trigger } | { type: 'endAlert'; reason: EndReason };
 
 export type Result = { state: SosState; commands: Command[] };
 
@@ -104,7 +107,7 @@ function catchUp(state: SosState, now: number, commands: Command[]): SosState {
         state = send(state.trigger, now, commands);
         break;
       case 'active':
-        commands.push({ type: 'endAlert' });
+        commands.push({ type: 'endAlert', reason: 'timeout' });
         state = INITIAL_STATE;
         break;
       default:
@@ -189,7 +192,7 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
     case 'active':
       switch (event.type) {
         case 'imSafe':
-          commands.push({ type: 'endAlert' });
+          commands.push({ type: 'endAlert', reason: 'user' });
           return INITIAL_STATE;
         case 'alertDelivered':
           return { ...state, delivery: 'delivered' };

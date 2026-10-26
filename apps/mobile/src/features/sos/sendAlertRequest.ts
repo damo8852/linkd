@@ -4,8 +4,15 @@ import 'react-native-get-random-values';
 
 import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
+import type { EndReason } from './alertMachine';
 import { readAlertToken } from './alertToken';
 import type { OutgoingAlert, SendResult } from './sosController';
+
+/** The stored alert token as a header, or none: an unreadable token is never a reason not to call. */
+async function alertTokenHeaders(): Promise<{ headers?: { 'X-Alert-Token': string } }> {
+  const alertToken = await readAlertToken(encryptedStorage).catch(() => null);
+  return alertToken === null ? {} : { headers: { 'X-Alert-Token': alertToken.token } };
+}
 
 /** A random UUID v4. The server uses it to make retries of the same alert idempotent. */
 export function newAlertId(): string {
@@ -26,9 +33,8 @@ export function newAlertId(): string {
  * which a retry cannot fix.
  */
 export async function sendAlertRequest(alert: OutgoingAlert): Promise<SendResult> {
-  const alertToken = await readAlertToken(encryptedStorage).catch(() => null);
   const { error } = await supabase.functions.invoke('send-alert', {
-    ...(alertToken !== null && { headers: { 'X-Alert-Token': alertToken.token } }),
+    ...(await alertTokenHeaders()),
     body: {
       id: alert.id,
       trigger: alert.trigger,
@@ -45,4 +51,15 @@ export async function sendAlertRequest(alert: OutgoingAlert): Promise<SendResult
     return 'noContacts';
   }
   return 'failed';
+}
+
+/**
+ * Calls the end-alert Edge Function. Safe to repeat: the first end wins on the server and each
+ * contact gets the end text once. The alert token rides along as for a send.
+ * On failure: false for any error so the caller retries, including 404, since a send still in
+ * flight may create the alert after this call.
+ */
+export async function endAlertRequest(id: string, reason: EndReason): Promise<boolean> {
+  const { error } = await supabase.functions.invoke('end-alert', { ...(await alertTokenHeaders()), body: { id, reason } });
+  return !error;
 }

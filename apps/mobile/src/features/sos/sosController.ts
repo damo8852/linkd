@@ -4,14 +4,17 @@
  * Plain TS with every side effect injected, so it is tested with a fake clock.
  *
  * Failure behavior: a send that fails or throws is shown as failed and retried with the same
- * alert id every RETRY_MS until it delivers or the alert ends. An unlock that fails, throws,
- * or finishes after the window never cancels. Nothing here can drop a pending send.
+ * alert id every RETRY_MS until it delivers or the alert ends. Ending an alert ("I'm safe" or
+ * the 60 min auto-end) tells the server the same way: a failed end is shown and retried with the
+ * same id and reason until the server confirms, even after a new alert starts. An unlock that
+ * fails, throws, or finishes after the window never cancels. Nothing here can drop a pending send.
  */
 
 import {
   INITIAL_STATE,
   nextDeadline,
   transition,
+  type EndReason,
   type HoldSource,
   type SosEvent,
   type SosState,
@@ -36,9 +39,12 @@ export type SosDeps = {
   newId(): string;
   send(alert: OutgoingAlert): Promise<SendResult>;
   unlock(reason: 'cancel' | 'imSafe'): Promise<UnlockResult>;
+  /** Tells the server the alert ended. Resolves true only once the server confirmed it. */
+  end(id: string, reason: EndReason): Promise<boolean>;
 };
 
-export type SosSnapshot = { state: SosState; noContacts: boolean };
+/** `endFailed`: an ended alert's end has not reached the server yet; it is being retried. */
+export type SosSnapshot = { state: SosState; noContacts: boolean; endFailed: boolean };
 
 export type SosController = {
   getSnapshot(): SosSnapshot;
@@ -56,11 +62,12 @@ export type SosController = {
 };
 
 export function createSosController(deps: SosDeps): SosController {
-  let snapshot: SosSnapshot = { state: INITIAL_STATE, noContacts: false };
+  let snapshot: SosSnapshot = { state: INITIAL_STATE, noContacts: false, endFailed: false };
   const listeners = new Set<() => void>();
   let deadlineTimer: unknown = null;
   let retryTimer: unknown = null;
   let current: OutgoingAlert | null = null;
+  const failedEnds = new Set<string>();
 
   function update(next: Partial<SosSnapshot>): void {
     snapshot = { ...snapshot, ...next };
@@ -87,6 +94,22 @@ export function createSosController(deps: SosDeps): SosController {
       });
   }
 
+  // Never cancelled: an end must reach the server, whatever the alert state does next.
+  function attemptEnd(id: string, reason: EndReason): void {
+    void deps
+      .end(id, reason)
+      .catch(() => false)
+      .then((ended) => {
+        if (ended) {
+          failedEnds.delete(id);
+        } else {
+          failedEnds.add(id);
+          deps.setTimer(() => attemptEnd(id, reason), RETRY_MS);
+        }
+        update({ endFailed: failedEnds.size > 0 });
+      });
+  }
+
   function stopAlert(): void {
     current = null;
     if (retryTimer !== null) deps.clearTimer(retryTimer);
@@ -99,6 +122,7 @@ export function createSosController(deps: SosDeps): SosController {
     update({ state: result.state });
 
     for (const command of result.commands) {
+      const ending = current;
       stopAlert();
       if (command.type === 'sendAlert') {
         current = { id: deps.newId(), trigger: command.trigger, triggeredAt: now };
@@ -106,6 +130,7 @@ export function createSosController(deps: SosDeps): SosController {
         attempt(current);
       } else {
         update({ noContacts: false });
+        if (ending !== null) attemptEnd(ending.id, command.reason);
       }
     }
 

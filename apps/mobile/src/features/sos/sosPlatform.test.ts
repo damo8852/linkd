@@ -3,7 +3,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
-import { newAlertId, sendAlertRequest } from './sendAlertRequest';
+import { endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
 import { hasScreenLock, requestUnlock } from './unlock';
 
 // Factories, so neither the native module nor the real client (and its storage) loads.
@@ -101,6 +101,37 @@ describe('sendAlertRequest', () => {
   it('reports failed for a network error', async () => {
     invoke.mockResolvedValue({ data: null, error: new Error('Failed to send a request to the Edge Function') });
     expect(await sendAlertRequest(alert)).toBe('failed');
+  });
+});
+
+describe('endAlertRequest', () => {
+  const id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+  it.each(['user', 'timeout'] as const)('posts the id and reason %s to end-alert with the alert token', async (reason) => {
+    getItem.mockResolvedValue(JSON.stringify({ userId: 'user-a', deviceId: 'device-1', token: 'token-1' }));
+    invoke.mockResolvedValue({ data: {}, error: null });
+
+    expect(await endAlertRequest(id, reason)).toBe(true);
+    expect(invoke).toHaveBeenCalledWith('end-alert', { headers: { 'X-Alert-Token': 'token-1' }, body: { id, reason } });
+  });
+
+  it('still ends when the stored token cannot be read', async () => {
+    getItem.mockRejectedValue(new Error('keychain unavailable'));
+    invoke.mockResolvedValue({ data: {}, error: null });
+
+    expect(await endAlertRequest(id, 'user')).toBe(true);
+    expect(invoke).toHaveBeenCalledWith('end-alert', { body: { id, reason: 'user' } });
+  });
+
+  // 404: the send may still be in flight and land later, so the end is retried, not dropped.
+  it.each([400, 401, 403, 404, 500, 502])('is false for HTTP %i so the caller retries', async (status) => {
+    invoke.mockResolvedValue({ data: null, error: new FunctionsHttpError({ status }) });
+    expect(await endAlertRequest(id, 'user')).toBe(false);
+  });
+
+  it('is false for a network error', async () => {
+    invoke.mockResolvedValue({ data: null, error: new Error('Failed to send a request to the Edge Function') });
+    expect(await endAlertRequest(id, 'user')).toBe(false);
   });
 });
 
