@@ -12,6 +12,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@linkd/ble-protocol": "^0.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.117.2",
     "aes-js": "^3.1.2",
@@ -29,6 +30,7 @@
     "libphonenumber-js": "^1.13.14",
     "react": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-ble-plx": "^3.5.1",
     "react-native-gesture-handler": "~2.32.0",
     "react-native-get-random-values": "~1.11.0",
     "react-native-safe-area-context": "~5.7.0",

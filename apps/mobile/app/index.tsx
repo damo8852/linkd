@@ -43,6 +43,7 @@ export default function HomeScreen(): React.JSX.Element {
         <SosButton onHold={() => hold('inApp')} />
         <Button label="Contacts" onPress={() => router.push('/contacts')} />
         <Button label="Settings" variant="ghost" onPress={() => router.push('/settings')} />
+        <Button label="Bangle" variant="ghost" onPress={() => router.push('/bangle')} />
         <Button label="Sign out" variant="ghost" onPress={() => void signOut()} />
       </View>
     </SafeAreaView>

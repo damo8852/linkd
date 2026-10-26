@@ -41,6 +41,7 @@ export default function RootLayout(): React.JSX.Element | null {
           <Stack.Screen name="contacts/index" options={{ title: 'Contacts' }} />
           <Stack.Screen name="contacts/add" options={{ title: 'Add a contact' }} />
           <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+          <Stack.Screen name="bangle" options={{ title: 'Bangle' }} />
         </Stack.Protected>
         {/* A signed-in user with no profile yet. Home shows first; this takes over once the server confirms. */}
         <Stack.Protected guard={signedIn && needsOnboarding}>
