@@ -26,6 +26,17 @@ Issues: #54, #75
 
 ---
 
+2026-10-26 17:12 MDT
+damo8852
+
+## Verify the user's own phone number by SMS
+
+[feature] Added phone verification with our own 6-digit code over the existing Twilio sender (about $0.012-0.013 per US text, against $0.055 for Twilio Verify): `verify-phone` texts a code that `start_phone_code` makes, rate-limits, and stores only as a hash, and the app confirms it with `confirm_phone_code`, which verifies only the number the code was sent to. Settings shows the number as Verified or Not verified with a way to verify it, home shows a banner until it is, and an unverified number never blocks an SOS.
+
+Issues: #18
+
+---
+
 2026-10-26 17:05 MDT
 damo8852
 
@@ -206,17 +217,6 @@ damo8852
 [internal] Added `docs/design/wireframes.html`, a self-contained page of themed mid-fi phone frames covering the SOS core, emergency contacts, and sign-in and onboarding screens, drawn from the style guide tokens. It is a living doc updated in the same PR as any screen layout change, and is listed in the docs inventory.
 
 Issues: #40
-
----
-
-2026-10-01 22:09 MDT
-damo8852
-
-## send-alert: record alerts and text contacts
-
-[feature] Added `profiles`, `alerts`, and `alert_recipients` with owner-only RLS and server-only SQL functions that record an alert once per client id, snapshot active contacts, and claim recipients atomically so no contact is texted twice. Added the `send-alert` Edge Function with Twilio behind a fake / sandbox / live provider, Deno pinned as an npm dev dependency, test-first pgTAP and Deno suites checked against deliberate safety mutations, and a local end-to-end run.
-
-Issues: #29, #36, #37, #38
 
 ---
 

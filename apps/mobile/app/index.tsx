@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from '../src/features/auth/auth';
 import { Banner, Button } from '../src/components/ui';
 import { useContacts } from '../src/features/emergency-contacts/contacts';
+import { usePhoneVerification } from '../src/features/settings/phoneVerification';
 import { useHasScreenLock, useSos } from '../src/features/sos/sos';
 import { SosButton } from '../src/features/sos/SosButton';
 import { theme } from '../src/lib/theme';
@@ -16,6 +17,7 @@ export default function HomeScreen(): React.JSX.Element {
   const hasActiveContact = contacts.some((contact) => contact.status === 'active');
   const { hold, snapshot } = useSos();
   const hasScreenLock = useHasScreenLock();
+  const { verified: phoneVerified } = usePhoneVerification();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,6 +36,9 @@ export default function HomeScreen(): React.JSX.Element {
         {!loading && !hasActiveContact && <Banner tone="warn">No one will be texted if you send an SOS.</Banner>}
         {hasScreenLock === false && (
           <Banner tone="warn">Set a screen lock on this phone. Without one, anyone holding it can cancel your SOS.</Banner>
+        )}
+        {phoneVerified === false && (
+          <Banner tone="warn">{"Your number isn't verified. Verify it in Settings so your contacts can call you back."}</Banner>
         )}
         <SosButton onHold={() => hold('inApp')} />
         <Button label="Contacts" onPress={() => router.push('/contacts')} />
