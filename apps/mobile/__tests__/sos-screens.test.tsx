@@ -11,6 +11,11 @@ import { theme } from '../src/lib/theme';
 
 // Factories, so the real modules (native storage, biometrics, the Supabase client) never load.
 jest.mock('../src/features/sos/sos', () => ({ useSos: jest.fn(), useHasScreenLock: jest.fn() }));
+jest.mock('../src/features/sos/recipients', () => ({
+  ...jest.requireActual('../src/features/sos/recipients'),
+  useAlertRecipients: () => null,
+}));
+jest.mock('../src/lib/supabase', () => ({ supabase: {} }));
 jest.mock('../src/features/auth/auth', () => ({ signOut: jest.fn() }));
 jest.mock('../src/features/emergency-contacts/contacts', () => ({
   useContacts: () => ({
@@ -30,7 +35,7 @@ const imSafe = jest.fn(async () => true);
 const textContacts = jest.fn(async () => undefined);
 
 function useSosReturns(state: SosState, noContacts = false): void {
-  mocked.useSos.mockReturnValue({ snapshot: { state, noContacts, endFailed: false, disarmFailed: false, lateCancel: false, fallback: null }, hold, cancel, imSafe, textContacts });
+  mocked.useSos.mockReturnValue({ snapshot: { state, noContacts, endFailed: false, disarmFailed: false, lateCancel: false, fallback: null, alertId: null }, hold, cancel, imSafe, textContacts });
 }
 
 const idle: SosState = { kind: 'idle', batteryCritical: false };
@@ -134,6 +139,7 @@ describe('ActiveAlertScreen', () => {
     now: () => 0,
     noContacts: false,
     fallback: null,
+    recipients: null,
   };
 
   it('says what actually happened for each delivery state', () => {
@@ -155,6 +161,29 @@ describe('ActiveAlertScreen', () => {
 
     expect(screen.getByText(/no emergency contacts, so no one was texted/)).toBeOnTheScreen();
     expect(screen.queryByText(/Trying again/)).toBeNull();
+  });
+
+  it('lists each contact with its status in words', () => {
+    render(
+      <ActiveAlertScreen
+        {...props}
+        delivery="failed"
+        recipients={[
+          { name: 'Maya', phone_e164: '+15555550101', status: 'sent', delivery_status: 'delivered' },
+          { name: 'Priya', phone_e164: '+15555550102', status: 'sent', delivery_status: null },
+          { name: 'Sam', phone_e164: '+15555550103', status: 'failed', delivery_status: null },
+        ]}
+      />,
+    );
+    expect(screen.getByLabelText('Maya: Delivered')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Priya: Texted')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Sam: Failed')).toBeOnTheScreen();
+  });
+
+  it('shows no contact list when the rows could not be read', () => {
+    render(<ActiveAlertScreen {...props} delivery="delivered" recipients={null} />);
+    expect(screen.queryByText('Texted')).toBeNull();
+    expect(screen.getByText('Your contacts were texted.')).toBeOnTheScreen();
   });
 
   it('offers to text contacts from this phone only while the send is failing', () => {

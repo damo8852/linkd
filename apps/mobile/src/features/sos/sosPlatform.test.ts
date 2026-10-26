@@ -4,6 +4,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
 import { armRequest, disarmRequest, endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
+import { lastKnownFix } from './location';
 import { hasScreenLock, requestUnlock } from './unlock';
 
 // Factories, so neither the native module nor the real client (and its storage) loads.
@@ -14,14 +15,17 @@ jest.mock('expo-local-authentication', () => ({
 }));
 jest.mock('../../lib/supabase', () => ({ supabase: { functions: { invoke: jest.fn() } } }));
 jest.mock('../../lib/encryptedStorage', () => ({ encryptedStorage: { getItem: jest.fn() } }));
+jest.mock('./location', () => ({ lastKnownFix: jest.fn() }));
 
 const auth = jest.mocked(LocalAuthentication);
 const invoke = jest.mocked(supabase.functions.invoke);
 const getItem = jest.mocked(encryptedStorage.getItem);
+const fix = jest.mocked(lastKnownFix);
 
 beforeEach(() => {
   jest.clearAllMocks();
   getItem.mockResolvedValue(null);
+  fix.mockResolvedValue(null);
 });
 
 describe('requestUnlock', () => {
@@ -70,6 +74,25 @@ describe('sendAlertRequest', () => {
     expect(invoke).toHaveBeenCalledWith('send-alert', {
       body: { id: alert.id, trigger: 'inApp', triggeredAt: new Date(alert.triggeredAt).toISOString(), location: null },
     });
+  });
+
+  it('attaches the last known fix', async () => {
+    const location = { latitude: 40.01501, longitude: -105.27055, accuracyM: 12, at: '2026-10-26T12:00:00.000Z' };
+    fix.mockResolvedValue(location);
+    invoke.mockResolvedValue({ data: {}, error: null });
+
+    expect(await sendAlertRequest(alert)).toBe('delivered');
+    expect(invoke).toHaveBeenCalledWith('send-alert', {
+      body: { id: alert.id, trigger: 'inApp', triggeredAt: new Date(alert.triggeredAt).toISOString(), location },
+    });
+  });
+
+  it('sends with no location rather than failing when there is no fix', async () => {
+    fix.mockResolvedValue(null);
+    invoke.mockResolvedValue({ data: {}, error: null });
+
+    expect(await sendAlertRequest(alert)).toBe('delivered');
+    expect(invoke).toHaveBeenCalledWith('send-alert', expect.objectContaining({ body: expect.objectContaining({ location: null }) }));
   });
 
   it('sends the stored alert token, so the alert goes out signed out or with a dead session', async () => {

@@ -1,5 +1,4 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as SMS from 'expo-sms';
 import { AppState } from 'react-native';
@@ -8,6 +7,7 @@ import { encryptedStorage } from '../../lib/encryptedStorage';
 import { readContactsCache } from '../emergency-contacts/contactsCache';
 import { createCountdownNotifier } from './countdownNotification';
 import { armRequest, disarmRequest, endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
+import { lastKnownFix } from './location';
 import { openSmsFallback } from './smsFallback';
 import { createSosController, type SosController, type SosSnapshot } from './sosController';
 import { hasScreenLock, requestUnlock } from './unlock';
@@ -27,10 +27,7 @@ const controller = createSosController({
     openSmsFallback({
       isAvailable: SMS.isAvailableAsync,
       readCache: () => readContactsCache(encryptedStorage),
-      lastLocation: async () => {
-        const position = await Location.getLastKnownPositionAsync();
-        return position && { ...position.coords, accuracyM: position.coords.accuracy };
-      },
+      lastLocation: lastKnownFix,
       compose: (to, body) => SMS.sendSMSAsync(to, body),
     }),
 });

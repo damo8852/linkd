@@ -6,6 +6,7 @@ import { encryptedStorage } from '../../lib/encryptedStorage';
 import { supabase } from '../../lib/supabase';
 import type { EndReason, Trigger } from './alertMachine';
 import { readAlertToken } from './alertToken';
+import { lastKnownFix } from './location';
 import type { DisarmResult, OutgoingAlert, SendResult } from './sosController';
 
 /** The stored alert token as a header, or none: an unreadable token is never a reason not to call. */
@@ -39,8 +40,8 @@ export async function sendAlertRequest(alert: OutgoingAlert): Promise<SendResult
       id: alert.id,
       trigger: alert.trigger,
       triggeredAt: new Date(alert.triggeredAt).toISOString(),
-      // Location needs the location permission flow, which is not built yet.
-      location: null,
+      // Never waits for GPS: the last known fix, or null after at most a second.
+      location: await lastKnownFix(),
     },
   });
   if (!error) {

@@ -12,6 +12,25 @@ damo8852
 [feature] Added phone verification with our own 6-digit code over the existing Twilio sender (about $0.012-0.013 per US text, against $0.055 for Twilio Verify): `verify-phone` texts a code that `start_phone_code` makes, rate-limits, and stores only as a hash, and the app confirms it with `confirm_phone_code`, which verifies only the number the code was sent to. Settings shows the number as Verified or Not verified with a way to verify it, home shows a banner until it is, and an unverified number never blocks an SOS.
 
 Issues: #18
+2026-10-26 17:20 MDT
+damo8852
+
+## Dispatch off needs a device unlock
+
+[internal] Decided that turning emergency dispatch off in Settings needs a device unlock, like cancel and "I'm safe": a failed unlock leaves it on, a phone with no screen lock uses a plain tap, and turning it on stays a plain tap. Recorded in locked_decisions.md and sos_alert_flow.md, and filed the implementation.
+
+Issues: #54, #75
+
+---
+
+2026-10-26 17:05 MDT
+damo8852
+
+## Location in the SOS and per-contact status
+
+[feature] Every SOS now carries the phone's last known location, capped at one second so no permission, no fix, or a slow lookup sends `location: null` instead of failing or delaying the send, and the SMS fallback uses the same lookup. The active alert screen lists each contact as Sending, Texted, Delivered, or Failed from the owner's `alert_recipients` rows, hidden when they cannot be read; built test-first.
+
+Issues: #49
 
 ---
 
