@@ -10,9 +10,10 @@ import {
   type PermissionId,
 } from '../onboarding/permissions';
 import { DispatchSwitch } from './DispatchSwitch';
+import { PhoneCard } from './PhoneCard';
 import { useDispatchSetting } from './dispatchSetting';
 
-/** Settings: who gets the SOS, then each permission's state in words, what is not working while it is off, and a way to turn it on. */
+/** Settings: who gets the SOS, the user's own number, then each permission's state in words, what is not working while it is off, and a way to turn it on. */
 export function SettingsScreen(): React.JSX.Element {
   const { states, reload } = usePermissionStates();
   const dispatch = useDispatchSetting();
@@ -44,6 +45,7 @@ export function SettingsScreen(): React.JSX.Element {
           </Card>
         )
       )}
+      <PhoneCard />
       {states !== null &&
         PERMISSION_IDS.map((id) => {
           const { name, withoutIt } = PERMISSION_COPY[id];

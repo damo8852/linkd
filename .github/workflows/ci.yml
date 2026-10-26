@@ -58,6 +58,10 @@ jobs:
         working-directory: supabase/functions/join-waitlist
         run: npx deno check index.ts && npx deno lint && npx deno test
 
+      - name: verify-phone function
+        working-directory: supabase/functions/verify-phone
+        run: npx deno check index.ts && npx deno lint && npx deno test
+
       # Firmware pure modules (no machine/bluetooth imports) run under CPython; standard library only.
       - uses: actions/setup-python@v6
         with:

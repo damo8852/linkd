@@ -9,6 +9,10 @@ jest.mock('../src/features/emergency-contacts/contacts', () => ({
   useContacts: () => ({ contacts: [], loading: false, fresh: true, reload: jest.fn() }),
 }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+let mockPhoneVerified: boolean | null = true;
+jest.mock('../src/features/settings/phoneVerification', () => ({
+  usePhoneVerification: () => ({ verified: mockPhoneVerified }),
+}));
 let mockSnapshot = { endFailed: false, disarmFailed: false, lateCancel: false };
 jest.mock('../src/features/sos/sos', () => ({
   useSos: () => ({ hold: jest.fn(), snapshot: mockSnapshot }),
@@ -40,6 +44,19 @@ describe('HomeScreen', () => {
     render(<HomeScreen />);
     expect(screen.getByText(message)).toBeOnTheScreen();
     mockSnapshot = { endFailed: false, disarmFailed: false, lateCancel: false };
+  });
+
+  it.each([
+    [false, true],
+    [true, false],
+    [null, false],
+  ])('flags an unverified number only when the server says so (verified: %s)', (verified, shown) => {
+    mockPhoneVerified = verified;
+    render(<HomeScreen />);
+
+    const banner = screen.queryByText("Your number isn't verified. Verify it in Settings so your contacts can call you back.");
+    expect(banner !== null).toBe(shown);
+    mockPhoneVerified = true;
   });
 
   it('styles the wordmark from the theme', () => {

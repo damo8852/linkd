@@ -19,6 +19,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Auth method        | Email + password, no session timeout, reset by emailed code. [supabase_protocol.md](../protocol/supabase_protocol.md#auth) | Soft      |
 | Auth email         | Resend (free tier) as the custom SMTP for Supabase Auth                     | Soft      |
 | SMS provider       | Twilio, called only from Edge Functions                                     | Soft      |
+| Phone verification | Own 6-digit code texted by `verify-phone` over Twilio, not Twilio Verify or Supabase phone auth. [supabase_protocol.md](../protocol/supabase_protocol.md#auth) | Soft      |
 | Emergency dispatch | Noonlight or RapidSOS (vendor open), behind a provider interface            | Soft      |
 | Package manager    | npm workspaces                                                              | Hard      |
 | Bangle SoC         | Espressif ESP32-C6                                                          | Hard      |

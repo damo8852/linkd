@@ -26,6 +26,7 @@ jest.mock('../src/features/emergency-contacts/contacts', () => ({
   }),
 }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock('../src/features/settings/phoneVerification', () => ({ usePhoneVerification: () => ({ verified: true }) }));
 
 const mocked = jest.mocked(sosModule);
 const hold = jest.fn();
