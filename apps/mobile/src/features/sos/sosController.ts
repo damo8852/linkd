@@ -4,7 +4,8 @@
  * Plain TS with every side effect injected, so it is tested with a fake clock.
  *
  * Failure behavior: a send that fails or throws is shown as failed and retried with the same
- * alert id every RETRY_MS until it delivers or the alert ends. Ending an alert ("I'm safe" or
+ * alert id every RETRY_MS until it delivers or the alert ends; the first failure of each alert
+ * also opens the native SMS composer once, so a user with no connection can text contacts. Ending an alert ("I'm safe" or
  * the 60 min auto-end) tells the server the same way: a failed end is shown and retried with the
  * same id and reason until the server confirms, even after a new alert starts. Every countdown is
  * also armed on the server under the id its send will use, so a suspended app still sends; a
@@ -24,6 +25,7 @@ import {
   type SosState,
   type Trigger,
 } from './alertMachine';
+import type { FallbackResult } from './smsFallback';
 
 export const RETRY_MS = 5_000;
 
@@ -50,6 +52,8 @@ export type SosDeps = {
   arm(id: string, trigger: Trigger, delayMs: number): Promise<unknown>;
   /** Disarms the server's send. Rejects when the server could not be reached. */
   disarm(id: string): Promise<DisarmResult>;
+  /** Opens the native SMS composer to the cached contacts (smsFallback.ts). */
+  fallback(): Promise<FallbackResult>;
   /** Tells the server the alert ended. Resolves true only once the server confirmed it. */
   end(id: string, reason: EndReason): Promise<boolean>;
 };
@@ -58,6 +62,7 @@ export type SosDeps = {
  * `endFailed`: an ended alert's end has not reached the server yet; it is being retried.
  * `disarmFailed`: a cancelled countdown's disarm has not reached the server yet, so it may still send.
  * `lateCancel`: the server sent the SOS before the cancel reached it; the alert is being ended as safe.
+ * `fallback`: what the SMS composer fallback did for the active alert, or null if it has not run.
  */
 export type SosSnapshot = {
   state: SosState;
@@ -65,6 +70,7 @@ export type SosSnapshot = {
   endFailed: boolean;
   disarmFailed: boolean;
   lateCancel: boolean;
+  fallback: FallbackResult | null;
 };
 
 export type SosController = {
@@ -74,6 +80,8 @@ export type SosController = {
   hold(source: HoldSource): void;
   /** Asks for a device unlock, then cancels the countdown. Resolves true only if it was cancelled. */
   cancel(): Promise<boolean>;
+  /** Reopens the SMS composer for the active alert; does nothing otherwise. */
+  textContacts(): Promise<void>;
   /** Asks for a device unlock, then ends the active alert. Resolves true only if it ended. */
   imSafe(): Promise<boolean>;
   /** Feeds any other event (link, battery, Bluetooth) into the machine. */
@@ -89,11 +97,13 @@ export function createSosController(deps: SosDeps): SosController {
     endFailed: false,
     disarmFailed: false,
     lateCancel: false,
+    fallback: null,
   };
   const listeners = new Set<() => void>();
   let deadlineTimer: unknown = null;
   let retryTimer: unknown = null;
   let current: OutgoingAlert | null = null;
+  let fallbackFor: OutgoingAlert | null = null;
   const failedEnds = new Set<string>();
   /** The running countdown's id, armed on the server; its send uses the same id. */
   let armed: { id: string; trigger: Trigger } | null = null;
@@ -119,9 +129,18 @@ export function createSosController(deps: SosDeps): SosController {
           update({ noContacts: true });
         } else {
           retryTimer = deps.setTimer(() => attempt(alert), RETRY_MS);
+          if (fallbackFor !== alert) {
+            fallbackFor = alert;
+            void runFallback(alert);
+          }
         }
         dispatch({ type: 'alertFailed' });
       });
+  }
+
+  async function runFallback(alert: OutgoingAlert): Promise<void> {
+    const result = await deps.fallback().catch((): FallbackResult => 'unavailable');
+    if (current === alert) update({ fallback: result });
   }
 
   // Never cancelled: an end must reach the server, whatever the alert state does next.
@@ -195,10 +214,10 @@ export function createSosController(deps: SosDeps): SosController {
       if (command.type === 'sendAlert') {
         current = { id: armed?.id ?? deps.newId(), trigger: command.trigger, triggeredAt: now };
         armed = null;
-        update({ noContacts: false });
+        update({ noContacts: false, fallback: null });
         attempt(current);
       } else {
-        update({ noContacts: false });
+        update({ noContacts: false, fallback: null });
         if (ending !== null) attemptEnd(ending.id, command.reason);
       }
     }
@@ -233,6 +252,7 @@ export function createSosController(deps: SosDeps): SosController {
     hold: (source) => dispatch({ type: 'sosHold', source }),
     cancel: () => confirm('cancel', 'cancelWindow'),
     imSafe: () => confirm('imSafe', 'active'),
+    textContacts: () => (current !== null && snapshot.state.kind === 'active' ? runFallback(current) : Promise.resolve()),
     dispatch,
     resume: () => dispatch({ type: 'tick' }),
   };

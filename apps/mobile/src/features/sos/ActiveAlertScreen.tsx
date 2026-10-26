@@ -4,8 +4,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Banner, Body, Button, ErrorText, Heading } from '../../components/ui';
 import { theme } from '../../lib/theme';
 import type { SosState } from './alertMachine';
+import type { FallbackResult } from './smsFallback';
 
 type Delivery = Extract<SosState, { kind: 'active' }>['delivery'];
+
+const FALLBACK_PROBLEM: Partial<Record<FallbackResult, string>> = {
+  unavailable: "This phone can't open a text message. Call for help another way.",
+  noContacts: 'No contacts are saved on this phone to text. Call for help another way.',
+};
 
 const HEADING: Record<Delivery, string> = {
   pending: 'Sending SOS',
@@ -22,6 +28,8 @@ export function ActiveAlertScreen({
   noContacts,
   endsAt,
   onImSafe,
+  fallback,
+  onTextContacts,
   now = Date.now,
 }: {
   delivery: Delivery;
@@ -29,6 +37,10 @@ export function ActiveAlertScreen({
   endsAt: number;
   /** Resolves false when the unlock failed. */
   onImSafe: () => Promise<boolean>;
+  /** What the SMS composer fallback did, or null if it has not run. */
+  fallback: FallbackResult | null;
+  /** Opens the native SMS composer to the cached contacts again. */
+  onTextContacts: () => Promise<void>;
   now?: () => number;
 }): React.JSX.Element {
   const [, redraw] = useState(0);
@@ -52,6 +64,12 @@ export function ActiveAlertScreen({
             ? 'You have no emergency contacts, so no one was texted. Call for help another way.'
             : 'Could not reach LINKD. Trying again every few seconds. Call or text someone yourself if you can.'}
         </Banner>
+      )}
+      {delivery === 'failed' && fallback !== null && FALLBACK_PROBLEM[fallback] !== undefined && (
+        <ErrorText>{FALLBACK_PROBLEM[fallback]}</ErrorText>
+      )}
+      {delivery === 'failed' && !noContacts && (
+        <Button label="Text my contacts" variant="ghost" onPress={() => void onTextContacts()} />
       )}
 
       <View style={styles.spacer} />

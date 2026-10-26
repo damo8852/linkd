@@ -102,9 +102,13 @@ If phone Bluetooth off or phone dying is reported while the grace period is runn
 
 **Decided.** With no data connection the app does both: keeps retrying the server send (idempotent client-generated alert id, so contacts are never texted twice), and opens the native SMS composer prefilled with the cached contacts and last known location so a user who can tap gets it out.
 
+- **When:** once per alert, on its first failed send for any reason (no connection, auth, a server error, or some texts failing). Contacts the server already texted may get a second text from the user: better than a missed one. The active alert screen also offers "Text my contacts" to reopen it while the send is failing. Nobody to text on the server (no active contacts) does not open it.
+- **What:** the cached active contacts only (opted-out excluded) and a first-person SOS with the last known location, or "Location unavailable." It never waits for a fix. The user taps send; iOS allows nothing else.
+- **When it cannot:** a phone that cannot open a text, or no contacts in the cache, is said on the alert screen with "Call for help another way."
+
 ## Signed out
 
-**Decided.** Being signed out never disarms the bangle or blocks an SOS. At sign-in the app gets a per-install **alert token**, kept in secure storage; the server stores only its hash. When there is no valid session, the app sends the alert with this token instead, and the server treats it exactly like a signed-in send: contacts are texted and dispatch follows the user's saved setting. The native SMS composer also opens, as for offline.
+**Decided.** Being signed out never disarms the bangle or blocks an SOS. At sign-in the app gets a per-install **alert token**, kept in secure storage; the server stores only its hash. When there is no valid session, the app sends the alert with this token instead, and the server treats it exactly like a signed-in send: contacts are texted and dispatch follows the user's saved setting. The SMS composer opens only if that send fails, as for offline: the token send texts contacts exactly as a signed-in one would.
 
 - The token can only send, update, and end alerts for its own user, exactly as that user's signed-in phone could, so an alert sent while signed in can still be ended after the session is lost. It reads nothing else.
 - Signing out keeps the cached contacts, alert settings, and token, and shows a persistent "signed out" banner with the in-app SOS button beside it, so that trigger is not lost with the home screen. Signing in as a different account replaces them.
