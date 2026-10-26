@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-26 16:53 MDT
+damo8852
+
+## Offline SOS fallback via the SMS composer
+
+[feature] The first failed send of an alert now opens the native SMS composer once, prefilled with the cached active contacts and a first-person SOS with the last known location, while server retries continue on the same id; the alert screen offers "Text my contacts" to reopen it and says when the phone cannot text. Built test-first with `expo-sms`, and the signed-out spec now opens the composer only when the token send fails.
+
+Issues: #34
+
+---
+
 2026-10-26 16:44 MDT
 damo8852
 
@@ -203,17 +214,6 @@ damo8852
 [feature] Added the first migration: `emergency_contacts` with RLS so users see and change only their own contacts, an E.164 check, a database-enforced limit of 5 active contacts, and an opted-out status only the server can set. Added 24 pgTAP tests written test-first, a synthetic seed, committed DB types, and a CI job that runs the database tests and fails on stale types.
 
 Issues: #12
-
----
-
-2026-10-01 15:18 MDT
-damo8852
-
-## Signed-out SOS decision
-
-[internal] Decided that a signed-out phone still sends an SOS through the server with a per-install alert token, dispatch follows the saved setting, and sign-out keeps the cache and token so only removing the device disarms it. Recorded it in the alert flow, Supabase protocol, locked decisions, and glossary, reordered the changelog after the last merges, and filed the implementation work.
-
-Issues: #19, #22
 
 ---
 

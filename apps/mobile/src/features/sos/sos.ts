@@ -1,9 +1,14 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
+import * as SMS from 'expo-sms';
 import { AppState } from 'react-native';
 
+import { encryptedStorage } from '../../lib/encryptedStorage';
+import { readContactsCache } from '../emergency-contacts/contactsCache';
 import { createCountdownNotifier } from './countdownNotification';
 import { armRequest, disarmRequest, endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
+import { openSmsFallback } from './smsFallback';
 import { createSosController, type SosController, type SosSnapshot } from './sosController';
 import { hasScreenLock, requestUnlock } from './unlock';
 
@@ -18,6 +23,16 @@ const controller = createSosController({
   arm: armRequest,
   disarm: disarmRequest,
   end: endAlertRequest,
+  fallback: () =>
+    openSmsFallback({
+      isAvailable: SMS.isAvailableAsync,
+      readCache: () => readContactsCache(encryptedStorage),
+      lastLocation: async () => {
+        const position = await Location.getLastKnownPositionAsync();
+        return position && { ...position.coords, accuracyM: position.coords.accuracy };
+      },
+      compose: (to, body) => SMS.sendSMSAsync(to, body),
+    }),
 });
 
 const COUNTDOWN_NOTIFICATION = 'sos-countdown';
@@ -54,10 +69,16 @@ AppState.addEventListener('change', (state) => {
   }
 });
 
-/** The feature seam for screens: current SOS state and the three user actions. */
-export function useSos(): { snapshot: SosSnapshot } & Pick<SosController, 'hold' | 'cancel' | 'imSafe'> {
+/** The feature seam for screens: current SOS state and the user actions. */
+export function useSos(): { snapshot: SosSnapshot } & Pick<SosController, 'hold' | 'cancel' | 'imSafe' | 'textContacts'> {
   const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  return { snapshot, hold: controller.hold, cancel: controller.cancel, imSafe: controller.imSafe };
+  return {
+    snapshot,
+    hold: controller.hold,
+    cancel: controller.cancel,
+    imSafe: controller.imSafe,
+    textContacts: controller.textContacts,
+  };
 }
 
 /** Whether the phone has a screen lock; null until known. Rechecked when the app returns. */

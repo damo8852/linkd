@@ -11,7 +11,7 @@ import { useSos } from './sos';
  * has to navigate to cancel. Renders nothing otherwise.
  */
 export function SosOverlay(): React.JSX.Element | null {
-  const { snapshot, cancel, imSafe } = useSos();
+  const { snapshot, cancel, imSafe, textContacts } = useSos();
   const { state } = snapshot;
 
   if (state.kind !== 'cancelWindow' && state.kind !== 'active') {
@@ -28,6 +28,8 @@ export function SosOverlay(): React.JSX.Element | null {
           noContacts={snapshot.noContacts}
           endsAt={state.endsAt}
           onImSafe={imSafe}
+          fallback={snapshot.fallback}
+          onTextContacts={textContacts}
         />
       )}
     </SafeAreaView>

@@ -1,4 +1,5 @@
 import { BUTTON_CANCEL_WINDOW_MS, GRACE_PERIOD_MS, LIVE_LOCATION_MS } from './alertMachine';
+import type { FallbackResult } from './smsFallback';
 import {
   RETRY_MS,
   createSosController,
@@ -20,6 +21,8 @@ function harness(overrides: Partial<SosDeps> = {}) {
   let unlockResult: UnlockResult | Promise<UnlockResult> = 'unlocked';
   const ends: { id: string; reason: string; at: number }[] = [];
   let endResults: (boolean | Error)[] = [];
+  let fallbacks = 0;
+  let fallbackResult: FallbackResult | Error = 'opened';
   const arms: { id: string; trigger: string; delayMs: number }[] = [];
   let armResult: Error | null = null;
   const disarms: { id: string; at: number }[] = [];
@@ -51,6 +54,10 @@ function harness(overrides: Partial<SosDeps> = {}) {
       disarms.push({ id, at: now });
       const result = disarmResults.shift() ?? 'disarmed';
       return result instanceof Error ? Promise.reject(result) : Promise.resolve(result);
+    },
+    fallback: () => {
+      fallbacks++;
+      return fallbackResult instanceof Error ? Promise.reject(fallbackResult) : Promise.resolve(fallbackResult);
     },
     end: (id, reason) => {
       ends.push({ id, reason, at: now });
@@ -93,6 +100,10 @@ function harness(overrides: Partial<SosDeps> = {}) {
     },
     disarmWill: (...results: (DisarmResult | Error)[]) => {
       disarmResults = results;
+    },
+    fallbacks: () => fallbacks,
+    fallbackWill: (result: FallbackResult | Error) => {
+      fallbackResult = result;
     },
     endWill: (...results: (boolean | Error)[]) => {
       endResults = results;
@@ -522,5 +533,64 @@ describe('arming the server', () => {
     h.controller.hold('inApp');
 
     expect(h.controller.getSnapshot().lateCancel).toBe(false);
+  });
+});
+
+describe('SMS composer fallback', () => {
+  it('opens once on the first failed send, while the server retries continue on the same id', async () => {
+    const h = harness();
+    h.sendWill('failed', 'failed', 'delivered');
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    expect(h.fallbacks()).toBe(1);
+    expect(h.controller.getSnapshot().fallback).toBe('opened');
+
+    await h.advance(2 * RETRY_MS);
+    expect(h.fallbacks()).toBe(1);
+    expect(h.sends.map((s) => s.id)).toEqual(['alert-1', 'alert-1', 'alert-1']);
+    expect(h.controller.getSnapshot().state).toMatchObject({ delivery: 'delivered' });
+  });
+
+  it('opens for a thrown send too', async () => {
+    const h = harness();
+    h.sendWill(new Error('network'));
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    expect(h.fallbacks()).toBe(1);
+  });
+
+  it('does not open when the send is delivered, or when the server has nobody to text', async () => {
+    for (const result of ['delivered', 'noContacts'] as const) {
+      const h = harness();
+      h.sendWill(result);
+      h.controller.hold('inApp');
+      await h.advance(5 * S);
+      expect(h.fallbacks()).toBe(0);
+    }
+  });
+
+  it('keeps what happened for the screen, and a fallback that throws counts as unavailable', async () => {
+    const h = harness();
+    h.fallbackWill(new Error('boom'));
+    h.sendWill('failed');
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    expect(h.controller.getSnapshot().fallback).toBe('unavailable');
+  });
+
+  it('textContacts reopens it for the active alert, and a new alert starts clean', async () => {
+    const h = harness();
+    h.sendWill('failed');
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.controller.textContacts();
+    expect(h.fallbacks()).toBe(2);
+
+    await h.controller.imSafe();
+    await h.controller.textContacts();
+    expect(h.fallbacks()).toBe(2);
+
+    h.controller.hold('inApp');
+    expect(h.controller.getSnapshot().fallback).toBeNull();
   });
 });

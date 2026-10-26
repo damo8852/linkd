@@ -26,9 +26,10 @@ const mocked = jest.mocked(sosModule);
 const hold = jest.fn();
 const cancel = jest.fn(async () => true);
 const imSafe = jest.fn(async () => true);
+const textContacts = jest.fn(async () => undefined);
 
 function useSosReturns(state: SosState, noContacts = false): void {
-  mocked.useSos.mockReturnValue({ snapshot: { state, noContacts, endFailed: false, disarmFailed: false, lateCancel: false }, hold, cancel, imSafe });
+  mocked.useSos.mockReturnValue({ snapshot: { state, noContacts, endFailed: false, disarmFailed: false, lateCancel: false, fallback: null }, hold, cancel, imSafe, textContacts });
 }
 
 const idle: SosState = { kind: 'idle', batteryCritical: false };
@@ -125,7 +126,14 @@ describe('CountdownScreen', () => {
 });
 
 describe('ActiveAlertScreen', () => {
-  const props = { endsAt: 60 * 60_000, onImSafe: imSafe, now: () => 0, noContacts: false };
+  const props = {
+    endsAt: 60 * 60_000,
+    onImSafe: imSafe,
+    onTextContacts: textContacts,
+    now: () => 0,
+    noContacts: false,
+    fallback: null,
+  };
 
   it('says what actually happened for each delivery state', () => {
     const { rerender } = render(<ActiveAlertScreen {...props} delivery="pending" />);
@@ -146,6 +154,26 @@ describe('ActiveAlertScreen', () => {
 
     expect(screen.getByText(/no emergency contacts, so no one was texted/)).toBeOnTheScreen();
     expect(screen.queryByText(/Trying again/)).toBeNull();
+  });
+
+  it('offers to text contacts from this phone only while the send is failing', () => {
+    const { rerender } = render(<ActiveAlertScreen {...props} delivery="delivered" />);
+    expect(screen.queryByRole('button', { name: 'Text my contacts' })).toBeNull();
+
+    rerender(<ActiveAlertScreen {...props} delivery="failed" noContacts />);
+    expect(screen.queryByRole('button', { name: 'Text my contacts' })).toBeNull();
+
+    rerender(<ActiveAlertScreen {...props} delivery="failed" />);
+    fireEvent.press(screen.getByRole('button', { name: 'Text my contacts' }));
+    expect(textContacts).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['unavailable', "This phone can't open a text message. Call for help another way."],
+    ['noContacts', 'No contacts are saved on this phone to text. Call for help another way.'],
+  ] as const)('says when the text could not be opened (%s)', (fallback, message) => {
+    render(<ActiveAlertScreen {...props} delivery="failed" fallback={fallback} />);
+    expect(screen.getByText(message)).toBeOnTheScreen();
   });
 
   it('ends with "I\'m safe" and says so when the unlock failed', async () => {
