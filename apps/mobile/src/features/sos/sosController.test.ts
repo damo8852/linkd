@@ -594,3 +594,18 @@ describe('SMS composer fallback', () => {
     expect(h.controller.getSnapshot().fallback).toBeNull();
   });
 });
+
+describe('alert id for the screen', () => {
+  it('is the sent alert id while it is active, and null once it ends', async () => {
+    const h = harness();
+    expect(h.controller.getSnapshot().alertId).toBeNull();
+    h.controller.hold('inApp');
+    expect(h.controller.getSnapshot().alertId).toBeNull();
+
+    await h.advance(5 * S);
+    expect(h.controller.getSnapshot().alertId).toBe('alert-1');
+
+    await h.controller.imSafe();
+    expect(h.controller.getSnapshot().alertId).toBeNull();
+  });
+});

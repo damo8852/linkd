@@ -1,6 +1,7 @@
 import { activeContacts, type ContactsCache } from '../emergency-contacts/contactsCache';
+import type { Fix } from './location';
 
-export type FallbackLocation = { latitude: number; longitude: number; accuracyM: number | null };
+export type FallbackLocation = Pick<Fix, 'latitude' | 'longitude' | 'accuracyM'>;
 
 /** `noContacts`: no cached active contact to text. `unavailable`: this phone cannot open a text. */
 export type FallbackResult = 'opened' | 'noContacts' | 'unavailable';
