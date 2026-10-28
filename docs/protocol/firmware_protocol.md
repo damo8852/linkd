@@ -35,6 +35,19 @@ Out for now: haptic motor, status LED, accelerometer.
 - Host tests: `cd firmware && python -m unittest`.
 - Copy to the board (`pip install mpremote`; replace COM3 with your port): `python -m mpremote connect COM3 fs cp packages/ble-protocol/generated/linkd_ble.py :linkd_ble.py + fs cp firmware/button.py :button.py + fs cp firmware/frames.py :frames.py + fs cp firmware/main.py :main.py + reset`.
 
+## Battery bench test
+
+For [#59](https://github.com/damo8852/linkd/issues/59): does the cell survive radio bursts, and how long does it last? Needs no instruments. `firmware/bench.py` temporarily replaces `main.py` and logs to `bench.log` on the board (format and logic in `firmware/bench_log.py`, host-tested). MicroPython reports a brown-out as a power-on reset, so any reset during a run is logged as `unexpected=1`.
+
+Cell on the XIAO **BAT pads only** (never the 3V3 pin), and a cell with its own protection circuit: the board's charger has no over-discharge cutoff.
+
+1. Install over USB (replace COM3): `python -m mpremote connect COM3 fs cp packages/ble-protocol/generated/linkd_ble.py :linkd_ble.py + fs cp firmware/bench_log.py :bench_log.py + fs cp firmware/bench.py :bench.py + exec "open('main.py','w').write('import bench\nbench.main()\n'); open('bench_mode','w').write('stress')"`. Use `idle` instead of `stress` for the run-down test.
+2. Unplug USB so the board runs on the cell only.
+   - **stress:** fully charged cell, connect with nRF Connect and enable notifications on the events characteristic, leave it 30 minutes.
+   - **idle:** fully charged cell, connect with nRF Connect and leave it connected until the cell dies.
+3. Plug USB back in and read the result: `python -m mpremote connect COM3 exec "import bench; bench.stop(); bench.report()"`. `unexpected_resets` above 0 in stress means the cell browned out. In idle, `longest_up_s` is the battery life (plugging USB into a dead board boots it and starts a new run, which logs one expected `unexpected=1`).
+4. Restore the product firmware (the copy command under Layout above) and delete the log: `python -m mpremote connect COM3 fs rm :bench.log + fs rm :bench_mode`.
+
 ## Testing
 
 - **Pure logic lives in modules that import no hardware** (`machine`, `bluetooth`): button debounce and hold timing, frame building. They run unchanged under CPython and MicroPython, with the clock passed in.
