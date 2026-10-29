@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-10-28 10:00 MDT
+damo8852
+
+## Battery bench test
+
+[feature] Added an instrument-free battery bench test for the bangle: `firmware/bench.py` temporarily replaces the product firmware and logs boots, run starts, and minute heartbeats to the board, in a stress mode (radio bursts every 20 ms) and an idle mode (the real 500 ms advertising, connected, until the cell dies). Because MicroPython reports a brown-out as a power-on reset, the host-tested `bench_log.py` flags any reset during a run as unexpected. The firmware protocol has the run steps; the measurements and the battery decision itself are still open.
+
+Issues: #59
+
+---
+
 2026-10-26 17:23 MDT
 damo8852
 
