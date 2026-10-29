@@ -41,7 +41,7 @@ For [#59](https://github.com/damo8852/linkd/issues/59): does the cell survive ra
 
 Cell on the XIAO **BAT pads only** (never the 3V3 pin), and a cell with its own protection circuit: the board's charger has no over-discharge cutoff.
 
-1. Install over USB (replace COM3): `python -m mpremote connect COM3 fs cp packages/ble-protocol/generated/linkd_ble.py :linkd_ble.py + fs cp firmware/bench_log.py :bench_log.py + fs cp firmware/bench.py :bench.py + exec "open('main.py','w').write('import bench\nbench.main()\n'); open('bench_mode','w').write('stress')"`. Use `idle` instead of `stress` for the run-down test.
+1. Install over USB (replace COM3): `python -m mpremote connect COM3 fs cp packages/ble-protocol/generated/linkd_ble.py :linkd_ble.py + fs cp firmware/bench_log.py :bench_log.py + fs cp firmware/bench.py :bench.py + exec "with open('main.py','w') as f: f.write('import bench\nbench.main()\n')" + exec "with open('bench_mode','w') as f: f.write('stress')" + reset`. Use `idle` instead of `stress` for the run-down test. (Write through `with`: an unclosed `open().write()` never reaches the board's flash.)
 2. Unplug USB so the board runs on the cell only.
    - **stress:** fully charged cell, connect with nRF Connect and enable notifications on the events characteristic, leave it 30 minutes.
    - **idle:** fully charged cell, connect with nRF Connect and leave it connected until the cell dies.
