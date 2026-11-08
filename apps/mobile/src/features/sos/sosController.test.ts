@@ -4,6 +4,7 @@ import {
   RETRY_MS,
   createSosController,
   type DisarmResult,
+  type PendingSos,
   type SendResult,
   type SosDeps,
   type UnlockResult,
@@ -12,7 +13,7 @@ import {
 const S = 1000;
 
 /** A manual clock and timer queue, so tests never sleep. */
-function harness(overrides: Partial<SosDeps> = {}) {
+function harness(overrides: Partial<SosDeps> = {}, { restored = true } = {}) {
   let now = 0;
   let nextHandle = 1;
   const timers = new Map<number, { at: number; fn: () => void }>();
@@ -28,6 +29,7 @@ function harness(overrides: Partial<SosDeps> = {}) {
   const disarms: { id: string; at: number }[] = [];
   let disarmResults: (DisarmResult | Error)[] = [];
   let ids = 0;
+  const saves: PendingSos[] = [];
 
   const deps: SosDeps = {
     now: () => now,
@@ -64,9 +66,14 @@ function harness(overrides: Partial<SosDeps> = {}) {
       const result = endResults.shift() ?? true;
       return result instanceof Error ? Promise.reject(result) : Promise.resolve(result);
     },
+    save: (record) => {
+      saves.push(record);
+    },
     ...overrides,
   };
   const controller = createSosController(deps);
+  // The app restores the saved record at start; most tests start from nothing saved.
+  if (restored) controller.restore({ active: null, ends: [], disarms: [] });
 
   /** Lets resolved promises (send, unlock) run their continuations. */
   const flush = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
@@ -89,6 +96,8 @@ function harness(overrides: Partial<SosDeps> = {}) {
   return {
     controller,
     advance,
+    saves,
+    lastSave: (): PendingSos | undefined => saves[saves.length - 1],
     flush,
     sends,
     ends,
@@ -607,5 +616,177 @@ describe('alert id for the screen', () => {
 
     await h.controller.imSafe();
     expect(h.controller.getSnapshot().alertId).toBeNull();
+  });
+});
+
+describe('surviving the app being killed', () => {
+  const none: PendingSos = { active: null, ends: [], disarms: [] };
+  const MIN = 60 * S;
+
+  it('saves nothing before the saved record is restored, so a startup change cannot overwrite it', async () => {
+    const h = harness({}, { restored: false });
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    expect(h.saves).toHaveLength(0);
+
+    h.controller.restore(none);
+    expect(h.lastSave()?.active).toMatchObject({ id: 'alert-1' });
+  });
+
+  it('saves the active alert as soon as it sends, and drops it once it ends', async () => {
+    const h = harness();
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+
+    expect(h.lastSave()).toEqual({
+      active: { id: 'alert-1', trigger: 'inApp', triggeredAt: 5 * S, endsAt: 5 * S + LIVE_LOCATION_MS },
+      ends: [],
+      disarms: [],
+    });
+
+    await h.controller.imSafe();
+    await h.flush();
+    expect(h.lastSave()).toEqual(none);
+  });
+
+  it('saves an end until the server confirms it, including while the first try is in flight', async () => {
+    let finishEnd: (ok: boolean) => void = () => {};
+    const h = harness({ end: () => new Promise<boolean>((resolve) => (finishEnd = resolve)) });
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+    await h.controller.imSafe();
+
+    expect(h.lastSave()).toEqual({ active: null, ends: [{ id: 'alert-1', reason: 'user' }], disarms: [] });
+
+    finishEnd(false);
+    await h.flush();
+    expect(h.lastSave()?.ends).toEqual([{ id: 'alert-1', reason: 'user' }]);
+
+    await h.advance(RETRY_MS);
+    finishEnd(true);
+    await h.flush();
+    expect(h.lastSave()).toEqual(none);
+  });
+
+  it('saves a cancelled countdown until its disarm reaches the server', async () => {
+    let finishDisarm: (r: DisarmResult) => void = () => {};
+    const h = harness({ disarm: () => new Promise<DisarmResult>((resolve) => (finishDisarm = resolve)) });
+    h.controller.hold('inApp');
+    await h.controller.cancel();
+
+    expect(h.lastSave()).toEqual({
+      active: null,
+      ends: [],
+      disarms: [{ id: 'alert-1', trigger: 'inApp', reason: 'cancel' }],
+    });
+
+    finishDisarm('disarmed');
+    await h.flush();
+    expect(h.lastSave()).toEqual(none);
+  });
+
+  it('restores an alert still inside its 60 min: same id, same end time, and resends to confirm', async () => {
+    const h = harness();
+    h.setNow(10 * MIN);
+    h.controller.restore({
+      active: { id: 'old-1', trigger: 'button', triggeredAt: 0, endsAt: LIVE_LOCATION_MS },
+      ends: [],
+      disarms: [],
+    });
+    await h.flush();
+
+    expect(h.controller.getSnapshot()).toMatchObject({
+      alertId: 'old-1',
+      state: { kind: 'active', trigger: 'button', endsAt: LIVE_LOCATION_MS, delivery: 'delivered' },
+    });
+    expect(h.sends).toEqual([{ id: 'old-1', trigger: 'button', triggeredAt: 0, at: 10 * MIN }]);
+
+    await h.advance(LIVE_LOCATION_MS - 10 * MIN);
+    expect(h.kind()).toBe('idle');
+    expect(h.ends).toEqual([{ id: 'old-1', reason: 'timeout', at: LIVE_LOCATION_MS }]);
+  });
+
+  it('a restored alert can be ended with "I\'m safe"', async () => {
+    const h = harness();
+    h.controller.restore({
+      active: { id: 'old-1', trigger: 'inApp', triggeredAt: 0, endsAt: LIVE_LOCATION_MS },
+      ends: [],
+      disarms: [],
+    });
+    await h.flush();
+
+    expect(await h.controller.imSafe()).toBe(true);
+    expect(h.ends).toEqual([{ id: 'old-1', reason: 'user', at: 0 }]);
+  });
+
+  it('an alert whose 60 min passed while the app was dead is ended as timeout, never shown', async () => {
+    const h = harness();
+    h.endWill(false, true);
+    h.setNow(LIVE_LOCATION_MS + 1);
+    h.controller.restore({
+      active: { id: 'old-1', trigger: 'linkLoss', triggeredAt: 0, endsAt: LIVE_LOCATION_MS },
+      ends: [],
+      disarms: [],
+    });
+    await h.flush();
+
+    expect(h.kind()).toBe('idle');
+    expect(h.sends).toHaveLength(0);
+    expect(h.controller.getSnapshot().endFailed).toBe(true);
+
+    await h.advance(RETRY_MS);
+    expect(h.ends.map((e) => [e.id, e.reason])).toEqual([
+      ['old-1', 'timeout'],
+      ['old-1', 'timeout'],
+    ]);
+    expect(h.controller.getSnapshot().endFailed).toBe(false);
+    expect(h.lastSave()).toEqual(none);
+  });
+
+  it('restored ends retry with the same id and reason until the server confirms', async () => {
+    const h = harness();
+    h.endWill(new Error('offline'), false, true);
+    h.controller.restore({ active: null, ends: [{ id: 'old-1', reason: 'user' }], disarms: [] });
+    await h.flush();
+    await h.advance(2 * RETRY_MS);
+
+    expect(h.ends.map((e) => [e.id, e.reason])).toEqual([
+      ['old-1', 'user'],
+      ['old-1', 'user'],
+      ['old-1', 'user'],
+    ]);
+    expect(h.lastSave()).toEqual(none);
+  });
+
+  it('a restored disarm that finds the alert sent ends it as safe, since the user unlocked to cancel', async () => {
+    const h = harness();
+    h.disarmWill('fired');
+    h.controller.restore({ active: null, ends: [], disarms: [{ id: 'old-1', trigger: 'inApp', reason: 'cancel' }] });
+    await h.flush();
+    await h.flush();
+
+    expect(h.disarms.map((d) => d.id)).toEqual(['old-1']);
+    expect(h.controller.getSnapshot().lateCancel).toBe(true);
+    expect(h.ends.map((e) => [e.id, e.reason])).toEqual([['old-1', 'user']]);
+  });
+
+  it('a restored reconnect disarm that finds the alert sent shows it as active, never as safe', async () => {
+    const h = harness();
+    h.disarmWill('fired');
+    h.controller.restore({ active: null, ends: [], disarms: [{ id: 'old-1', trigger: 'linkLoss', reason: 'reconnect' }] });
+    await h.flush();
+    await h.flush();
+
+    expect(h.controller.getSnapshot()).toMatchObject({ alertId: 'old-1', state: { kind: 'active' } });
+    expect(h.ends).toHaveLength(0);
+  });
+
+  it('a new alert after a restore still gets a new id', async () => {
+    const h = harness();
+    h.controller.restore({ active: null, ends: [{ id: 'old-1', reason: 'user' }], disarms: [] });
+    h.controller.hold('inApp');
+    await h.advance(5 * S);
+
+    expect(h.sends.map((s) => s.id)).toEqual(['alert-1']);
   });
 });

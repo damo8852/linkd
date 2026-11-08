@@ -12,6 +12,9 @@
  * disarm is retried until the server answers, and one that finds the alert already sent either
  * ends it as safe (the user unlocked to cancel) or shows it as active (no unlock). An unlock that
  * fails, throws, or finishes after the window never cancels. Nothing here can drop a pending send.
+ *
+ * The active alert, unconfirmed ends, and unanswered disarms are saved through `save` on every
+ * change and handed back to `restore` at app start, so killing the app drops none of them.
  */
 
 import {
@@ -40,6 +43,16 @@ export type DisarmResult = 'disarmed' | 'fired';
 
 export type OutgoingAlert = { id: string; trigger: Trigger; triggeredAt: number };
 
+/**
+ * What must outlive the app process: the active alert, ends the server has not confirmed, and
+ * cancelled countdowns whose disarm has not reached it. Saved on every change, restored at start.
+ */
+export type PendingSos = {
+  active: (OutgoingAlert & { endsAt: number }) | null;
+  ends: { id: string; reason: EndReason }[];
+  disarms: { id: string; trigger: Trigger; reason: DisarmReason }[];
+};
+
 export type SosDeps = {
   now(): number;
   setTimer(fn: () => void, ms: number): unknown;
@@ -56,6 +69,8 @@ export type SosDeps = {
   fallback(): Promise<FallbackResult>;
   /** Tells the server the alert ended. Resolves true only once the server confirmed it. */
   end(id: string, reason: EndReason): Promise<boolean>;
+  /** Persists what must survive the app being killed. Called on every change; must not throw. */
+  save(record: PendingSos): void;
 };
 
 /**
@@ -90,6 +105,12 @@ export type SosController = {
   dispatch(event: SosEvent): void;
   /** Call when the app returns to the foreground: applies deadlines missed while suspended. */
   resume(): void;
+  /**
+   * Call once at app start with the last saved record. Retries its ends and disarms with the same
+   * ids, shows its alert again with the original end time (resending to confirm delivery), or
+   * ends it as timeout if its 60 min passed while the app was dead.
+   */
+  restore(record: PendingSos): void;
 };
 
 export function createSosController(deps: SosDeps): SosController {
@@ -108,6 +129,13 @@ export function createSosController(deps: SosDeps): SosController {
   let current: OutgoingAlert | null = null;
   let fallbackFor: OutgoingAlert | null = null;
   const failedEnds = new Set<string>();
+  /** Every end not yet confirmed by the server, in flight or failed. */
+  const pendingEnds = new Map<string, EndReason>();
+  /** Every disarm not yet answered by the server, in flight or failed. */
+  const pendingDisarms = new Map<string, { trigger: Trigger; reason: DisarmReason }>();
+  let lastSaved = '';
+  /** Nothing is saved before restore, so a change at startup can never overwrite the saved record. */
+  let restored = false;
   /** The running countdown's id, armed on the server; its send uses the same id. */
   let armed: { id: string; trigger: Trigger } | null = null;
   const failedDisarms = new Set<string>();
@@ -115,6 +143,23 @@ export function createSosController(deps: SosDeps): SosController {
   function update(next: Partial<SosSnapshot>): void {
     snapshot = { ...snapshot, ...next };
     listeners.forEach((listener) => listener());
+    persist();
+  }
+
+  /** Saves the pending record whenever it differs from the last one saved. */
+  function persist(): void {
+    if (!restored) return;
+    const record: PendingSos = {
+      active:
+        current !== null && snapshot.state.kind === 'active' ? { ...current, endsAt: snapshot.state.endsAt } : null,
+      ends: [...pendingEnds].map(([id, reason]) => ({ id, reason })),
+      disarms: [...pendingDisarms].map(([id, disarm]) => ({ id, ...disarm })),
+    };
+    const serialized = JSON.stringify(record);
+    if (serialized !== lastSaved) {
+      lastSaved = serialized;
+      deps.save(record);
+    }
   }
 
   function attempt(alert: OutgoingAlert): void {
@@ -148,11 +193,14 @@ export function createSosController(deps: SosDeps): SosController {
 
   // Never cancelled: an end must reach the server, whatever the alert state does next.
   function attemptEnd(id: string, reason: EndReason): void {
+    pendingEnds.set(id, reason);
+    persist();
     void deps
       .end(id, reason)
       .catch(() => false)
       .then((ended) => {
         if (ended) {
+          pendingEnds.delete(id);
           failedEnds.delete(id);
         } else {
           failedEnds.add(id);
@@ -164,8 +212,11 @@ export function createSosController(deps: SosDeps): SosController {
 
   // Never cancelled, like an end: until the server answers, it may still send.
   function attemptDisarm(id: string, trigger: Trigger, reason: DisarmReason): void {
+    pendingDisarms.set(id, { trigger, reason });
+    persist();
     deps.disarm(id).then(
       (result) => {
+        pendingDisarms.delete(id);
         failedDisarms.delete(id);
         update({ disarmFailed: failedDisarms.size > 0 });
         if (result !== 'fired') return;
@@ -225,10 +276,46 @@ export function createSosController(deps: SosDeps): SosController {
       }
     }
 
+    scheduleDeadline();
+  }
+
+  function scheduleDeadline(): void {
     if (deadlineTimer !== null) deps.clearTimer(deadlineTimer);
     const deadline = nextDeadline(snapshot.state);
     deadlineTimer =
       deadline === null ? null : deps.setTimer(() => dispatch({ type: 'tick' }), Math.max(0, deadline - deps.now()));
+  }
+
+  function restore(record: PendingSos): void {
+    restored = true;
+    for (const end of record.ends) {
+      if (!pendingEnds.has(end.id)) attemptEnd(end.id, end.reason);
+    }
+    for (const disarm of record.disarms) {
+      if (!pendingDisarms.has(disarm.id)) attemptDisarm(disarm.id, disarm.trigger, disarm.reason);
+    }
+    const alert = record.active;
+    persist();
+    if (alert === null || pendingEnds.has(alert.id)) return;
+    if (deps.now() >= alert.endsAt) {
+      // Its 60 min passed while the app was dead: nobody unlocked, so never "safe".
+      attemptEnd(alert.id, 'timeout');
+      return;
+    }
+    // ponytail: restore runs at app start, before a 3 s hold or a 20 s grace can finish, so a
+    // running countdown or alert here means something unusual; the restored alert is then dropped
+    // without an end. Queue it behind the running one if that ever shows up outside a test.
+    if (snapshot.state.kind !== 'idle' && snapshot.state.kind !== 'unprotected') return;
+    current = { id: alert.id, trigger: alert.trigger, triggeredAt: alert.triggeredAt };
+    update({
+      state: { kind: 'active', trigger: alert.trigger, endsAt: alert.endsAt, delivery: 'pending' },
+      noContacts: false,
+      fallback: null,
+      alertId: alert.id,
+    });
+    scheduleDeadline();
+    // Same id, so the server texts nobody twice; its answer tells the screen what was delivered.
+    attempt(current);
   }
 
   async function confirm(event: 'cancel' | 'imSafe', from: SosState['kind']): Promise<boolean> {
@@ -258,5 +345,6 @@ export function createSosController(deps: SosDeps): SosController {
     textContacts: () => (current !== null && snapshot.state.kind === 'active' ? runFallback(current) : Promise.resolve()),
     dispatch,
     resume: () => dispatch({ type: 'tick' }),
+    restore,
   };
 }
