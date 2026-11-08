@@ -26,11 +26,11 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
-    // Asked for in onboarding. The BLE library's config plugin takes these over once the bangle link is built.
-    permissions: ['android.permission.BLUETOOTH_SCAN', 'android.permission.BLUETOOTH_CONNECT'],
   },
   plugins: [
     'expo-router',
+    // The bangle link. Declares the Android Bluetooth permissions (asked for in onboarding) and the iOS prompt text.
+    ['react-native-ble-plx', { bluetoothAlwaysPermission: 'LINKD uses Bluetooth to stay connected to your bangle.' }],
     // Holds the key that encrypts the stored session (src/lib/sessionStorage.ts).
     'expo-secure-store',
     // Device unlock (Face ID / fingerprint / passcode) gates cancelling an SOS and "I'm safe".

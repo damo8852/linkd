@@ -12,6 +12,11 @@ damo8852
 [internal] Signed off that cancel and "I'm safe" stay separate: a cancel unlock that finishes after the window does nothing, so a late or coerced cancel can never end an SOS that just went out, and only "I'm safe" ends a sent alert. Recorded in locked_decisions.md; the state machine already behaves this way, so no code changed.
 
 Issues: #28
+## App connects to the bangle and shows button presses
+
+[feature] Added the app side of the bangle link: `connectBangle` scans for the LINKD service, accepts only a bangle on this app's protocol version, and passes well-formed button frames to a new Bangle debug screen, dropping malformed, unknown, early, and post-disconnect frames; nothing reaches the SOS state machine. `react-native-ble-plx` 3.5.1 is behind a single transport file and its config plugin now declares the Bluetooth permissions; built test-first against a fake transport, with the whole link (including the library on the New Architecture) still to be verified on a phone.
+
+Issues: #60
 
 ---
 
