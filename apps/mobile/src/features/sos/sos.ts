@@ -8,6 +8,7 @@ import { readContactsCache } from '../emergency-contacts/contactsCache';
 import { createCountdownNotifier } from './countdownNotification';
 import { armRequest, disarmRequest, endAlertRequest, newAlertId, sendAlertRequest } from './sendAlertRequest';
 import { lastKnownFix } from './location';
+import { createPendingSosWriter, readPendingSos } from './pendingSos';
 import { openSmsFallback } from './smsFallback';
 import { createSosController, type SosController, type SosSnapshot } from './sosController';
 import { hasScreenLock, requestUnlock } from './unlock';
@@ -30,7 +31,16 @@ const controller = createSosController({
       lastLocation: lastKnownFix,
       compose: (to, body) => SMS.sendSMSAsync(to, body),
     }),
+  // Encrypted, readable after the first unlock since boot, so a relaunch from a locked phone still finds it.
+  save: createPendingSosWriter(encryptedStorage, () => {
+    // No contents: the record holds alert ids only, but nothing from it belongs in logs.
+    console.warn('sos: could not save the pending alert state');
+  }),
 });
+
+// An alert, end, or disarm the last run never finished picks up where it stopped. Nothing is
+// saved until this has run, so startup can never overwrite the saved record.
+void readPendingSos(encryptedStorage).then(controller.restore);
 
 const COUNTDOWN_NOTIFICATION = 'sos-countdown';
 

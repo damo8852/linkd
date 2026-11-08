@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-08 15:38 MST
+damo8852
+
+## Alerts and pending ends survive the app being killed
+
+[feature] The SOS controller now saves the active alert, unconfirmed ends, and unanswered disarms to encrypted storage on every change and restores them at app start, resuming with the same ids and reasons and ending as `timeout` any alert whose 60 min passed while the app was dead. Built test-first and mutation-checked; a countdown running at the moment of the kill is filed as a follow-up.
+
+Issues: #70, #82
+
+---
+
 2026-10-26 17:23 MDT
 damo8852
 
@@ -187,17 +198,6 @@ Issues: #38
 
 ---
 
-2026-10-05 16:32 MDT
-damo8852
-
-## Supabase client and auth screens
-
-[feature] Added the single Supabase client with the session stored encrypted on the phone, plus sign-in, sign-up, and password-reset screens with signed-in vs signed-out routing and a sign-out button on the placeholder home. Password reset is by a 6-digit emailed code instead of a link, the minimum password length is now 8, and the flows were checked against the local Supabase stack.
-
-Issues: #30
-
----
-
 2026-10-05 16:40 MDT
 damo8852
 
@@ -206,17 +206,6 @@ damo8852
 [feature] Added `dispatch_enabled` (default on) and a server-only `phone_verified` to `profiles`, with a trigger that clears the verified flag whenever the number changes. Built test-first with 23 pgTAP tests covering owner, other user, anon, and server, and decided the profile row is created by the app at onboarding rather than by a sign-up trigger.
 
 Issues: #31
-
----
-
-2026-10-04 14:19 MDT
-damo8852
-
-## Living wireframes, first pass
-
-[internal] Added `docs/design/wireframes.html`, a self-contained page of themed mid-fi phone frames covering the SOS core, emergency contacts, and sign-in and onboarding screens, drawn from the style guide tokens. It is a living doc updated in the same PR as any screen layout change, and is listed in the docs inventory.
-
-Issues: #40
 
 ---
 
