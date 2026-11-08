@@ -123,7 +123,7 @@ describe('SettingsScreen', () => {
     const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
     const reload = jest.fn(async () => {});
     permissions.usePermissionStates.mockReturnValue({
-      states: { bluetooth: 'later', notifications: 'granted', location: 'off', backgroundLocation: 'off' },
+      states: { bluetooth: 'later', notifications: 'granted', location: 'off', backgroundLocation: 'off', batteryOptimization: 'granted' },
       reload,
     });
     permissions.requestPermission.mockResolvedValue('off');

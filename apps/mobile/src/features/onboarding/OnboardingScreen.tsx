@@ -4,10 +4,10 @@ import { Platform } from 'react-native';
 import { Banner, Body, Button, Card, ErrorText, Field, Heading, Screen, TextLink } from '../../components/ui';
 import { normalizePhone } from '../emergency-contacts/phone';
 import { DispatchSwitch } from '../settings/DispatchSwitch';
-import { asksLater, PERMISSION_COPY, PERMISSION_IDS, requestPermission, type PermissionId } from './permissions';
+import { asksLater, PERMISSION_COPY, permissionIdsHere, requestPermission, type PermissionId } from './permissions';
 import { createProfile } from './profile';
 
-const STEPS = ['profile', ...PERMISSION_IDS, 'dispatch'] as const;
+type Step = 'profile' | PermissionId | 'dispatch';
 
 /**
  * First-run flow: who you are, one explained screen per permission, then who gets the SOS.
@@ -23,7 +23,9 @@ export function OnboardingScreen(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const step = STEPS[index] ?? 'dispatch';
+  // Read at render: which permissions exist depends on the platform.
+  const steps: Step[] = ['profile', ...permissionIdsHere(), 'dispatch'];
+  const step = steps[index] ?? 'dispatch';
 
   function confirmProfile(): void {
     const normalized = normalizePhone(phone);
@@ -58,7 +60,7 @@ export function OnboardingScreen(): React.JSX.Element {
 
   return (
     <Screen>
-      <Body>{`Step ${index + 1} of ${STEPS.length}`}</Body>
+      <Body>{`Step ${index + 1} of ${steps.length}`}</Body>
 
       {step === 'profile' && (
         <>
