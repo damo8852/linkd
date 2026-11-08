@@ -13,12 +13,14 @@
  * ends it as safe (the user unlocked to cancel) or shows it as active (no unlock). An unlock that
  * fails, throws, or finishes after the window never cancels. Nothing here can drop a pending send.
  *
- * The active alert, unconfirmed ends, and unanswered disarms are saved through `save` on every
- * change and handed back to `restore` at app start, so killing the app drops none of them.
+ * The active alert or running countdown, unconfirmed ends, and unanswered disarms are saved
+ * through `save` on every change and handed back to `restore` at app start, so killing the app
+ * drops none of them.
  */
 
 import {
   INITIAL_STATE,
+  LIVE_LOCATION_MS,
   nextDeadline,
   transition,
   type DisarmReason,
@@ -43,12 +45,17 @@ export type DisarmResult = 'disarmed' | 'fired';
 
 export type OutgoingAlert = { id: string; trigger: Trigger; triggeredAt: number };
 
+export type ArmedCountdown = { id: string; trigger: Trigger; sendAt: number };
+
 /**
- * What must outlive the app process: the active alert, ends the server has not confirmed, and
- * cancelled countdowns whose disarm has not reached it. Saved on every change, restored at start.
+ * What must outlive the app process: the active alert or running countdown, ends the server has
+ * not confirmed, and cancelled countdowns whose disarm has not reached it. Saved on every change,
+ * restored at start.
  */
 export type PendingSos = {
   active: (OutgoingAlert & { endsAt: number }) | null;
+  /** A running countdown, armed on the server under this id to send at `sendAt`. */
+  countdown: ArmedCountdown | null;
   ends: { id: string; reason: EndReason }[];
   disarms: { id: string; trigger: Trigger; reason: DisarmReason }[];
 };
@@ -137,7 +144,7 @@ export function createSosController(deps: SosDeps): SosController {
   /** Nothing is saved before restore, so a change at startup can never overwrite the saved record. */
   let restored = false;
   /** The running countdown's id, armed on the server; its send uses the same id. */
-  let armed: { id: string; trigger: Trigger } | null = null;
+  let armed: ArmedCountdown | null = null;
   const failedDisarms = new Set<string>();
 
   function update(next: Partial<SosSnapshot>): void {
@@ -152,6 +159,8 @@ export function createSosController(deps: SosDeps): SosController {
     const record: PendingSos = {
       active:
         current !== null && snapshot.state.kind === 'active' ? { ...current, endsAt: snapshot.state.endsAt } : null,
+      countdown:
+        armed !== null && (snapshot.state.kind === 'cancelWindow' || snapshot.state.kind === 'grace') ? armed : null,
       ends: [...pendingEnds].map(([id, reason]) => ({ id, reason })),
       disarms: [...pendingDisarms].map(([id, disarm]) => ({ id, ...disarm })),
     };
@@ -226,7 +235,7 @@ export function createSosController(deps: SosDeps): SosController {
           attemptEnd(id, 'user');
         } else if (snapshot.state.kind === 'idle' || snapshot.state.kind === 'unprotected') {
           // Nobody unlocked: show the alert as active so it can only end by unlock or timeout.
-          armed = { id, trigger };
+          armed = { id, trigger, sendAt: deps.now() };
           dispatch({ type: 'serverSent', trigger });
         }
         // ponytail: a newer countdown is running, so this sent alert has no screen and no end;
@@ -254,7 +263,7 @@ export function createSosController(deps: SosDeps): SosController {
     for (const command of result.commands) {
       if (command.type === 'arm') {
         if (armed === null) update({ lateCancel: false });
-        armed = { id: armed?.id ?? deps.newId(), trigger: command.trigger };
+        armed = { id: armed?.id ?? deps.newId(), trigger: command.trigger, sendAt: command.sendAt };
         deps.arm(armed.id, command.trigger, Math.max(0, command.sendAt - now)).catch(() => undefined);
         continue;
       }
@@ -277,6 +286,8 @@ export function createSosController(deps: SosDeps): SosController {
     }
 
     scheduleDeadline();
+    // Commands (arm, disarm, send) change what must be saved after the state update above.
+    persist();
   }
 
   function scheduleDeadline(): void {
@@ -294,18 +305,41 @@ export function createSosController(deps: SosDeps): SosController {
     for (const disarm of record.disarms) {
       if (!pendingDisarms.has(disarm.id)) attemptDisarm(disarm.id, disarm.trigger, disarm.reason);
     }
-    const alert = record.active;
     persist();
-    if (alert === null || pendingEnds.has(alert.id)) return;
-    if (deps.now() >= alert.endsAt) {
+
+    // A countdown saved before the kill becomes an alert from its send time once that has passed:
+    // the server sent it, or its arm never landed and the phone sends it now on the same id.
+    const countdown = record.countdown;
+    const alert =
+      record.active ??
+      (countdown !== null && deps.now() >= countdown.sendAt
+        ? { ...countdown, triggeredAt: countdown.sendAt, endsAt: countdown.sendAt + LIVE_LOCATION_MS }
+        : null);
+    const id = alert?.id ?? countdown?.id;
+    if (id === undefined || pendingEnds.has(id) || pendingDisarms.has(id)) return;
+    if (alert !== null && deps.now() >= alert.endsAt) {
       // Its 60 min passed while the app was dead: nobody unlocked, so never "safe".
       attemptEnd(alert.id, 'timeout');
       return;
     }
     // ponytail: restore runs at app start, before a 3 s hold or a 20 s grace can finish, so a
-    // running countdown or alert here means something unusual; the restored alert is then dropped
+    // running countdown or alert here means something unusual; the restored one is then dropped
     // without an end. Queue it behind the running one if that ever shows up outside a test.
     if (snapshot.state.kind !== 'idle' && snapshot.state.kind !== 'unprotected') return;
+
+    if (alert === null && countdown !== null) {
+      // Still counting: resume it on the same id, and re-arm for the time left (the server only
+      // ever moves a send earlier, so this cannot postpone it, and it covers an arm that failed).
+      armed = countdown;
+      update({
+        state: { kind: 'cancelWindow', trigger: countdown.trigger, endsAt: countdown.sendAt, bangleReconnected: false },
+      });
+      scheduleDeadline();
+      deps.arm(countdown.id, countdown.trigger, countdown.sendAt - deps.now()).catch(() => undefined);
+      return;
+    }
+    if (alert === null) return;
+
     current = { id: alert.id, trigger: alert.trigger, triggeredAt: alert.triggeredAt };
     update({
       state: { kind: 'active', trigger: alert.trigger, endsAt: alert.endsAt, delivery: 'pending' },

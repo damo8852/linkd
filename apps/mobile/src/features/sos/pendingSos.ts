@@ -4,7 +4,7 @@ import type { PendingSos } from './sosController';
 
 const KEY = 'linkd.sos-pending';
 
-export const EMPTY_PENDING_SOS: PendingSos = { active: null, ends: [], disarms: [] };
+export const EMPTY_PENDING_SOS: PendingSos = { active: null, countdown: null, ends: [], disarms: [] };
 
 const TRIGGERS: readonly unknown[] = ['button', 'inApp', 'linkLoss'] satisfies Trigger[];
 const END_REASONS: readonly unknown[] = ['user', 'timeout'] satisfies EndReason[];
@@ -38,6 +38,13 @@ export async function readPendingSos(storage: KeyValueStorage): Promise<PendingS
       ? { id: a.id, trigger: a.trigger as Trigger, triggeredAt: a.triggeredAt, endsAt: a.endsAt }
       : null;
 
+  // Records saved before countdowns were saved have none.
+  const k = saved.countdown as Loose;
+  const countdown =
+    typeof k?.id === 'string' && TRIGGERS.includes(k.trigger) && typeof k.sendAt === 'number'
+      ? { id: k.id, trigger: k.trigger as Trigger, sendAt: k.sendAt }
+      : null;
+
   const ends = asList(saved.ends).flatMap((e) =>
     typeof e?.id === 'string' && END_REASONS.includes(e.reason) ? [{ id: e.id, reason: e.reason as EndReason }] : [],
   );
@@ -48,7 +55,7 @@ export async function readPendingSos(storage: KeyValueStorage): Promise<PendingS
       : [],
   );
 
-  return { active, ends, disarms };
+  return { active, countdown, ends, disarms };
 }
 
 /**

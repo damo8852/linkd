@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-08 15:45 MST
+damo8852
+
+## Countdowns survive the app being killed
+
+[feature] A running countdown is now saved with its id and send time and restored at app start: still counting, it resumes with the time left and is re-armed on the same id; past its send time, it comes back as the active alert from that time and is resent on the same id in case its arm never reached the server. Built test-first and mutation-checked.
+
+Issues: #82
+
+---
+
 2026-11-08 15:38 MST
 damo8852
 
@@ -189,44 +200,6 @@ damo8852
 [feature] Added first-run onboarding that collects the user's name, number (entered twice), and dispatch choice, with one explained screen per permission (Bluetooth, notifications, location, background location) saying what it enables and what breaks without it, and a Settings screen that lists each permission's state in words with a way to turn it on. The profile is saved only on Finish and a slow or failed profile check never keeps a user from the home screen; the Android battery-optimization step and changing dispatch in Settings were filed as follow-ups.
 
 Issues: #35, #51, #52
-
----
-
-2026-10-07 12:08 MDT
-damo8852
-
-## In-app SOS: hold button, countdown, active alert
-
-[feature] Added the hold-to-trigger SOS button on home, a full-screen cancel countdown and active alert that cover any route, and a controller that runs the state machine, calls `send-alert` for real with retries on one alert id, and gates cancel and "I'm safe" on a device unlock via `expo-local-authentication`. Built test-first and mutation-checked; decided that a phone with no screen lock cancels with a plain tap plus a warning, and filed the background-countdown and location follow-ups.
-
-Issues: #33, #48, #49
-
----
-
-2026-10-05 17:01 MDT
-damo8852
-
-## Emergency contacts screen with offline cache
-
-[feature] Added the contacts list and add-contact screens with numbers normalized to E.164, the limit of 5 and opted-out contacts shown in words, and an encrypted on-device cache, built test-first, that survives sign-out, never empties on a failed fetch, and is replaced when a different account signs in. Also fixed the stored session and cache being unreadable on a locked iPhone by storing the Keychain key as readable after first unlock.
-
-Issues: #32
-## Twilio delivery status for SOS texts
-
-[feature] Added the `sms-status` Edge Function, which verifies Twilio's request signature and records whether each SOS text was delivered, undelivered, or failed, in new `delivery_status` and `delivery_error` columns the owner can read. `send-alert` now passes the callback URL to Twilio in live mode; built test-first with pgTAP and Deno suites and a local end-to-end run with signed, forged, and unsigned requests.
-
-Issues: #38
-
----
-
-2026-10-05 16:40 MDT
-damo8852
-
-## Profiles: dispatch setting and verified flag
-
-[feature] Added `dispatch_enabled` (default on) and a server-only `phone_verified` to `profiles`, with a trigger that clears the verified flag whenever the number changes. Built test-first with 23 pgTAP tests covering owner, other user, anon, and server, and decided the profile row is created by the app at onboarding rather than by a sign-up trigger.
-
-Issues: #31
 
 ---
 

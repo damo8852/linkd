@@ -18,6 +18,7 @@ function memoryStorage(initial: Record<string, string> = {}): KeyValueStorage & 
 
 const record: PendingSos = {
   active: { id: 'a1', trigger: 'inApp', triggeredAt: 1000, endsAt: 3_601_000 },
+  countdown: { id: 'c1', trigger: 'linkLoss', sendAt: 50_000 },
   ends: [{ id: 'e1', reason: 'user' }],
   disarms: [{ id: 'd1', trigger: 'linkLoss', reason: 'reconnect' }],
 };
@@ -45,6 +46,7 @@ describe('readPendingSos', () => {
   it('keeps every valid entry and drops only the malformed ones', async () => {
     const saved = {
       active: { id: 'a1', trigger: 'inApp', triggeredAt: 'yesterday', endsAt: 1 },
+      countdown: { id: 'c1', trigger: 'inApp', sendAt: '5s' },
       ends: [{ id: 'e1', reason: 'user' }, { id: 'e2', reason: 'bored' }, { reason: 'timeout' }],
       disarms: [{ id: 'd1', trigger: 'linkLoss', reason: 'reconnect' }, { id: 'd2', trigger: 'shake', reason: 'cancel' }],
     };
@@ -52,10 +54,18 @@ describe('readPendingSos', () => {
 
     expect(await readPendingSos(storage)).toEqual({
       active: null,
+      countdown: null,
       ends: [{ id: 'e1', reason: 'user' }],
       disarms: [{ id: 'd1', trigger: 'linkLoss', reason: 'reconnect' }],
     });
   });
+});
+
+it('reads a record saved before countdowns were saved as having no countdown', async () => {
+  const saved = { active: null, ends: [{ id: 'e1', reason: 'user' }], disarms: [] };
+  const storage = memoryStorage({ 'linkd.sos-pending': JSON.stringify(saved) });
+
+  expect(await readPendingSos(storage)).toEqual({ ...saved, countdown: null });
 });
 
 describe('createPendingSosWriter', () => {
