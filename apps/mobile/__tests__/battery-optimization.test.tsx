@@ -128,7 +128,8 @@ describe('screens', () => {
 
     await waitFor(() => expect(permissions.requestPermission).toHaveBeenLastCalledWith('batteryOptimization'));
     expect(await screen.findByText('Step 7 of 7')).toBeOnTheScreen();
-  });
+    // Six screens rendered and awaited in turn: 0.5 s locally, over 5 s on the Windows CI runner.
+  }, 30_000);
 
   it('iOS onboarding has no background running step', () => {
     onPlatform('ios');
