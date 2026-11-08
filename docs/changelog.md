@@ -23,6 +23,27 @@ damo8852
 [feature] The SOS controller now saves the active alert, unconfirmed ends, and unanswered disarms to encrypted storage on every change and restores them at app start, resuming with the same ids and reasons and ending as `timeout` any alert whose 60 min passed while the app was dead. Built test-first and mutation-checked; a countdown running at the moment of the kill is filed as a follow-up.
 
 Issues: #70, #82
+2026-10-28 10:00 MDT
+damo8852
+
+## Battery bench test
+
+[feature] Added an instrument-free battery bench test for the bangle: `firmware/bench.py` temporarily replaces the product firmware and logs boots, run starts, and minute heartbeats to the board, in a stress mode (radio bursts every 20 ms) and an idle mode (the real 500 ms advertising, connected, until the cell dies). Because MicroPython reports a brown-out as a power-on reset, the host-tested `bench_log.py` flags any reset during a run as unexpected. The firmware protocol has the run steps; the measurements and the battery decision itself are still open.
+
+Issues: #59
+2026-10-26 17:29 MDT
+damo8852
+
+## Cancel and "I'm safe" signed off as separate actions
+
+[internal] Signed off that cancel and "I'm safe" stay separate: a cancel unlock that finishes after the window does nothing, so a late or coerced cancel can never end an SOS that just went out, and only "I'm safe" ends a sent alert. Recorded in locked_decisions.md; the state machine already behaves this way, so no code changed.
+
+Issues: #28
+## App connects to the bangle and shows button presses
+
+[feature] Added the app side of the bangle link: `connectBangle` scans for the LINKD service, accepts only a bangle on this app's protocol version, and passes well-formed button frames to a new Bangle debug screen, dropping malformed, unknown, early, and post-disconnect frames; nothing reaches the SOS state machine. `react-native-ble-plx` 3.5.1 is behind a single transport file and its config plugin now declares the Bluetooth permissions; built test-first against a fake transport, with the whole link (including the library on the New Architecture) still to be verified on a phone.
+
+Issues: #60
 
 ---
 
@@ -179,33 +200,6 @@ damo8852
 [feature] Added first-run onboarding that collects the user's name, number (entered twice), and dispatch choice, with one explained screen per permission (Bluetooth, notifications, location, background location) saying what it enables and what breaks without it, and a Settings screen that lists each permission's state in words with a way to turn it on. The profile is saved only on Finish and a slow or failed profile check never keeps a user from the home screen; the Android battery-optimization step and changing dispatch in Settings were filed as follow-ups.
 
 Issues: #35, #51, #52
-
----
-
-2026-10-07 12:08 MDT
-damo8852
-
-## In-app SOS: hold button, countdown, active alert
-
-[feature] Added the hold-to-trigger SOS button on home, a full-screen cancel countdown and active alert that cover any route, and a controller that runs the state machine, calls `send-alert` for real with retries on one alert id, and gates cancel and "I'm safe" on a device unlock via `expo-local-authentication`. Built test-first and mutation-checked; decided that a phone with no screen lock cancels with a plain tap plus a warning, and filed the background-countdown and location follow-ups.
-
-Issues: #33, #48, #49
-
----
-
-2026-10-05 17:01 MDT
-damo8852
-
-## Emergency contacts screen with offline cache
-
-[feature] Added the contacts list and add-contact screens with numbers normalized to E.164, the limit of 5 and opted-out contacts shown in words, and an encrypted on-device cache, built test-first, that survives sign-out, never empties on a failed fetch, and is replaced when a different account signs in. Also fixed the stored session and cache being unreadable on a locked iPhone by storing the Keychain key as readable after first unlock.
-
-Issues: #32
-## Twilio delivery status for SOS texts
-
-[feature] Added the `sms-status` Edge Function, which verifies Twilio's request signature and records whether each SOS text was delivered, undelivered, or failed, in new `delivery_status` and `delivery_error` columns the owner can read. `send-alert` now passes the callback URL to Twilio in live mode; built test-first with pgTAP and Deno suites and a local end-to-end run with signed, forged, and unsigned requests.
-
-Issues: #38
 
 ---
 
