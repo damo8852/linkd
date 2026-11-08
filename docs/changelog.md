@@ -12,6 +12,19 @@ damo8852
 [feature] Added an instrument-free battery bench test for the bangle: `firmware/bench.py` temporarily replaces the product firmware and logs boots, run starts, and minute heartbeats to the board, in a stress mode (radio bursts every 20 ms) and an idle mode (the real 500 ms advertising, connected, until the cell dies). Because MicroPython reports a brown-out as a power-on reset, the host-tested `bench_log.py` flags any reset during a run as unexpected. The firmware protocol has the run steps; the measurements and the battery decision itself are still open.
 
 Issues: #59
+2026-10-26 17:29 MDT
+damo8852
+
+## Cancel and "I'm safe" signed off as separate actions
+
+[internal] Signed off that cancel and "I'm safe" stay separate: a cancel unlock that finishes after the window does nothing, so a late or coerced cancel can never end an SOS that just went out, and only "I'm safe" ends a sent alert. Recorded in locked_decisions.md; the state machine already behaves this way, so no code changed.
+
+Issues: #28
+## App connects to the bangle and shows button presses
+
+[feature] Added the app side of the bangle link: `connectBangle` scans for the LINKD service, accepts only a bangle on this app's protocol version, and passes well-formed button frames to a new Bangle debug screen, dropping malformed, unknown, early, and post-disconnect frames; nothing reaches the SOS state machine. `react-native-ble-plx` 3.5.1 is behind a single transport file and its config plugin now declares the Bluetooth permissions; built test-first against a fake transport, with the whole link (including the library on the New Architecture) still to be verified on a phone.
+
+Issues: #60
 
 ---
 
@@ -217,17 +230,6 @@ damo8852
 [feature] Added `dispatch_enabled` (default on) and a server-only `phone_verified` to `profiles`, with a trigger that clears the verified flag whenever the number changes. Built test-first with 23 pgTAP tests covering owner, other user, anon, and server, and decided the profile row is created by the app at onboarding rather than by a sign-up trigger.
 
 Issues: #31
-
----
-
-2026-10-04 14:19 MDT
-damo8852
-
-## Living wireframes, first pass
-
-[internal] Added `docs/design/wireframes.html`, a self-contained page of themed mid-fi phone frames covering the SOS core, emergency contacts, and sign-in and onboarding screens, drawn from the style guide tokens. It is a living doc updated in the same PR as any screen layout change, and is listed in the docs inventory.
-
-Issues: #40
 
 ---
 
