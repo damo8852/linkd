@@ -73,7 +73,7 @@ function harness(overrides: Partial<SosDeps> = {}, { restored = true } = {}) {
   };
   const controller = createSosController(deps);
   // The app restores the saved record at start; most tests start from nothing saved.
-  if (restored) controller.restore({ active: null, ends: [], disarms: [] });
+  if (restored) controller.restore({ active: null, countdown: null, ends: [], disarms: [] });
 
   /** Lets resolved promises (send, unlock) run their continuations. */
   const flush = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
@@ -620,7 +620,7 @@ describe('alert id for the screen', () => {
 });
 
 describe('surviving the app being killed', () => {
-  const none: PendingSos = { active: null, ends: [], disarms: [] };
+  const none: PendingSos = { active: null, countdown: null, ends: [], disarms: [] };
   const MIN = 60 * S;
 
   it('saves nothing before the saved record is restored, so a startup change cannot overwrite it', async () => {
@@ -640,6 +640,7 @@ describe('surviving the app being killed', () => {
 
     expect(h.lastSave()).toEqual({
       active: { id: 'alert-1', trigger: 'inApp', triggeredAt: 5 * S, endsAt: 5 * S + LIVE_LOCATION_MS },
+      countdown: null,
       ends: [],
       disarms: [],
     });
@@ -656,7 +657,7 @@ describe('surviving the app being killed', () => {
     await h.advance(5 * S);
     await h.controller.imSafe();
 
-    expect(h.lastSave()).toEqual({ active: null, ends: [{ id: 'alert-1', reason: 'user' }], disarms: [] });
+    expect(h.lastSave()).toEqual({ active: null, countdown: null, ends: [{ id: 'alert-1', reason: 'user' }], disarms: [] });
 
     finishEnd(false);
     await h.flush();
@@ -676,6 +677,7 @@ describe('surviving the app being killed', () => {
 
     expect(h.lastSave()).toEqual({
       active: null,
+      countdown: null,
       ends: [],
       disarms: [{ id: 'alert-1', trigger: 'inApp', reason: 'cancel' }],
     });
@@ -690,6 +692,7 @@ describe('surviving the app being killed', () => {
     h.setNow(10 * MIN);
     h.controller.restore({
       active: { id: 'old-1', trigger: 'button', triggeredAt: 0, endsAt: LIVE_LOCATION_MS },
+      countdown: null,
       ends: [],
       disarms: [],
     });
@@ -710,6 +713,7 @@ describe('surviving the app being killed', () => {
     const h = harness();
     h.controller.restore({
       active: { id: 'old-1', trigger: 'inApp', triggeredAt: 0, endsAt: LIVE_LOCATION_MS },
+      countdown: null,
       ends: [],
       disarms: [],
     });
@@ -725,6 +729,7 @@ describe('surviving the app being killed', () => {
     h.setNow(LIVE_LOCATION_MS + 1);
     h.controller.restore({
       active: { id: 'old-1', trigger: 'linkLoss', triggeredAt: 0, endsAt: LIVE_LOCATION_MS },
+      countdown: null,
       ends: [],
       disarms: [],
     });
@@ -746,7 +751,7 @@ describe('surviving the app being killed', () => {
   it('restored ends retry with the same id and reason until the server confirms', async () => {
     const h = harness();
     h.endWill(new Error('offline'), false, true);
-    h.controller.restore({ active: null, ends: [{ id: 'old-1', reason: 'user' }], disarms: [] });
+    h.controller.restore({ active: null, countdown: null, ends: [{ id: 'old-1', reason: 'user' }], disarms: [] });
     await h.flush();
     await h.advance(2 * RETRY_MS);
 
@@ -761,7 +766,7 @@ describe('surviving the app being killed', () => {
   it('a restored disarm that finds the alert sent ends it as safe, since the user unlocked to cancel', async () => {
     const h = harness();
     h.disarmWill('fired');
-    h.controller.restore({ active: null, ends: [], disarms: [{ id: 'old-1', trigger: 'inApp', reason: 'cancel' }] });
+    h.controller.restore({ active: null, countdown: null, ends: [], disarms: [{ id: 'old-1', trigger: 'inApp', reason: 'cancel' }] });
     await h.flush();
     await h.flush();
 
@@ -773,7 +778,7 @@ describe('surviving the app being killed', () => {
   it('a restored reconnect disarm that finds the alert sent shows it as active, never as safe', async () => {
     const h = harness();
     h.disarmWill('fired');
-    h.controller.restore({ active: null, ends: [], disarms: [{ id: 'old-1', trigger: 'linkLoss', reason: 'reconnect' }] });
+    h.controller.restore({ active: null, countdown: null, ends: [], disarms: [{ id: 'old-1', trigger: 'linkLoss', reason: 'reconnect' }] });
     await h.flush();
     await h.flush();
 
@@ -783,10 +788,87 @@ describe('surviving the app being killed', () => {
 
   it('a new alert after a restore still gets a new id', async () => {
     const h = harness();
-    h.controller.restore({ active: null, ends: [{ id: 'old-1', reason: 'user' }], disarms: [] });
+    h.controller.restore({ active: null, countdown: null, ends: [{ id: 'old-1', reason: 'user' }], disarms: [] });
     h.controller.hold('inApp');
     await h.advance(5 * S);
 
     expect(h.sends.map((s) => s.id)).toEqual(['alert-1']);
+  });
+});
+
+describe('a countdown running when the app is killed', () => {
+  const none: PendingSos = { active: null, countdown: null, ends: [], disarms: [] };
+  const MIN = 60 * S;
+
+  it('is saved with its send time while it runs, and dropped once it sends or is cancelled', async () => {
+    const h = harness();
+    h.controller.hold('inApp');
+    expect(h.lastSave()).toEqual({ ...none, countdown: { id: 'alert-1', trigger: 'inApp', sendAt: 5 * S } });
+
+    await h.advance(5 * S);
+    expect(h.lastSave()?.countdown).toBeNull();
+    expect(h.lastSave()?.active).toMatchObject({ id: 'alert-1' });
+
+    const h2 = harness();
+    h2.controller.hold('inApp');
+    await h2.controller.cancel();
+    await h2.flush();
+    expect(h2.lastSave()).toEqual(none);
+  });
+
+  it('a link-loss countdown is saved with the end of grace plus the window', async () => {
+    const h = harness();
+    h.controller.dispatch({ type: 'linkLost' });
+
+    expect(h.lastSave()?.countdown).toEqual({ id: 'alert-1', trigger: 'linkLoss', sendAt: 50 * S });
+  });
+
+  it('restored before its send time: counts down the time left on the same id, re-armed for the rest', async () => {
+    const h = harness();
+    h.setNow(2 * S);
+    h.controller.restore({ ...none, countdown: { id: 'old-1', trigger: 'inApp', sendAt: 5 * S } });
+
+    expect(h.controller.getSnapshot().state).toMatchObject({ kind: 'cancelWindow', trigger: 'inApp', endsAt: 5 * S });
+    expect(h.arms).toEqual([{ id: 'old-1', trigger: 'inApp', delayMs: 3 * S }]);
+
+    await h.advance(3 * S);
+    expect(h.sends).toEqual([{ id: 'old-1', trigger: 'inApp', triggeredAt: 5 * S, at: 5 * S }]);
+    expect(h.kind()).toBe('active');
+  });
+
+  it('a restored countdown can be cancelled with an unlock, which disarms its id', async () => {
+    const h = harness();
+    h.controller.restore({ ...none, countdown: { id: 'old-1', trigger: 'linkLoss', sendAt: 30 * S } });
+
+    expect(await h.controller.cancel()).toBe(true);
+    await h.flush();
+    expect(h.disarms.map((d) => d.id)).toEqual(['old-1']);
+    expect(h.sends).toHaveLength(0);
+  });
+
+  it('restored after its send time: shown as the active alert on the same id, never as cancelled or safe', async () => {
+    const h = harness();
+    h.setNow(10 * MIN);
+    h.controller.restore({ ...none, countdown: { id: 'old-1', trigger: 'linkLoss', sendAt: 50 * S } });
+    await h.flush();
+
+    expect(h.controller.getSnapshot()).toMatchObject({
+      alertId: 'old-1',
+      lateCancel: false,
+      state: { kind: 'active', trigger: 'linkLoss', endsAt: 50 * S + LIVE_LOCATION_MS },
+    });
+    // Same id: if the server already sent it nobody is texted twice; if its arm never landed, this sends it.
+    expect(h.sends).toEqual([{ id: 'old-1', trigger: 'linkLoss', triggeredAt: 50 * S, at: 10 * MIN }]);
+    expect(h.ends).toHaveLength(0);
+  });
+
+  it('restored after its 60 min would have passed: ended as timeout, never shown', async () => {
+    const h = harness();
+    h.setNow(5 * S + LIVE_LOCATION_MS);
+    h.controller.restore({ ...none, countdown: { id: 'old-1', trigger: 'inApp', sendAt: 5 * S } });
+    await h.flush();
+
+    expect(h.kind()).toBe('idle');
+    expect(h.ends.map((e) => [e.id, e.reason])).toEqual([['old-1', 'timeout']]);
   });
 });

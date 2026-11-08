@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-08 15:45 MST
+damo8852
+
+## Countdowns survive the app being killed
+
+[feature] A running countdown is now saved with its id and send time and restored at app start: still counting, it resumes with the time left and is re-armed on the same id; past its send time, it comes back as the active alert from that time and is resent on the same id in case its arm never reached the server. Built test-first and mutation-checked.
+
+Issues: #82
+
+---
+
 2026-11-08 15:38 MST
 damo8852
 
@@ -195,17 +206,6 @@ Issues: #32
 [feature] Added the `sms-status` Edge Function, which verifies Twilio's request signature and records whether each SOS text was delivered, undelivered, or failed, in new `delivery_status` and `delivery_error` columns the owner can read. `send-alert` now passes the callback URL to Twilio in live mode; built test-first with pgTAP and Deno suites and a local end-to-end run with signed, forged, and unsigned requests.
 
 Issues: #38
-
----
-
-2026-10-05 16:40 MDT
-damo8852
-
-## Profiles: dispatch setting and verified flag
-
-[feature] Added `dispatch_enabled` (default on) and a server-only `phone_verified` to `profiles`, with a trigger that clears the verified flag whenever the number changes. Built test-first with 23 pgTAP tests covering owner, other user, anon, and server, and decided the profile row is created by the app at onboarding rather than by a sign-up trigger.
-
-Issues: #31
 
 ---
 
