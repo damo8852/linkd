@@ -26,6 +26,9 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    // Lets onboarding show Android's one-tap "run in the background" prompt. Google Play allows it for
+    // safety apps and asks for the justification at release.
+    permissions: ['android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'],
   },
   plugins: [
     'expo-router',

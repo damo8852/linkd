@@ -4,7 +4,7 @@ import { Button, Card, ErrorText, Heading, Screen } from '../../components/ui';
 import { DevicesCard } from '../device/DevicesCard';
 import {
   PERMISSION_COPY,
-  PERMISSION_IDS,
+  permissionIdsHere,
   requestPermission,
   usePermissionStates,
   type PermissionId,
@@ -19,8 +19,9 @@ export function SettingsScreen(): React.JSX.Element {
   const dispatch = useDispatchSetting();
 
   async function turnOn(id: PermissionId): Promise<void> {
-    // Once refused, the OS no longer prompts; the only way left is the system settings.
-    if ((await requestPermission(id)) !== 'granted') {
+    // Once refused, the OS no longer prompts; the only way left is the system settings. Battery
+    // optimization is the exception: asking always opens a system screen of its own.
+    if ((await requestPermission(id)) !== 'granted' && id !== 'batteryOptimization') {
       await Linking.openSettings();
     }
     await reload();
@@ -48,7 +49,7 @@ export function SettingsScreen(): React.JSX.Element {
       )}
       <PhoneCard />
       {states !== null &&
-        PERMISSION_IDS.map((id) => {
+        permissionIdsHere().map((id) => {
           const { name, withoutIt } = PERMISSION_COPY[id];
           const state = states[id];
           if (state === 'granted') {

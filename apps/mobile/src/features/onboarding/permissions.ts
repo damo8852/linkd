@@ -1,15 +1,34 @@
+import Constants from 'expo-constants';
+import * as Battery from 'expo-battery';
+import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, PermissionsAndroid, Platform } from 'react-native';
 
-export type PermissionId = 'bluetooth' | 'notifications' | 'location' | 'backgroundLocation';
+export type PermissionId = 'bluetooth' | 'notifications' | 'location' | 'backgroundLocation' | 'batteryOptimization';
 
 /** `later`: this OS has no prompt to show yet (see `asksLater`). */
 export type PermissionState = 'granted' | 'off' | 'later';
 
-/** In onboarding order. */
-export const PERMISSION_IDS: readonly PermissionId[] = ['bluetooth', 'notifications', 'location', 'backgroundLocation'];
+/** In onboarding order. Use `permissionIdsHere` for the ones this platform has. */
+export const PERMISSION_IDS: readonly PermissionId[] = [
+  'bluetooth',
+  'notifications',
+  'location',
+  'backgroundLocation',
+  'batteryOptimization',
+];
+
+/** Battery optimization is Android only; iOS has no such setting. */
+function appliesHere(id: PermissionId): boolean {
+  return id !== 'batteryOptimization' || Platform.OS === 'android';
+}
+
+/** The permissions this platform has, in onboarding order. */
+export function permissionIdsHere(): PermissionId[] {
+  return PERMISSION_IDS.filter(appliesHere);
+}
 
 /** What each permission enables and what stops working without it. Shown before the OS prompt and in Settings. */
 export const PERMISSION_COPY: Record<
@@ -45,6 +64,15 @@ export const PERMISSION_COPY: Record<
     title: 'Allow location in the background',
     withIt: ['Your location is sent even when your phone is locked or LINKD is not on screen.'],
     withoutIt: ['Your location is only sent if LINKD is open on screen when the SOS goes out.'],
+  },
+  batteryOptimization: {
+    name: 'Background running',
+    title: 'Let LINKD run in the background',
+    withIt: ['Android does not pause LINKD while your phone sits idle, so it keeps watching your bangle.'],
+    withoutIt: [
+      'Android can pause LINKD while your phone sits idle.',
+      'A bangle button press or a lost bangle may not be noticed until you open LINKD.',
+    ],
   },
 };
 
@@ -86,7 +114,32 @@ async function bluetooth(ask: boolean): Promise<PermissionState> {
   return toState(held.every(Boolean));
 }
 
+/**
+ * Android's battery optimization exemption. Asking shows the system's one-tap prompt for this
+ * package (needs REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, allowed for safety apps by Google Play); if
+ * that cannot open, the battery optimization list instead. The prompt reports nothing useful, so
+ * the state is always read back afterwards.
+ */
+async function batteryOptimization(ask: boolean): Promise<PermissionState> {
+  if (ask) {
+    const pkg = Constants.expoConfig?.android?.package;
+    try {
+      if (pkg === undefined) throw new Error('no package name');
+      await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, {
+        data: `package:${pkg}`,
+      });
+    } catch {
+      await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+    }
+  }
+  return toState(!(await Battery.isBatteryOptimizationEnabledAsync()));
+}
+
 async function resolve(id: PermissionId, ask: boolean): Promise<PermissionState> {
+  if (!appliesHere(id)) {
+    // Nothing to grant on this platform, so nothing is missing.
+    return 'granted';
+  }
   try {
     switch (id) {
       case 'bluetooth':
@@ -101,6 +154,8 @@ async function resolve(id: PermissionId, ask: boolean): Promise<PermissionState>
         return toState(
           (await (ask ? Location.requestBackgroundPermissionsAsync() : Location.getBackgroundPermissionsAsync())).granted,
         );
+      case 'batteryOptimization':
+        return await batteryOptimization(ask);
     }
   } catch {
     // A permission we could not read is shown as off, never as granted.
@@ -130,13 +185,20 @@ export function usePermissionStates(): {
   const [states, setStates] = useState<Record<PermissionId, PermissionState> | null>(null);
 
   const reload = useCallback(async (): Promise<void> => {
-    const [bluetoothState, notifications, location, backgroundLocation] = await Promise.all([
+    const [bluetoothState, notifications, location, backgroundLocation, batteryOptimizationState] = await Promise.all([
       checkPermission('bluetooth'),
       checkPermission('notifications'),
       checkPermission('location'),
       checkPermission('backgroundLocation'),
+      checkPermission('batteryOptimization'),
     ]);
-    setStates({ bluetooth: bluetoothState, notifications, location, backgroundLocation });
+    setStates({
+      bluetooth: bluetoothState,
+      notifications,
+      location,
+      backgroundLocation,
+      batteryOptimization: batteryOptimizationState,
+    });
   }, []);
 
   useEffect(() => {
