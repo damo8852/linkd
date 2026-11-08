@@ -50,6 +50,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Alert recipients   | SMS to chosen emergency contacts (always) + emergency dispatch (user setting, default on)    | Hard      |
 | Alert timings      | Hold 3 s; cancel 5 s (button), 20 s grace + 30 s cancel (link loss); live location 60 min    | Soft      |
 | Cancel / end auth  | Device unlock to cancel or end an alert; no input sends. No screen lock: plain tap + warning | Hard      |
+| Cancel vs safe     | Separate actions: a cancel unlock after the window does nothing; only "I'm safe" ends        | Hard      |
 | Dispatch off auth  | Device unlock to turn dispatch off; on is a plain tap. No screen lock: plain tap             | Hard      |
 | Link reconnect     | Never cancels by itself; must be up 5 s during grace; hold in link-loss window sends now     | Hard      |
 | Benign link loss   | Battery-critical, phone BT off, phone dying: warn only, never an SOS (but see next row)      | Hard      |
@@ -76,7 +77,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 Turn each into a GitHub issue (label `decision`) before working on it.
 
 - Duress PIN, Bluetooth-off as an attack - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
-- BLE UUIDs, byte layouts, bonding/security - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
+- BLE bonding/security and the byte layouts of the messages not yet built - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Android foreground-service implementation (library or custom Expo module).
 - Server-state library for the app (e.g. TanStack Query) or plain hooks.
