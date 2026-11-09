@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-08 17:50 MST
+damo8852
+
+## Bluetooth off on a locked phone is a link loss
+
+[internal] Decided that switching phone Bluetooth off on a locked phone, or when the lock state cannot be read, is a link loss with the usual grace and unlock-to-cancel countdown, while on an unlocked phone it stays a warning; airplane mode follows the same rule. Recorded it in the alert flow, locked decisions, and glossary with the iOS behavior still to verify on a device, and filed the implementation.
+
+Issues: #15, #86
+
+---
+
 2026-11-08 16:06 MST
 damo8852
 
@@ -192,17 +203,6 @@ damo8852
 [feature] Added the emergency dispatch switch to Settings, built test-first: it shows only what the server has saved, moves only once a change is confirmed, names the setting still in force when a save fails, and shows no switch at all when the setting cannot be read. Onboarding now shares the same switch and says the choice can be changed in Settings; whether turning dispatch off should need a device unlock was filed as a decision.
 
 Issues: #52, #54
-
----
-
-2026-10-11 13:40 MDT
-damo8852
-
-## Onboarding permission screens
-
-[feature] Added first-run onboarding that collects the user's name, number (entered twice), and dispatch choice, with one explained screen per permission (Bluetooth, notifications, location, background location) saying what it enables and what breaks without it, and a Settings screen that lists each permission's state in words with a way to turn it on. The profile is saved only on Finish and a slow or failed profile check never keeps a user from the home screen; the Android battery-optimization step and changing dispatch in Settings were filed as follow-ups.
-
-Issues: #35, #51, #52
 
 ---
 
