@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <!-- Android 14+: the connectedDevice type; its runtime prerequisite is BLUETOOTH_CONNECT. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+  <!-- HeadlessJsTaskService holds a partial wake lock while its task runs. -->
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+  <application>
+    <service
+      android:name="expo.modules.bangleservice.BangleLinkService"
+      android:exported="false"
+      android:foregroundServiceType="connectedDevice" />
+  </application>
+</manifest>

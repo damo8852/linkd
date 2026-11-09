@@ -1,0 +1,38 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:1:1-14:12
+INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:1:1-14:12
+	package
+		INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:1:11-69
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:2:3-75
+	android:name
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:2:20-72
+uses-permission#android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE
+ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:4:3-92
+	android:name
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:4:20-89
+uses-permission#android.permission.WAKE_LOCK
+ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:6:3-66
+	android:name
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:6:20-63
+application
+ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:8:3-13:17
+service#expo.modules.bangleservice.BangleLinkService
+ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:9:5-12:57
+	android:exported
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:11:7-31
+	android:foregroundServiceType
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:12:7-54
+	android:name
+		ADDED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml:10:7-66
+uses-sdk
+INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml
+INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/danielmonteiro/linkd/apps/mobile/modules/bangle-service/android/src/main/AndroidManifest.xml

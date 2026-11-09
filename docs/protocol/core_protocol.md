@@ -69,6 +69,7 @@ linkd/
 │       ├── src/features/<name>/    ← feature code: components, hooks, logic (sos/, device/, contacts/, onboarding/, settings/)
 │       ├── src/components/         ← shared UI primitives
 │       ├── src/lib/                ← supabase client, ble transport, theme, clock
+│       ├── modules/<name>/         ← local Expo native modules (bangle-service: Android background link)
 │       └── app.config.ts           ← Expo config + config plugins (native settings live here)
 ├── packages/
 │   └── ble-protocol/               ← single source of truth for the BLE link  [ble_protocol.md]
