@@ -21,7 +21,7 @@ Term + one-line definition + link to the canonical spec. No inline spec content.
 | Dispatch          | Professional emergency dispatch via Noonlight or RapidSOS.                           | [supabase_protocol.md](../protocol/supabase_protocol.md) |
 | False alert       | An SOS sent when the user was not in danger.                                         | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Missed alert      | An SOS that should have been sent and was not. The worse failure.                    | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
-| Benign link loss  | Known safe link drop (battery critical, phone BT off, phone dying); warns only.      | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
+| Benign link loss  | Known safe drop (battery critical, phone BT off while unlocked, dying); warns only.  | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | Live location     | Link in the SOS text with live location, for 60 min or until the alert ends.         | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 | I'm safe          | User action (device unlock) that ends a sent alert and texts contacts.               | [sos_alert_flow.md](../design/sos_alert_flow.md)      |
 

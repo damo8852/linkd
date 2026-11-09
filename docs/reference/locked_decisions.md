@@ -53,7 +53,8 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Cancel vs safe     | Separate actions: a cancel unlock after the window does nothing; only "I'm safe" ends        | Hard      |
 | Dispatch off auth  | Device unlock to turn dispatch off; on is a plain tap. No screen lock: plain tap             | Hard      |
 | Link reconnect     | Never cancels by itself; must be up 5 s during grace; hold in link-loss window sends now     | Hard      |
-| Benign link loss   | Battery-critical, phone BT off, phone dying: warn only, never an SOS (but see next row)      | Hard      |
+| Benign link loss   | Battery-critical, phone BT off while unlocked, phone dying: warn only (but see next rows)    | Hard      |
+| Bluetooth off      | On a locked phone (or lock unknown) it is a link loss; unlocked it is benign                 | Hard      |
 | Countdown arming   | Also armed on the server; a phone dying before it disarms sends. [sos_alert_flow.md](../design/sos_alert_flow.md#countdowns-run-on-the-server) | Hard      |
 | Offline fallback   | Idempotent server retry + native SMS composer prefilled with cached contacts                 | Hard      |
 | Emergency contacts | Max 5 active; intro SMS on add, active immediately; STOP opts out (kept, never texted)       | Soft      |
@@ -76,7 +77,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 
 Turn each into a GitHub issue (label `decision`) before working on it.
 
-- Duress PIN, Bluetooth-off as an attack - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
+- Duress PIN - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
 - BLE bonding/security and the byte layouts of the messages not yet built - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
 - Android foreground-service implementation (library or custom Expo module).

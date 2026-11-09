@@ -50,7 +50,8 @@ Idle ──button / in-app hold──▶ CancelWindow(5 s) ──timeout──�
   └──link lost──▶ GracePeriod(20 s) ──timeout──▶ CancelWindow(30 s) ──button hold──▶ Sending
                         └──link up 5 s──▶ Idle      (reconnect here: keep counting down)
 
-Benign link loss (battery-critical, phone Bluetooth off, phone dying) ──▶ Unprotected warning, never an SOS
+Benign link loss (battery-critical, phone Bluetooth off while unlocked, phone dying) ──▶ Unprotected warning, never an SOS
+Phone Bluetooth off while locked (or lock state unknown) ──▶ treated as link loss
 ```
 
 ## Countdowns run on the server
@@ -81,10 +82,12 @@ Known risk (accepted): after a link loss, a phone that dies before its disarm re
 | Cause                                   | Detected by                                 |
 |-----------------------------------------|---------------------------------------------|
 | Bangle sent `BATTERY_CRITICAL`          | BLE message before the disconnect           |
-| Phone Bluetooth turned off              | OS Bluetooth state change                   |
+| Phone Bluetooth turned off, unlocked    | OS Bluetooth state change + lock state      |
 | Phone battery dying / shutting down     | OS battery / shutdown signal (to verify per platform) |
 
-If phone Bluetooth off or phone dying is reported while the grace period is running, grace ends, the server is disarmed, and the warning shows instead: the OS may report the disconnect before its cause. Once the link-loss cancel window is showing, it keeps counting. A phone that dies before the disarm reaches the server sends (see Countdowns run on the server).
+If phone Bluetooth off (unlocked) or phone dying is reported while the grace period is running, grace ends, the server is disarmed, and the warning shows instead: the OS may report the disconnect before its cause. Once the link-loss cancel window is showing, it keeps counting.
+
+**Bluetooth off on a locked phone (Decided).** Someone holding a locked phone can switch Bluetooth off from the lock screen and silence the bangle, so on a locked phone it is not benign: it is a link loss (silent grace, then the visible cancel window, cancelled only by a device unlock). If it was the user, they unlock and cancel. A lock state the app cannot read counts as locked (a missed alert is worse than a false one). Reported during grace on a locked phone, it keeps grace running. Airplane mode is handled the same way, since the app only sees Bluetooth turn off. Neither OS says who switched Bluetooth off ([Android `ACTION_STATE_CHANGED`](https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#ACTION_STATE_CHANGED)); since Android 13 apps cannot switch it themselves. Android reads the lock with [`KeyguardManager.isDeviceLocked()`](https://developer.android.com/reference/android/app/KeyguardManager#isDeviceLocked()) (swipe-only lock screens count as unlocked). A phone that dies before the disarm reaches the server sends (see Countdowns run on the server).
 
 ## Location
 
@@ -135,9 +138,9 @@ If phone Bluetooth off or phone dying is reported while the grace period is runn
 - iOS state restoration behavior after force-quit.
 - Detecting phone shutdown / critically low battery on iOS and Android.
 - Twilio consent, intro-message, and STOP handling requirements.
+- iOS: whether switching Bluetooth off in Control Center (a temporary disconnect, [Apple](https://support.apple.com/en-us/102412)) reaches the app as Bluetooth powered off; whether Control Center is reachable from the lock screen by default; and how the app reads the lock state.
 
 ## Open questions
 
 - Duress PIN (an unlock that appears to cancel but still sends).
-- Should phone Bluetooth turned off by someone else be treated as an attack?
 - Dispatch vendor choice (Noonlight vs RapidSOS) and their consent/verification requirements.
