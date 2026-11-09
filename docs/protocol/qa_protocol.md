@@ -27,6 +27,7 @@ Use a dev bangle (or the BLE simulator once one exists) and **sandbox SMS/dispat
 - [ ] Cancel inside the cancel window -> nothing sent
 - [ ] Walk out of range / power off bangle -> grace period -> cancel window -> alert
 - [ ] Reconnect inside the grace period -> no alert
+- [ ] (Android) Bangle disconnect with a GATT timeout (walk out of range while connected) -> the app does not crash and the link loss is handled
 - [ ] Battery-critical message then disconnect -> **no alert**, battery warning shown
 - [ ] App in background, phone locked -> trigger still works
 - [ ] App force-quit (iOS) -> the documented warning/limitation behaves as designed
