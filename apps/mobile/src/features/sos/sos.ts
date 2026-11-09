@@ -76,6 +76,9 @@ AppState.addEventListener('change', (state) => {
   }
 });
 
+/** Feeds link, bangle, and phone events into the SOS controller (device/bangle.ts). */
+export const dispatchSos = controller.dispatch;
+
 /** The feature seam for screens: current SOS state and the user actions. */
 export function useSos(): { snapshot: SosSnapshot } & Pick<SosController, 'hold' | 'cancel' | 'imSafe' | 'textContacts'> {
   const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
