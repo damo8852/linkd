@@ -1,4 +1,4 @@
-import { encodeButtonEvent, PROTOCOL_VERSION } from '@linkd/ble-protocol';
+import { encodeBatteryCritical, encodeButtonEvent, encodeSosTrigger, PROTOCOL_VERSION } from '@linkd/ble-protocol';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { BangleScreen } from '../src/features/device/BangleScreen';
@@ -42,6 +42,10 @@ describe('BangleScreen', () => {
     expect(screen.getByText('Button pressed')).toBeOnTheScreen();
     act(() => bangle?.onNotification(encodeButtonEvent(false)));
     expect(screen.getByText('Button released')).toBeOnTheScreen();
+    act(() => bangle?.onNotification(encodeSosTrigger(7)));
+    expect(screen.getByText('SOS hold received (7)')).toBeOnTheScreen();
+    act(() => bangle?.onNotification(encodeBatteryCritical()));
+    expect(screen.getByText('Battery critical')).toBeOnTheScreen();
 
     act(() => bangle?.onDisconnect());
     expect(screen.getByText('Disconnected')).toBeOnTheScreen();

@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-08 18:34 MST
+damo8852
+
+## BLE protocol v2: SOS_TRIGGER with ack
+
+[feature] Moved the bangle protocol to version 2: the firmware now measures the 3 s hold itself and sends `SOS_TRIGGER` with a sequence number, resent every second until the app writes an `ACK` on a new characteristic and dropped after 5 minutes, and `BATTERY_CRITICAL` is defined for when the battery can be read. Built test-first in the package and the firmware, mutation-checked, and flashed to the ESP32-C6; the app's handling of the new messages is the next issue.
+
+Issues: #90, #91, #92
+
+---
+
 2026-11-08 18:02 MST
 damo8852
 
@@ -195,14 +206,6 @@ damo8852
 [docs] Locked the Espressif ESP32-C6 as the bangle SoC and replaced the Nordic nRF52/nRF54 references in the README, firmware protocol, and firmware agent; the toolchain question now assumes ESP-IDF. The coin cell stays, and whether it can supply the ESP32-C6's peak BLE current was filed as an open question, since a brown-out could cause a false or missed SOS.
 
 Issues: #61
-2026-10-20 10:30 MDT
-damo8852
-
-## Landing page with early-bird waitlist
-
-[feature] Added `apps/web`, a static landing page in the "Pink drink" style that explains LINKD and offers early-bird pricing ($37.99, regular $59.99) through a waitlist form; holding the bangle button in the hero for 3 s plays a demo of the alert going out (nothing is sent). Signups go to a new `waitlist` table that anyone can add an email to but no client can read, update, or delete, with one row per address regardless of case; a repeat signup gets the same success message so the page does not reveal who is on the list. The repo-shape lock now includes `apps/web`. The page is live on Cloudflare Workers at linkd.linkdjewelery.workers.dev against the new hosted Supabase project, which now has every migration; signups go through a `join-waitlist` Edge Function that checks a Cloudflare Turnstile token before inserting with the service role, and clients can no longer insert into the table directly. Confirmation emails are not done yet.
-
-Issues: #63, #65
 
 ---
 

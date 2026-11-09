@@ -12,7 +12,7 @@
  */
 
 /** Hold needed to trigger. The bangle enforces it in firmware; the in-app button enforces it here. */
-export const SOS_HOLD_MS = 3_000;
+export { SOS_HOLD_MS } from '@linkd/ble-protocol';
 export const BUTTON_CANCEL_WINDOW_MS = 5_000;
 export const GRACE_PERIOD_MS = 20_000;
 export const RECONNECT_STABLE_MS = 5_000;

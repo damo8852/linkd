@@ -21,6 +21,7 @@ supabase/.branches/
 
 # Firmware
 firmware/**/build/
+__pycache__/
 
 # Env / secrets
 .env

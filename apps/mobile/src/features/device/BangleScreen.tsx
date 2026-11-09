@@ -59,8 +59,20 @@ export function BangleScreen(): React.JSX.Element {
       <Body>Link test only. Pressing the bangle button here does not send an SOS.</Body>
       {events.map((event, index) => (
         // Newest first; the list only ever grows at the front, so position from the end is stable.
-        <Body key={events.length - index}>{event.pressed ? 'Button pressed' : 'Button released'}</Body>
+        <Body key={events.length - index}>{describeFrame(event)}</Body>
       ))}
     </Screen>
   );
+}
+
+/** What a frame says, for this diagnostic list only. Nothing here acts on it. */
+function describeFrame(frame: Frame): string {
+  switch (frame.type) {
+    case 'button':
+      return frame.pressed ? 'Button pressed' : 'Button released';
+    case 'sosTrigger':
+      return `SOS hold received (${frame.seq})`;
+    case 'batteryCritical':
+      return 'Battery critical';
+  }
 }
