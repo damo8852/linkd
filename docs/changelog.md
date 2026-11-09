@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-08 18:02 MST
+damo8852
+
+## Locked-phone Bluetooth off in the state machine
+
+[feature] The SOS state machine's `bluetoothOff` event now carries the lock state: locked or unknown starts a link loss (grace, server arm, countdown) and keeps a running grace going, while unlocked stays the benign warning. Built test-first, shown failing against the old machine, and mutation-checked; reading the lock state and feeding Bluetooth changes into the controller are filed separately.
+
+Issues: #86, #88
+
+---
+
 2026-11-08 17:50 MST
 damo8852
 
@@ -192,17 +203,6 @@ damo8852
 [feature] Added `apps/web`, a static landing page in the "Pink drink" style that explains LINKD and offers early-bird pricing ($37.99, regular $59.99) through a waitlist form; holding the bangle button in the hero for 3 s plays a demo of the alert going out (nothing is sent). Signups go to a new `waitlist` table that anyone can add an email to but no client can read, update, or delete, with one row per address regardless of case; a repeat signup gets the same success message so the page does not reveal who is on the list. The repo-shape lock now includes `apps/web`. The page is live on Cloudflare Workers at linkd.linkdjewelery.workers.dev against the new hosted Supabase project, which now has every migration; signups go through a `join-waitlist` Edge Function that checks a Cloudflare Turnstile token before inserting with the service role, and clients can no longer insert into the table directly. Confirmation emails are not done yet.
 
 Issues: #63, #65
-
----
-
-2026-10-11 13:52 MDT
-damo8852
-
-## Dispatch setting in Settings
-
-[feature] Added the emergency dispatch switch to Settings, built test-first: it shows only what the server has saved, moves only once a change is confirmed, names the setting still in force when a save fails, and shows no switch at all when the setting cannot be read. Onboarding now shares the same switch and says the choice can be changed in Settings; whether turning dispatch off should need a device unlock was filed as a decision.
-
-Issues: #52, #54
 
 ---
 

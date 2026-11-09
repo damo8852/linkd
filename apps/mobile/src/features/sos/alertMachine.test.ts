@@ -28,6 +28,9 @@ function run(steps: [number, SosEvent][], from: SosState = INITIAL_STATE) {
 }
 
 const tick: SosEvent = { type: 'tick' };
+/** The benign events. Bluetooth off is benign only on an unlocked phone. */
+const benign = (type: 'bluetoothOff' | 'phoneDying'): SosEvent =>
+  type === 'bluetoothOff' ? { type, locked: false } : { type };
 const sent = (r: ReturnType<typeof run>) => r.commands.filter((c) => c.command.type === 'sendAlert');
 /** Commands that text anyone (send or end); arming and disarming the server do not. */
 const alertCommands = (r: ReturnType<typeof run>) =>
@@ -165,20 +168,20 @@ describe('benign link loss never sends', () => {
     expect(alertCommands(r)).toHaveLength(0);
   });
 
-  it.each(['bluetoothOff', 'phoneDying'] as const)('%s while idle: unprotected', (type) => {
-    const r = run([[0, { type }], [1 * S, { type: 'linkLost' }], [10 * MIN, tick]]);
+  it.each(['bluetoothOff', 'phoneDying'] as const)('%s while idle (unlocked): unprotected', (type) => {
+    const r = run([[0, benign(type)], [1 * S, { type: 'linkLost' }], [10 * MIN, tick]]);
     expect(r.state).toEqual({ kind: 'unprotected', reason: type });
     expect(alertCommands(r)).toHaveLength(0);
   });
 
-  it.each(['bluetoothOff', 'phoneDying'] as const)('%s reported during grace: unprotected', (type) => {
-    const r = run([[0, { type: 'linkLost' }], [50, { type }], [10 * MIN, tick]]);
+  it.each(['bluetoothOff', 'phoneDying'] as const)('%s reported during grace (unlocked): unprotected', (type) => {
+    const r = run([[0, { type: 'linkLost' }], [50, benign(type)], [10 * MIN, tick]]);
     expect(r.state).toEqual({ kind: 'unprotected', reason: type });
     expect(alertCommands(r)).toHaveLength(0);
   });
 
   it.each(['bluetoothOff', 'phoneDying'] as const)('%s during the link-loss window: still sends', (type) => {
-    const r = run([[0, { type: 'linkLost' }], [20 * S, tick], [25 * S, { type }], [50 * S, tick]]);
+    const r = run([[0, { type: 'linkLost' }], [20 * S, tick], [25 * S, benign(type)], [50 * S, tick]]);
     expect(sent(r)).toHaveLength(1);
   });
 
@@ -195,7 +198,7 @@ describe('benign link loss never sends', () => {
   });
 
   it('the in-app hold still works while unprotected', () => {
-    const r = run([[0, { type: 'bluetoothOff' }], [1 * S, { type: 'sosHold', source: 'inApp' }], [6 * S, tick]]);
+    const r = run([[0, benign('bluetoothOff')], [1 * S, { type: 'sosHold', source: 'inApp' }], [6 * S, tick]]);
     expect(sent(r)).toHaveLength(1);
   });
 });
@@ -315,8 +318,8 @@ describe('arming the server', () => {
     expect(serverCommands(r).at(-1)).toEqual({ at: 8 * S, command: { type: 'disarm', reason: 'reconnect' } });
   });
 
-  it.each(['bluetoothOff', 'phoneDying'] as const)('%s during grace disarms', (type) => {
-    const r = run([[0, { type: 'linkLost' }], [3 * S, { type }]]);
+  it.each(['bluetoothOff', 'phoneDying'] as const)('%s during grace (unlocked) disarms', (type) => {
+    const r = run([[0, { type: 'linkLost' }], [3 * S, benign(type)]]);
     expect(serverCommands(r).at(-1)).toEqual({ at: 3 * S, command: { type: 'disarm', reason: 'benign' } });
   });
 
@@ -327,6 +330,47 @@ describe('arming the server', () => {
       expect(serverCommands(r).map((c) => c.command.type)).toEqual(['arm']);
       expect(sent(r)).toHaveLength(1);
     }
+  });
+});
+
+describe('Bluetooth off on a locked phone is a link loss', () => {
+  const serverCommands = (r: ReturnType<typeof run>) =>
+    r.commands.filter((c) => c.command.type === 'arm' || c.command.type === 'disarm');
+
+  it.each([
+    ['locked', true],
+    ['lock state unknown', null],
+  ] as const)('%s, while idle: silent grace, armed, then the countdown, then it sends', (_name, locked) => {
+    const r = run([[0, { type: 'bluetoothOff', locked }], [20 * S, tick], [50 * S, tick]]);
+    expect(serverCommands(r)[0]).toEqual({ at: 0, command: { type: 'arm', trigger: 'linkLoss', sendAt: 50 * S } });
+    expect(sent(r)).toEqual([{ at: 50 * S, command: { type: 'sendAlert', trigger: 'linkLoss' } }]);
+  });
+
+  it('locked: shown as the link-loss countdown, cancelled only by an unlock', () => {
+    const r = run([[0, { type: 'bluetoothOff', locked: true }], [20 * S, tick], [25 * S, { type: 'cancel' }], [60 * S, tick]]);
+    expect(sent(r)).toHaveLength(0);
+    expect(serverCommands(r).at(-1)).toEqual({ at: 25 * S, command: { type: 'disarm', reason: 'cancel' } });
+  });
+
+  it.each([
+    ['locked', true],
+    ['lock state unknown', null],
+  ] as const)('%s, reported during grace: grace keeps running, nothing disarmed, and it sends', (_name, locked) => {
+    const r = run([[0, { type: 'linkLost' }], [50, { type: 'bluetoothOff', locked }], [20 * S, tick], [50 * S, tick]]);
+    expect(serverCommands(r).map((c) => c.command.type)).toEqual(['arm']);
+    expect(sent(r)).toHaveLength(1);
+  });
+
+  it('the bangle warned its battery is critical: still benign, even locked', () => {
+    const r = run([[0, { type: 'batteryCritical' }], [1 * S, { type: 'bluetoothOff', locked: true }], [10 * MIN, tick]]);
+    expect(r.state).toEqual({ kind: 'unprotected', reason: 'batteryCritical' });
+    expect(alertCommands(r)).toHaveLength(0);
+  });
+
+  it('Bluetooth back on with the bangle reconnected for 5 s during grace clears it, as any link loss', () => {
+    const r = run([[0, { type: 'bluetoothOff', locked: true }], [4 * S, { type: 'linkUp' }], [9 * S, tick], [10 * MIN, tick]]);
+    expect(r.state.kind).toBe('idle');
+    expect(sent(r)).toHaveLength(0);
   });
 });
 

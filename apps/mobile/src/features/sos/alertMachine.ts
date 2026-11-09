@@ -40,7 +40,11 @@ export type SosEvent =
   | { type: 'linkLost' }
   | { type: 'linkUp' }
   | { type: 'batteryCritical' }
-  | { type: 'bluetoothOff' }
+  /**
+   * Phone Bluetooth switched off. `locked`: whether the phone was locked (null: could not be read).
+   * Only an unlocked phone makes it benign; locked or unknown, someone else may have switched it off.
+   */
+  | { type: 'bluetoothOff'; locked: boolean | null }
   | { type: 'phoneDying' }
   /** Device unlock succeeded on the countdown screen. Arriving after the window expired, it does nothing. */
   | { type: 'cancel' }
@@ -168,6 +172,11 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
         case 'batteryCritical':
           return { kind: 'idle', batteryCritical: true };
         case 'bluetoothOff':
+          if (event.locked !== false) {
+            // Treated exactly like a link loss, including a bangle that warned its battery is critical.
+            return state.batteryCritical ? { kind: 'unprotected', reason: 'batteryCritical' } : startGrace(now, commands);
+          }
+          return { kind: 'unprotected', reason: 'bluetoothOff' };
         case 'phoneDying':
           return { kind: 'unprotected', reason: event.type };
         case 'serverSent':
@@ -198,6 +207,8 @@ function apply(state: SosState, event: SosEvent, now: number, commands: Command[
           return { ...state, linkUpSince: null };
         // The OS may report the disconnect before the Bluetooth-off / shutdown that caused it.
         case 'bluetoothOff':
+          // Locked or unknown: not benign, so grace keeps running.
+          return event.locked === false ? disarm('benign', { kind: 'unprotected', reason: 'bluetoothOff' }, commands) : state;
         case 'phoneDying':
           return disarm('benign', { kind: 'unprotected', reason: event.type }, commands);
         default:
