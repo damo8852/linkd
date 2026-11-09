@@ -32,8 +32,12 @@ const config: ExpoConfig = {
   },
   plugins: [
     'expo-router',
-    // The bangle link. Declares the Android Bluetooth permissions (asked for in onboarding) and the iOS prompt text.
-    ['react-native-ble-plx', { bluetoothAlwaysPermission: 'LINKD uses Bluetooth to stay connected to your bangle.' }],
+    // The bangle link. Declares the Android Bluetooth permissions (asked for in onboarding), the iOS prompt
+    // text, and the iOS `bluetooth-central` background mode that keeps the link while the app is suspended.
+    [
+      'react-native-ble-plx',
+      { bluetoothAlwaysPermission: 'LINKD uses Bluetooth to stay connected to your bangle.', modes: ['central'] },
+    ],
     // Holds the key that encrypts the stored session (src/lib/sessionStorage.ts).
     'expo-secure-store',
     // Device unlock (Face ID / fingerprint / passcode) gates cancelling an SOS and "I'm safe".
