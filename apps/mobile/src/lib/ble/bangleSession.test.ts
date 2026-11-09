@@ -236,6 +236,43 @@ describe('bangle session -> SOS controller', () => {
     expect(h.transport.disconnect).toHaveBeenCalled();
     expect(h.types()).toEqual(['linkUp']);
     expect(h.connects()).toBe(1);
+    expect(h.session.getSnapshot().link).toBe('idle');
+  });
+
+  it('a bangle that drops before its version is checked was never protecting: no link loss', async () => {
+    let handlers: TransportHandlers | undefined;
+    const answers: (() => Promise<Uint8Array>)[] = [
+      async () => {
+        handlers?.onDisconnect();
+        throw new Error('dropped mid-connect');
+      },
+      async () => CURRENT,
+    ];
+    const dispatched: SosEvent[] = [];
+    const session = createBangleSession({
+      transport: {
+        connect: (given) => {
+          handlers = given;
+          return (answers.shift() ?? (async () => Promise.reject(new Error('not found'))))();
+        },
+        disconnect: async () => {},
+        write: async () => {},
+      },
+      now: () => 0,
+      setTimer: (fn) => {
+        setImmediate(fn);
+        return 0;
+      },
+      clearTimer: () => {},
+      dispatch: (event) => dispatched.push(event),
+    });
+
+    session.start();
+    await new Promise<void>((resolve) => setImmediate(() => resolve()));
+    await new Promise<void>((resolve) => setImmediate(() => resolve()));
+    await new Promise<void>((resolve) => setImmediate(() => resolve()));
+
+    expect(dispatched).toEqual([{ type: 'linkUp' }]);
   });
 
   it('start while already running does not open a second connection', async () => {
