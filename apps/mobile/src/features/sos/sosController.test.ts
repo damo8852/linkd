@@ -527,7 +527,7 @@ describe('arming the server', () => {
     const h = harness();
     h.controller.dispatch({ type: 'linkLost' });
     await h.advance(GRACE_PERIOD_MS / 2);
-    h.controller.dispatch({ type: 'bluetoothOff' });
+    h.controller.dispatch({ type: 'bluetoothOff', locked: false });
 
     expect(h.disarms.map((d) => d.id)).toEqual(['alert-1']);
     expect(h.kind()).toBe('unprotected');
