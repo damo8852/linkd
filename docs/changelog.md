@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-09 16:21 MST
+damo8852
+
+## SDK 57 patch baseline and BLE library findings
+
+[internal] Moved the 8 Expo packages that were behind to SDK 57's expected patch versions (`expo-doctor` 21/21), keeping `expo-modules-core` hoisted so `jest-expo` still resolves it. Recorded the `react-native-ble-plx` 3.5.1 New Architecture findings in the mobile protocol (interop-layer module, open iOS release crash, Android GATT-timeout disconnect crash fixed in 3.5.1 but only user-confirmed) and added that disconnect to the device safety checklist.
+
+Issues: #96
+
+---
+
 2026-11-08 23:00 MST
 damo8852
 
@@ -201,14 +212,14 @@ Issues: #58
 
 ---
 
-2026-10-11 18:26 MDT
+2026-10-19 22:45 MDT
 damo8852
 
-## Alert token for a signed-out SOS
+## ESP32-C6 as the bangle SoC
 
-[feature] Added the per-install alert token: an `alert_devices` table that stores only the token's hash, `send-alert` and `end-alert` accepting the token when there is no valid session, and the app issuing it at sign-in, keeping it through sign-out, and sending it with every SOS. A signed-out phone now shows a banner with the SOS button and "Remove this device" (device unlock required), Settings lists the account's devices, and the token was decided to act for its user rather than one device; built test-first with pgTAP, Deno, and Jest suites and a local end-to-end run.
+[docs] Locked the Espressif ESP32-C6 as the bangle SoC and replaced the Nordic nRF52/nRF54 references in the README, firmware protocol, and firmware agent; the toolchain question now assumes ESP-IDF. The coin cell stays, and whether it can supply the ESP32-C6's peak BLE current was filed as an open question, since a brown-out could cause a false or missed SOS.
 
-Issues: #22
+Issues: #61
 
 ---
 
