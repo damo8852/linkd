@@ -1,73 +1,82 @@
-import { encodeBatteryCritical, encodeButtonEvent, encodeSosTrigger, PROTOCOL_VERSION } from '@linkd/ble-protocol';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { decodeFrame, encodeBatteryCritical, encodeButtonEvent, encodeSosTrigger, type Frame } from '@linkd/ble-protocol';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
+import * as bangleModule from '../src/features/device/bangle';
 import { BangleScreen } from '../src/features/device/BangleScreen';
-import * as permissionsModule from '../src/features/onboarding/permissions';
-import type { TransportHandlers } from '../src/lib/ble/bangleLink';
+import type { SessionSnapshot } from '../src/lib/ble/bangleSession';
 
-jest.mock('../src/features/onboarding/permissions', () => ({
-  ...jest.requireActual('../src/features/onboarding/permissions'),
-  requestPermission: jest.fn(),
-}));
+// The feature seam: the session itself is covered in bangle-device.test.ts and bangleSession.test.ts.
+jest.mock('../src/features/device/bangle', () => ({ useBangle: jest.fn(), pairBangle: jest.fn() }));
 
-const mockConnect = jest.fn();
-jest.mock('../src/lib/ble/blePlxTransport', () => ({
-  createBlePlxTransport: () => ({
-    connect: (handlers: TransportHandlers) => mockConnect(handlers),
-    disconnect: async () => {},
-  }),
-}));
+const bangle = jest.mocked(bangleModule);
+const frame = (bytes: Uint8Array): Frame => decodeFrame(bytes) as Frame;
 
-const CURRENT = Uint8Array.from([PROTOCOL_VERSION]);
+function show(snapshot: SessionSnapshot): void {
+  bangle.useBangle.mockReturnValue(snapshot);
+  render(<BangleScreen />);
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(permissionsModule.requestPermission).mockResolvedValue('granted');
+  bangle.pairBangle.mockResolvedValue(true);
 });
 
 describe('BangleScreen', () => {
-  it('connects, then lists button presses newest first', async () => {
-    let bangle: TransportHandlers | undefined;
-    mockConnect.mockImplementation(async (handlers: TransportHandlers) => {
-      bangle = handlers;
-      return CURRENT;
+  it('not connected: says the bangle cannot send an SOS, and Connect pairs it', async () => {
+    show({ link: 'idle', frames: [] });
+
+    expect(screen.getByText('Your bangle cannot send an SOS until it is connected.')).toBeOnTheScreen();
+    fireEvent.press(screen.getByText('Connect'));
+    await waitFor(() => expect(bangle.pairBangle).toHaveBeenCalledTimes(1));
+  });
+
+  it('says a 3 s hold starts an SOS, and lists frames newest first', () => {
+    show({
+      link: 'connected',
+      frames: [
+        frame(encodeBatteryCritical()),
+        frame(encodeSosTrigger(7)),
+        frame(encodeButtonEvent(false)),
+        frame(encodeButtonEvent(true)),
+      ],
     });
-    render(<BangleScreen />);
-    expect(screen.getByText('Not connected')).toBeOnTheScreen();
 
-    fireEvent.press(screen.getByText('Connect'));
-    expect(await screen.findByText('Connected')).toBeOnTheScreen();
-
-    act(() => bangle?.onNotification(encodeButtonEvent(true)));
-    expect(screen.getByText('Button pressed')).toBeOnTheScreen();
-    act(() => bangle?.onNotification(encodeButtonEvent(false)));
-    expect(screen.getByText('Button released')).toBeOnTheScreen();
-    act(() => bangle?.onNotification(encodeSosTrigger(7)));
-    expect(screen.getByText('SOS hold received (7)')).toBeOnTheScreen();
-    act(() => bangle?.onNotification(encodeBatteryCritical()));
-    expect(screen.getByText('Battery critical')).toBeOnTheScreen();
-
-    act(() => bangle?.onDisconnect());
-    expect(screen.getByText('Disconnected')).toBeOnTheScreen();
-    expect(screen.getByText('Try again')).toBeOnTheScreen();
+    expect(screen.getByText('Connected')).toBeOnTheScreen();
+    expect(screen.getByText(/Holding the bangle button for 3 seconds starts an SOS countdown/)).toBeOnTheScreen();
+    expect(screen.getAllByText(/^(Battery critical|SOS hold received|Button)/).map((node) => node.props.children)).toEqual([
+      'Battery critical',
+      'SOS hold received (7)',
+      'Button released',
+      'Button pressed',
+    ]);
+    expect(screen.queryByText('Connect')).toBeNull();
   });
 
-  it('says so when the bangle cannot be found', async () => {
-    mockConnect.mockRejectedValue(new Error('No bangle found'));
-    render(<BangleScreen />);
+  it('a dropped link says it is reconnecting and that an SOS countdown follows if it does not come back', () => {
+    show({ link: 'disconnected', frames: [] });
 
-    fireEvent.press(screen.getByText('Connect'));
-
-    expect(await screen.findByText("Couldn't find your bangle")).toBeOnTheScreen();
+    expect(screen.getByText('Link lost, reconnecting')).toBeOnTheScreen();
+    expect(screen.getByText('If it does not come back, LINKD starts an SOS countdown.')).toBeOnTheScreen();
+    expect(screen.queryByText('Try again')).toBeNull();
   });
 
-  it('does not try to connect when Bluetooth permission is refused', async () => {
-    jest.mocked(permissionsModule.requestPermission).mockResolvedValue('off');
-    render(<BangleScreen />);
+  it('a bangle that cannot be found yet is still being looked for', () => {
+    show({ link: 'failed', frames: [] });
+    expect(screen.getByText("Can't find your bangle yet")).toBeOnTheScreen();
+  });
+
+  it('a bangle on another protocol version cannot be used', () => {
+    show({ link: 'unsupported', frames: [] });
+    expect(screen.getByText("This bangle can't be used")).toBeOnTheScreen();
+  });
+
+  it('says so when Bluetooth is refused, and offers to try again', async () => {
+    bangle.pairBangle.mockResolvedValue(false);
+    show({ link: 'idle', frames: [] });
 
     fireEvent.press(screen.getByText('Connect'));
 
     expect(await screen.findByText('Bluetooth is off for LINKD')).toBeOnTheScreen();
-    expect(mockConnect).not.toHaveBeenCalled();
+    expect(screen.getByText('Try again')).toBeOnTheScreen();
   });
 });

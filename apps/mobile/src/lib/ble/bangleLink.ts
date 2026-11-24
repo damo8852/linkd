@@ -11,6 +11,8 @@ export type BleTransport = {
   /** Finds the bangle, connects, and resolves with its raw version characteristic. Rejects if it cannot. */
   connect: (handlers: TransportHandlers) => Promise<Uint8Array>;
   disconnect: () => Promise<void>;
+  /** Writes one app -> bangle frame (the ACK characteristic). Rejects if it could not be written. */
+  write: (bytes: Uint8Array) => Promise<void>;
 };
 
 /** `unsupported`: a bangle answered, but on a protocol version this app does not speak. */
@@ -21,7 +23,7 @@ export type LinkState = 'connecting' | 'connected' | 'disconnected' | 'unsupport
  * while the link is up and the bangle's protocol version has been accepted; malformed and
  * unknown frames are dropped. Never throws: a bangle that cannot be reached reports `failed`.
  *
- * These are button edges for display. Nothing here feeds the SOS state machine.
+ * The SOS meaning of these frames (and of the link going up and down) is applied by bangleSession.ts.
  */
 export async function connectBangle(
   transport: BleTransport,

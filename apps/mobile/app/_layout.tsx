@@ -6,6 +6,8 @@ import { syncAlertToken } from '../src/features/device/device';
 import { refreshContacts } from '../src/features/emergency-contacts/contacts';
 import { useNeedsOnboarding } from '../src/features/onboarding/profile';
 import { SosOverlay } from '../src/features/sos/SosOverlay';
+// Side effect: a bangle paired before reconnects from launch and feeds the SOS controller.
+import '../src/features/device/bangle';
 import { theme } from '../src/lib/theme';
 
 export default function RootLayout(): React.JSX.Element | null {

@@ -22,6 +22,7 @@ function fakeTransport(versionValue: Uint8Array | Error): {
         return versionValue;
       },
       disconnect,
+      write: async () => {},
     },
     bangle: () => {
       if (handlers === undefined) {
@@ -122,6 +123,7 @@ describe('connectBangle', () => {
         return CURRENT;
       },
       disconnect: async () => {},
+      write: async () => {},
     };
 
     await connectBangle(transport, on);

@@ -1,4 +1,4 @@
-import { EVENTS_CHAR_UUID, SERVICE_UUID, VERSION_CHAR_UUID } from '@linkd/ble-protocol';
+import { ACK_CHAR_UUID, EVENTS_CHAR_UUID, SERVICE_UUID, VERSION_CHAR_UUID } from '@linkd/ble-protocol';
 import { BleManager, type Device } from 'react-native-ble-plx';
 
 import type { BleTransport, TransportHandlers } from './bangleLink';
@@ -8,6 +8,10 @@ const SCAN_TIMEOUT_MS = 15_000;
 // The library hands characteristic values over as base64.
 function fromBase64(value: string): Uint8Array {
   return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+}
+
+function toBase64(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes));
 }
 
 /** The real transport. The only file that imports the BLE library. */
@@ -51,6 +55,10 @@ export function createBlePlxTransport(): BleTransport {
         }
       });
       return fromBase64(version.value ?? '');
+    },
+    async write(bytes: Uint8Array): Promise<void> {
+      if (device === undefined) throw new Error('Not connected');
+      await device.writeCharacteristicWithoutResponseForService(SERVICE_UUID, ACK_CHAR_UUID, toBase64(bytes));
     },
     async disconnect(): Promise<void> {
       await device?.cancelConnection();

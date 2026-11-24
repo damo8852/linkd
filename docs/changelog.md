@@ -15,6 +15,17 @@ Issues: #96
 
 ---
 
+2026-11-08 23:00 MST
+damo8852
+
+## Bangle events reach the SOS controller
+
+[feature] Added the app-wide bangle session: a connect is a link up, an unexpected drop is a link loss followed by automatic reconnects, each `SOS_TRIGGER` is acked and starts one bangle SOS per sequence number, and battery-critical reaches the controller. A paired bangle reconnects from launch, signed in or not, and the Bangle screen now says a 3 s hold starts an SOS; built test-first against a fake transport and mutation-checked.
+
+Issues: #91
+
+---
+
 2026-11-08 18:34 MST
 damo8852
 
