@@ -9,7 +9,9 @@ const mockWrites: number[][] = [];
 const mockStore = new Map<string, string>();
 let mockHandlers: TransportHandlers | undefined;
 let mockBluetooth: 'granted' | 'off' | 'later' = 'granted';
+const mockStartBackground = jest.fn();
 
+jest.mock('../modules/bangle-service', () => ({ startBackgroundLink: () => mockStartBackground() }));
 jest.mock('../src/features/sos/sos', () => ({ dispatchSos: (event: unknown) => mockDispatch(event) }));
 jest.mock('../src/features/onboarding/permissions', () => ({ requestPermission: async () => mockBluetooth }));
 jest.mock('@react-native-async-storage/async-storage', () => ({
@@ -51,6 +53,7 @@ beforeEach(() => {
   mockStore.clear();
   mockHandlers = undefined;
   mockBluetooth = 'granted';
+  mockStartBackground.mockReset();
   // The session's reconnect timer must not outlive a test; setImmediate stays real for flush().
   jest.useFakeTimers({ doNotFake: ['setImmediate'] });
 });
@@ -101,5 +104,41 @@ describe('the app-wide bangle link', () => {
     await flush();
     expect(mockHandlers).toBeUndefined();
     expect(mockStore.size).toBe(0);
+    expect(mockStartBackground).not.toHaveBeenCalled();
+  });
+});
+
+describe('keeping the link alive in the background', () => {
+  it('pairing starts the background service', async () => {
+    const { pairBangle } = launch();
+
+    await pairBangle();
+    expect(mockStartBackground).toHaveBeenCalledTimes(1);
+  });
+
+  it('a bangle paired before starts the background service at launch', async () => {
+    mockStore.set('linkd.bangle-paired', '1');
+    launch();
+    await flush();
+
+    expect(mockStartBackground).toHaveBeenCalledTimes(1);
+  });
+
+  it('no paired bangle, no background service', async () => {
+    launch();
+    await flush();
+
+    expect(mockStartBackground).not.toHaveBeenCalled();
+  });
+
+  it('a background service that cannot start never stops the bangle from connecting', async () => {
+    mockStartBackground.mockImplementation(() => {
+      throw new Error('ForegroundServiceStartNotAllowedException');
+    });
+    const { pairBangle } = launch();
+
+    expect(await pairBangle()).toBe(true);
+    await flush();
+    expect(mockDispatch).toHaveBeenLastCalledWith({ type: 'linkUp' });
   });
 });

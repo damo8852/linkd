@@ -4,6 +4,17 @@ Rolling log of session outcomes. Newest at the top. Max 20 entries - drop the ol
 
 <!-- New entries go here, directly below this line and above the format section. -->
 
+2026-11-24 13:16 MST
+damo8852
+
+## Bangle link kept in the background
+
+[feature] Android keeps the bangle link through a local Expo module running a `connectedDevice` foreground service with a never-ending Headless JS task, and iOS uses the `bluetooth-central` background mode with state restoration under the restore identifier `linkd-bangle`. Built test-first; device behavior is still unverified and is the QA checklist on the PR, and the Gradle build output that was committed by mistake is now ignored.
+
+Issues: #92
+
+---
+
 2026-11-09 16:21 MST
 damo8852
 
@@ -209,17 +220,6 @@ damo8852
 [docs] Locked MicroPython (v1.29.0 on the prototype board) as the ESP32-C6 firmware toolchain and unlocked the Hard BLE source-of-truth decision so the firmware consumes a generated MicroPython module instead of a C header, since MicroPython cannot use one. The firmware and BLE protocols, the firmware and ble-link agents, the ble-change skill, the repo layout, the README, and CLAUDE.md now say so; firmware testing is locked as host-side CPython `unittest` for pure modules plus `mpremote` board checks, and the coin cell question points at its decision issue.
 
 Issues: #58
-
----
-
-2026-10-19 22:45 MDT
-damo8852
-
-## ESP32-C6 as the bangle SoC
-
-[docs] Locked the Espressif ESP32-C6 as the bangle SoC and replaced the Nordic nRF52/nRF54 references in the README, firmware protocol, and firmware agent; the toolchain question now assumes ESP-IDF. The coin cell stays, and whether it can supply the ESP32-C6's peak BLE current was filed as an open question, since a brown-out could cause a false or missed SOS.
-
-Issues: #61
 
 ---
 

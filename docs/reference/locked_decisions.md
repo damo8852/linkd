@@ -15,6 +15,7 @@ The canon. Work that contradicts a decision here halts until it is unlocked ([se
 | Mobile framework   | React Native + Expo, development builds (not Expo Go), expo-router          | Hard      |
 | Platforms          | iOS + Android                                                               | Hard      |
 | BLE library        | react-native-ble-plx (via its Expo config plugin)                           | Soft      |
+| Android background | Custom local Expo module (`apps/mobile/modules/bangle-service`): a `connectedDevice` foreground service holding a Headless JS task. [mobile_protocol.md](../protocol/mobile_protocol.md#bluetooth-and-background-behavior-the-hard-part) | Soft      |
 | Backend            | Supabase: Postgres + RLS, Supabase Auth, Edge Functions (Deno)              | Hard      |
 | Auth method        | Email + password, no session timeout, reset by emailed code. [supabase_protocol.md](../protocol/supabase_protocol.md#auth) | Soft      |
 | Auth email         | Resend (free tier) as the custom SMTP for Supabase Auth                     | Soft      |
@@ -80,6 +81,5 @@ Turn each into a GitHub issue (label `decision`) before working on it.
 - Duress PIN - see [sos_alert_flow.md](../design/sos_alert_flow.md#open-questions).
 - BLE bonding/security and the byte layouts of the messages not yet built - see [ble_link_spec.md](../design/ble_link_spec.md#open-questions).
 - Dispatch vendor: Noonlight vs RapidSOS.
-- Android foreground-service implementation (library or custom Expo module).
 - Server-state library for the app (e.g. TanStack Query) or plain hooks.
 - Coin cell vs ESP32-C6 peak BLE current (decision: [#59](https://github.com/damo8852/linkd/issues/59)): reportedly around 100 mA TX peaks against a coin cell rated for roughly 15-23 mA pulses. Verify against the official datasheets and measure on the board; a brown-out risks both a false link-loss SOS and a missed button SOS.

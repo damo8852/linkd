@@ -19,6 +19,9 @@ GoogleService-Info.plist
 supabase/.temp/
 supabase/.branches/
 
+# Local Expo module Gradle output
+apps/mobile/modules/*/android/build/
+
 # Firmware
 firmware/**/build/
 __pycache__/

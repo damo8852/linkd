@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore } from 'react';
 
+import { startBackgroundLink } from '../../../modules/bangle-service';
 import { createBangleSession, type SessionSnapshot } from '../../lib/ble/bangleSession';
 import { createBlePlxTransport } from '../../lib/ble/blePlxTransport';
 import { requestPermission } from '../onboarding/permissions';
@@ -17,11 +18,25 @@ const session = createBangleSession({
   dispatch: dispatchSos,
 });
 
+/**
+ * Starts the link, and on Android the foreground service that keeps it (and JS timers) alive in the
+ * background. On failure: a service that cannot start is logged and the link still starts, so the
+ * bangle works at least while the app is open.
+ */
+function startLink(): void {
+  try {
+    startBackgroundLink();
+  } catch (error) {
+    console.warn('Background link service did not start', error);
+  }
+  session.start();
+}
+
 // A bangle connected before is watched again from launch, signed in or not. An unreadable flag
 // leaves it unconnected; the Bangle screen shows that and offers Connect.
 void AsyncStorage.getItem(PAIRED_KEY).then(
   (paired) => {
-    if (paired === '1') session.start();
+    if (paired === '1') startLink();
   },
   () => undefined,
 );
@@ -40,6 +55,6 @@ export async function pairBangle(): Promise<boolean> {
     return false;
   }
   await AsyncStorage.setItem(PAIRED_KEY, '1').catch(() => undefined);
-  session.start();
+  startLink();
   return true;
 }
